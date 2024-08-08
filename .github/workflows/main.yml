@@ -6,38 +6,45 @@ on:
       - main  # or your default branch name
 
 jobs:
-    web-deploy:
-        name: 🎉 Deploy
+  web-deploy:
+    name: 🎉 Deploy
+    runs-on: ubuntu-latest
 
-        runs-on: ubuntu-latest
-        steps:
-            - name: 🚚 Get latest code
-              uses: actions/checkout@v3
-            - name: Prepare the environment
-              run: cp .env.example .env
-            - name: Run composer install
-              run: |
-                    composer validate && composer install --ignore-platform-reqs --prefer-dist
-            - name: 📂 Sync files
-              uses: SamKirkland/FTP-Deploy-Action@v4.3.4
-              with:
-                    server-dir: /
-                    server: ${{ secrets.FTP_SERVER}}
-                    username: ${{ secrets.FTP_USERNAME }}
-                    password: ${{ secrets.FTP_PASSWORD }}
-                    exclude: |
-                        .env
-                        .git*
-                        .github/
-                        node_modules/
-                        vendor/
-                        storage/logs/*.log
-                        tests/
-                        .editorconfig
-                        .gitattributes
-                        .gitignore
-                        .styleci.yml
-                        README.md
-                        phpunit.xml
+    steps:
+      - name: 🚚 Get latest code
+        uses: actions/checkout@v3
 
-                                
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'  # Set your required PHP version
+          extensions: mbstring, intl, bcmath, dom, xml
+          coverage: none
+
+      - name: Prepare the environment
+        run: cp .env.example .env
+
+      - name: Install Composer dependencies
+        run: composer install --ignore-platform-reqs --prefer-dist --no-progress --no-suggest --verbose
+
+      - name: 📂 Sync files
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+        with:
+          server-dir: /
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          exclude: |
+            .env
+            .git*
+            .github/
+            node_modules/
+            vendor/
+            storage/logs/*.log
+            tests/
+            .editorconfig
+            .gitattributes
+            .gitignore
+            .styleci.yml
+            README.md
+            phpunit.xml
