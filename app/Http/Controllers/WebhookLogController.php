@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\TransactionRecords;
+use App\Models\User;
 use Illuminate\Http\Request;
 
 class WebhookLogController extends Controller
@@ -9,7 +11,7 @@ class WebhookLogController extends Controller
     /**
      * Summary of paystackWebhook
      * @param Request $request
-     * @return \Illuminate\Http\JsonResponse
+     * @return mixed
      */
     public function paystackWebhook(Request $request)
     {
@@ -58,11 +60,9 @@ class WebhookLogController extends Controller
             }
 
             return http_response_code(200);
-            return response()->json(['status' => 'success']);
         } catch (\Exception $e) {
             \Log::channel('deposit-log')->error('Paystack Webhook Error: ' . $e->getMessage());
-            return http_response_code(0);
-            return response()->json(['status' => 'error'], 500);
+            return http_response_code($e->getCode());
         }
     }
 }

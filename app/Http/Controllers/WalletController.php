@@ -57,9 +57,8 @@ class WalletController extends Controller
     }
 
 
-    public function processDeposit(Request $request)
+    public function processDeposit(Request $request, $walletType = 'ngn')
     {
-        $walletType = 'ngn';
         $user = $request->user();
         $wallet = $user->getWallet($walletType);
         $amount = $request->amount;
@@ -73,7 +72,15 @@ class WalletController extends Controller
     }
 
     public function withdraw(Request $request, $walletType)
-    {
+    {        
+        $validate = Validator::make($request->all(), [
+            'amount' => 'required|min:100|numeric',
+        ]);
+
+        if($validate->fails()) {
+            return get_error_response($validate->errors());
+        }
+
         $user = $request->user();
         $wallet = $user->getWallet($walletType);
         $amount = $request->amount;
@@ -96,7 +103,17 @@ class WalletController extends Controller
     }
 
     public function transfer(Request $request)
-    {
+    {        
+        $validate = Validator::make($request->all(), [
+            'amount' => 'required|min:100|numeric',
+            'from_wallet' => 'required',
+            'to_wallet' => 'required'
+        ]);
+
+        if($validate->fails()) {
+            return get_error_response($validate->errors());
+        }
+
         $user = $request->user();
         $fromWalletType = $request->from_wallet;
         $toWalletType = $request->to_wallet;

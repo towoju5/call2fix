@@ -27,6 +27,13 @@ class Product extends BaseModel
     protected $casts = [
         'price' => 'decimal:2',
         'is_active' => 'boolean',
+        'is_leasable' => 'boolean',
+    ];
+
+    protected $hidden = [
+        "created_at",
+        "updated_at",
+        "deleted_at"
     ];
 
     public function seller()
@@ -42,5 +49,10 @@ class Product extends BaseModel
     public function orders()
     {
         return $this->hasMany(Order::class);
+    }
+
+    public function leasable()
+    {
+        $this->where('is_leasable', true)->where('seller_id', auth()->id());
     }
 }

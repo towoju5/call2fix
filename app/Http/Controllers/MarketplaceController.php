@@ -30,6 +30,13 @@ class MarketplaceController extends Controller
         return get_success_response($response, "Record retrieved successfully");
     }
 
+    public function ItemDetails(Request $request)
+    {
+        $category = $request->input('category');
+        $response = $this->marketplaceService->getItems($category);
+        return get_success_response($response, "Record retrieved successfully");
+    }
+
     public function purchaseItem(Request $request)
     {
         $itemId = $request->input('item_id');

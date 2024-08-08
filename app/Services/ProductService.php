@@ -10,11 +10,11 @@ class ProductService
     {
         $query = Product::query();
         if ($category) {
-            $query->whereHas('category', function ($q) use ($category) {
+            $query->whenHas('category_id', function ($q) use ($category) {
                 $q->where('name', $category);
             });
         }
-        return $query->where('is_active', true)->get();
+        return $query->whereSellerId(auth()->id())->where('is_active', true)->get();
     }
 
     public function getProduct($id)

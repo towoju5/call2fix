@@ -52,7 +52,7 @@ return [
     |
     */
 
-    'prefix' => '2fa',
+    'prefix' => 'code',
 
     'domain' => null,
 

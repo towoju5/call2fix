@@ -6,6 +6,7 @@ use App\Models\Product;
 use App\Services\ProductService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Validator;
 
 class ProductController extends Controller
 {
@@ -32,11 +33,10 @@ class ProductController extends Controller
     public function store(Request $request)
     {
         try {
-            $this->authorize('create products');
             $product = Product::count();
-            $request->sku = "SKU-" . ((int) $product + 1230);
+            $request->merge(["sku" => generate_uuid()]);
 
-            $validatedData = $request->validate([
+            $validator = Validator::make($request->all(), [
                 'name' => 'required|string|max:255',
                 'description' => 'required|string',
                 'price' => 'required|numeric|min:0',
@@ -48,7 +48,11 @@ class ProductController extends Controller
                 'is_active' => 'boolean',
             ]);
 
-            $product = $this->productService->createProduct($validatedData, Auth::id());
+            if ($validator->fails()) {
+                return get_error_response("Validation error", $validator->errors(), 422);
+            }
+
+            $product = $this->productService->createProduct($validator->validated(), Auth::id());
             return get_success_response($product, "New Product added successfuly", 201);
         } catch (\Exception $e) {
             return get_error_response($e->getMessage());
@@ -59,9 +63,9 @@ class ProductController extends Controller
     {
         try {
             $product = Product::findOrFail($id);
-            $this->authorize('update products');
+            // $request->user()->can('update products');
 
-            $validatedData = $request->validate([
+            $validator = Validator::make($request->all(), [
                 'name' => 'string|max:255',
                 'description' => 'string',
                 'price' => 'numeric|min:0',
@@ -70,12 +74,17 @@ class ProductController extends Controller
                 'weight' => 'nullable|numeric|min:0',
                 'dimensions' => 'nullable|string',
                 'is_active' => 'boolean',
+                'is_leasable' => 'sometimes|boolean',
             ]);
 
-            $updatedProduct = $this->productService->updateProduct($product, $validatedData);
-            return get_success_response($updatedProduct);
+            if ($validator->fails()) {
+                return get_error_response("Validation error", $validator->errors(), 422);
+            }
+
+            $updatedProduct = $this->productService->updateProduct($product, $validator->validated());
+            return get_success_response($updatedProduct, 'Product updated successfully');
         } catch (\Exception $e) {
-            return get_error_response($e->getMessage());
+            return get_error_response($e->getMessage(), []);
         }
     }
 
@@ -83,7 +92,6 @@ class ProductController extends Controller
     {
         try {
             $product = Product::findOrFail($id);
-            $this->authorize('delete products');
 
             $this->productService->deleteProduct($product);
             return get_success_response(null, "Product trashed successfully", 204);

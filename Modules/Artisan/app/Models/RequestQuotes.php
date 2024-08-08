@@ -5,11 +5,12 @@ namespace Modules\Artisan\Models;
 use App\Models\BaseModel;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Modules\Artisan\Database\Factories\RequestQuotesFactory;
 
 class RequestQuotes extends BaseModel
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     /**
      * The attributes that are mass assignable.
@@ -27,10 +28,6 @@ class RequestQuotes extends BaseModel
         "service_vat",
     ];
 
-    public function 
+    // public function 
 
-    protected static function newFactory(): RequestQuotesFactory
-    {
-        //return RequestQuotesFactory::new();
-    }
 }

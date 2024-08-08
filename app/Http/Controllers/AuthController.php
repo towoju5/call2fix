@@ -22,8 +22,8 @@ class AuthController extends Controller
 
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
-            'phone' => 'required|string|max:20',
+            'email' => 'required_without:phone|string|email|max:255|unique:users',
+            'phone' => 'required_without:email|string|max:20|unique:users',
             'password' => 'required|string|min:8',
             'username' => 'required|string|max:255|unique:users',
             'profile_picture' => 'nullable|string',
@@ -33,15 +33,23 @@ class AuthController extends Controller
             return get_error_response($validator->errors());
         }
 
-        $user = User::create([
+        $userData = [
             'name' => $request->name,
-            'email' => $request->email,
-            'phone' => $request->phone,
             'password' => Hash::make($request->password),
             'username' => $request->username,
             'profile_picture' => $request->profile_picture,
             'is_social' => false,
-        ]);
+        ];
+
+        if ($request->has('email')) {
+            $userData['email'] = $request->email;
+        }
+
+        if ($request->has('phone')) {
+            $userData['phone'] = $request->phone;
+        }
+
+        $user = User::create($userData);
 
         if ($user) {
             // create customer wallets
@@ -63,27 +71,36 @@ class AuthController extends Controller
             ]);
         }
 
-        return get_success_response(['user' => $user, 'message' => 'User registered successfully']);
+        return get_success_response($user, 'User registered successfully');
     }
     public function login(Request $request)
     {
-        $validator = Validator::make($request->all(), [
-            'email' => 'required|string|email',
-            'password' => 'required|string',
-        ]);
+        try {
+            $validator = Validator::make($request->all(), [
+                'login' => 'required|string',
+                'password' => 'required|string',
+            ]);
 
-        if ($validator->fails()) {
-            return get_error_response($validator->errors());
-        }
+            if ($validator->fails()) {
+                return get_error_response($validator->errors());
+            }
 
-        if (Auth::attempt($request->only('email', 'password'))) {
-            $user = Auth::user();
-            $token = $user->createToken('auth_token')->plainTextToken;
-            return get_success_response(['user' => $user, 'token' => $token]);
-        }
+            $loginField = filter_var($request->input('login'), FILTER_VALIDATE_EMAIL) ? 'email' : 'phone';
+            $credentials = [
+                $loginField => $request->input('login'),
+                'password' => $request->input('password'),
+            ];
 
-        return get_error_response(['message' => 'Invalid credentials']);
-    }
+            if (Auth::attempt($credentials)) {
+                $user = Auth::user();
+                $token = $user->createToken('auth_token')->plainTextToken;
+                return get_success_response(['user' => $user, 'token' => $token]);
+            }
+
+            return get_error_response(['message' => 'Invalid credentials']);
+        } catch (\Exception $e) {
+            return get_error_response(['message' => 'An error occurred during authentication']);
+        }    }
 
     public function logout(Request $request)
     {
@@ -252,4 +269,12 @@ class AuthController extends Controller
         }
     }
 
+
+    public function unauthenticated()
+    {
+        return response()->json([
+            "status" => false,
+            "message" => "Unauthenticated. Please login first",
+        ], 401);
+    }
 }
