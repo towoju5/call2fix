@@ -1,0 +1,11 @@
+{
+    "name": "Artisan",
+    "alias": "artisan",
+    "description": "",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\Artisan\\Providers\\ArtisanServiceProvider"
+    ],
+    "files": []
+}

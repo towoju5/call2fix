@@ -1,0 +1,152 @@
+<?php
+
+namespace Modules\ServiceProvider\Http\Controllers;
+
+use App\Http\Controllers\Controller;
+use App\Models\Artisans;
+use App\Models\SubmittedQuotes;
+use App\Models\User;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Http\Response;
+use Modules\Artisan\Models\ArtisanQuotes;
+use Validator;
+
+class ServiceProviderController extends Controller
+{
+    public function artisans()
+    {
+        $artisans = User::whereHas('artisan', function ($query) {
+            $query->where('service_provider_id', auth()->id());
+        })->with('artisan_quotes')->latest()->get();
+        return get_success_response($artisans, "All artisans retrieved successfully");
+    }
+
+    public function viewArtisan($id)
+    {
+        $artisan = User::where('id', $id)
+            ->whereHas('artisans', function ($query) {
+                $query->where('service_provider_id', auth()->id());
+            })
+            ->with('artisan_quotes')
+            ->first();
+
+        if (!$artisan) {
+            return get_error_response("Artisan not found", [], 404);
+        }
+
+        return get_success_response($artisan, "Artisan retrieved successfully");
+    }
+
+    public function deleteArtisan($id)
+    {
+        $artisan = Artisans::where('artisan_id', $id)
+            ->where('service_provider_id', auth()->id())
+            ->first();
+
+        if (!$artisan) {
+            return get_error_response("Artisan not found", [], 404);
+        }
+
+        $artisan->delete();
+
+        return get_success_response(null, "Artisan deleted successfully");
+    }
+
+    public function store(Request $request)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                "first_name" => "required|string|max:255",
+                "last_name" => "required|string|max:255",
+                "email" => "required|email|unique:users,email",
+                "phone" => "required|string|max:20",
+                "trade" => "required|string|max:255",
+                "location" => "required|string|max:255",
+                "id_type" => "required|string|in:national_id,drivers_license,passport,voters_card",
+                "id_image" => "required|image|mimes:jpeg,png,jpg|max:2048",
+                "trade_certificate" => "required|file|mimes:pdf,jpeg,png,jpg|max:2048",
+                "payment_plan" => "required|string|in:percentage,fixed",
+                "payment_amount" => "required|numeric|min:0",
+                "bank_code" => "required|string|max:20",
+                "account_number" => "required|string|max:20",
+                "account_name" => "required|string|max:255",
+                "artisan_category" => "sometimes|exists:categories,id"
+            ]);
+
+            if( $validator->fails() ) {
+                return get_error_response("Validation error", $validator->errors(), 422);
+            }
+            $validateData = $validator->validate();
+            $validateData['account_type'] = "artisan";
+
+            if(User::createOrFirst($validateData)) {
+                return get_success_response($validateData, "Artisan created successfully", 200);
+            }
+        } catch (\Throwable $th) {
+            return get_error_response($th->getMessage(), [], $th->getCode());
+        }
+    }
+
+    public function artisanQuotes()
+    {
+        try {
+            $quotes = ArtisanQuotes::whereServiceProviderId(auth()->id())->latest()->get();
+            return get_success_response($quotes, "All quotes retrieved successfully");
+        } catch (\Throwable $th) {
+            return get_error_response($th->getMessage(), ["error" => $th->getMessage()]);
+        }
+    }
+    
+    public function submitQuote(Request $request)
+    {
+        try {
+            $validate = Validator::make(request()->all(), [
+                "request_id" => "required",
+                'workmanship' => 'required',
+                'items' => 'array|required',
+                'sla_duration' => 'required',
+                'sla_start_date' => 'required',
+                'attachments' => 'nullable',
+                'summary_note' => 'required',
+            ]);
+
+            if ($validate->fails()) {
+                return get_error_response("Validation failed", $validate->errors());
+            }
+
+                // Check if quote already submitted
+                if (SubmittedQuotes::where(["artisan_id" => auth()->id(), "request_id" => $request->request_id])->exists()) {
+                    return get_error_response("You have already submitted a quote for this request", ["error" => "You have already submitted a quote for this request"]);
+                }
+
+                // Process quote submission 
+                $createQuote = SubmittedQuotes::firstOrCreate(
+                    [
+                        "artisan_id" => auth()->id(),
+                        "request_id" => $request->request_id,
+                        "service_provider_id" => $request->service_provider_id
+                    ],
+                    [
+                        "artisan_id" => auth()->id(),
+                        "request_id" => $request->request_id,
+                        "service_provider_id" => $request->service_provider_id,
+                        "workmanship" => $request->workmanship,
+                        "sla_duration" => $request->sla_duration,
+                        "sla_start_date" => $request->sla_start_date,
+                        "attachments" => $request->attachments,
+                        "summary_note" => $request->summary_note,
+                        "administrative_fee" => get_settings_value('administrative_fee'),
+                        "service_vat" => ($request->workmanship + get_settings_value('administrative_fee')) * 0.075
+                    ]
+                );
+
+                $createQuote->items()->save($request->items);
+
+                return get_success_response($createQuote, "Quote submitted successfully");
+            
+        } catch (\Throwable $th) {
+            return get_error_response($th->getMessage(), [], 500);
+        }
+    }
+}

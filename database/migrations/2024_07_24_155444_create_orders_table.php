@@ -1,0 +1,35 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+class CreateOrdersTable extends Migration
+{
+    public function up()
+    {
+        Schema::create('orders', function (Blueprint $table) {
+            $table->uuid('id')->primary();
+            $table->foreignId('user_id')->constrained();
+            $table->foreignId('seller_id')->constrained();
+            $table->foreignId('product_id')->constrained();
+            $table->string('status');
+            $table->string('order_id');
+            $table->enum('delivery_type', ['home_delivery', 'pickup'])->default('home_delivery');
+            $table->integer('quantity')->default(1);
+            $table->decimal('total_price', 10, 2);
+            $table->string('delivery_address')->nullable();
+            $table->text('additional_info')->nullable();
+            $table->dateTime('estimated_delivery')->nullable();
+            $table->timestamps();
+            $table->softDeletes();
+        });
+
+
+    }
+
+    public function down()
+    {
+        Schema::dropIfExists('orders');
+    }
+}
