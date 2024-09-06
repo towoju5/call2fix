@@ -2,7 +2,7 @@ name: Deploy Laravel 11 Project To call2fix
 on:
   push:
     branches:
-      - master
+      - main
 jobs:
   web-deploy:
     name: Deploy
