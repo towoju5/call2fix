@@ -1,7 +1,7 @@
 <?php
 
-use App\Http\Controllers\Admin\ServiceAreaController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\ChatController;
 use App\Http\Controllers\DepartmentController;
 use App\Http\Controllers\Google2faController;
 use App\Http\Controllers\MarketplaceController;
@@ -111,8 +111,10 @@ Route::middleware(['api'])->domain(env('API_URL'))->prefix('v1')->group(function
         Route::prefix('providers')->group(function () {
             Route::get('artisans', [ServiceProviderController::class, 'artisans']);
             Route::get('artisan/quotes', [ServiceProviderController::class, 'artisanQuotes']);
-            Route::get('requests', [ArtisanController::class, 'requests']);
-            Route::post('submit-quote', [ArtisanController::class, 'submitQuote']);
+            Route::get('requests', [ServiceProviderController::class, 'requests']);
+            Route::post('submit-quote', [ServiceProviderController::class, 'submitQuote']);
+            Route::get("artisan/{artisanId}", [ServiceProviderController::class, 'viewArtisan']);
+            Route::delete("artisan/{artisanId}", [ServiceProviderController::class, 'deleteArtisan']);
         });
 
 
@@ -124,9 +126,17 @@ Route::middleware(['api'])->domain(env('API_URL'))->prefix('v1')->group(function
         });
 
         Route::prefix('media/file/')->controller(MediaController::class)->group(function () {
-            Route::get('{mediaPath}', 'fetch');    
+            Route::get('{mediaPath}', 'fetch');
             Route::post('upload', 'upload');
             Route::delete('{mediaPath}', 'destroy');
+        });
+
+
+        Route::prefix('chats')->group(function () {
+            Route::get('/', [ChatController::class, 'index']);
+            Route::post('/', [ChatController::class, 'store']);
+            Route::get('{chat}', [ChatController::class, 'show']);
+            Route::post('{chat}/messages', [ChatController::class, 'sendMessage']);
         });
 
     });

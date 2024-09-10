@@ -159,6 +159,13 @@ class User extends Authenticatable
         return $this->hasMany(ServiceRequest::class);
     }
 
+    public function chats()
+    {
+        return $this->belongsToMany(Chat::class, 'chat_user', 'user_id', 'chat_id')
+            ->withTimestamps();
+    }
+
+
     // Relationship: User belongs to many departments
     public function departments()
     {
@@ -185,7 +192,7 @@ class User extends Authenticatable
             return $department;
         });
     }
-    
+
     /**
      * Set the currently active department for the user.
      *

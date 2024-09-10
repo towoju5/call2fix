@@ -4,8 +4,10 @@ namespace Modules\ServiceProvider\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Models\Artisans;
+use App\Models\Property;
 use App\Models\SubmittedQuotes;
 use App\Models\User;
+use DB;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -74,13 +76,13 @@ class ServiceProviderController extends Controller
                 "artisan_category" => "sometimes|exists:categories,id"
             ]);
 
-            if( $validator->fails() ) {
+            if ($validator->fails()) {
                 return get_error_response("Validation error", $validator->errors(), 422);
             }
             $validateData = $validator->validate();
             $validateData['account_type'] = "artisan";
 
-            if(User::createOrFirst($validateData)) {
+            if (User::createOrFirst($validateData)) {
                 return get_success_response($validateData, "Artisan created successfully", 200);
             }
         } catch (\Throwable $th) {
@@ -97,7 +99,7 @@ class ServiceProviderController extends Controller
             return get_error_response($th->getMessage(), ["error" => $th->getMessage()]);
         }
     }
-    
+
     public function submitQuote(Request $request)
     {
         try {
@@ -115,38 +117,103 @@ class ServiceProviderController extends Controller
                 return get_error_response("Validation failed", $validate->errors());
             }
 
-                // Check if quote already submitted
-                if (SubmittedQuotes::where(["artisan_id" => auth()->id(), "request_id" => $request->request_id])->exists()) {
-                    return get_error_response("You have already submitted a quote for this request", ["error" => "You have already submitted a quote for this request"]);
-                }
+            // Check if quote already submitted
+            if (SubmittedQuotes::where(["artisan_id" => auth()->id(), "request_id" => $request->request_id])->exists()) {
+                return get_error_response("You have already submitted a quote for this request", ["error" => "You have already submitted a quote for this request"]);
+            }
 
-                // Process quote submission 
-                $createQuote = SubmittedQuotes::firstOrCreate(
-                    [
-                        "artisan_id" => auth()->id(),
-                        "request_id" => $request->request_id,
-                        "service_provider_id" => $request->service_provider_id
-                    ],
-                    [
-                        "artisan_id" => auth()->id(),
-                        "request_id" => $request->request_id,
-                        "service_provider_id" => $request->service_provider_id,
-                        "workmanship" => $request->workmanship,
-                        "sla_duration" => $request->sla_duration,
-                        "sla_start_date" => $request->sla_start_date,
-                        "attachments" => $request->attachments,
-                        "summary_note" => $request->summary_note,
-                        "administrative_fee" => get_settings_value('administrative_fee'),
-                        "service_vat" => ($request->workmanship + get_settings_value('administrative_fee')) * 0.075
-                    ]
-                );
+            // Process quote submission 
+            $createQuote = SubmittedQuotes::firstOrCreate(
+                [
+                    "artisan_id" => auth()->id(),
+                    "request_id" => $request->request_id,
+                    "service_provider_id" => $request->service_provider_id
+                ],
+                [
+                    "artisan_id" => auth()->id(),
+                    "request_id" => $request->request_id,
+                    "service_provider_id" => $request->service_provider_id,
+                    "workmanship" => $request->workmanship,
+                    "sla_duration" => $request->sla_duration,
+                    "sla_start_date" => $request->sla_start_date,
+                    "attachments" => $request->attachments,
+                    "summary_note" => $request->summary_note,
+                    "administrative_fee" => get_settings_value('administrative_fee'),
+                    "service_vat" => ($request->workmanship + get_settings_value('administrative_fee')) * 0.075
+                ]
+            );
 
-                $createQuote->items()->save($request->items);
+            $createQuote->items()->save($request->items);
 
-                return get_success_response($createQuote, "Quote submitted successfully");
-            
+            return get_success_response($createQuote, "Quote submitted successfully");
+
         } catch (\Throwable $th) {
             return get_error_response($th->getMessage(), [], 500);
         }
     }
+
+    public function getProviders($propertyId)
+    {
+        try {
+            // Get the property details
+            $property = Property::findOrFail($propertyId);
+
+            // Get the authenticated user
+            $user = auth()->user();
+
+            // Get the radius limit in kilometers from settings and convert to meters
+            $radiusLimitKm = get_settings_value('max_provider_radius');
+            $radiusLimitMeters = $radiusLimitKm * 1000; // Convert km to meters
+
+            // Get service providers within the radius limit
+            $providers = User::where('account_type', 'providers')->select(DB::raw('*, ST_Distance_Sphere(point(longitude, latitude), point(?, ?)) as distance'))
+                ->whereRaw('ST_Distance_Sphere(point(longitude, latitude), point(?, ?)) <= ?', [
+                    $property->longitude,
+                    $property->latitude,
+                    $radiusLimitMeters
+                ])
+                ->orderBy('distance')
+                ->get();
+
+            return get_success_response($providers, "Nearby service providers retrieved successfully");
+        } catch (\Throwable $th) {
+            return get_error_response($th->getMessage(), [], 500);
+        }
+    }
+
+    public function getFeaturedProvider($propertyId)
+    {
+        try {
+            // Get the property details
+            $property = Property::findOrFail($propertyId);
+
+            // Get the authenticated user
+            $user = auth()->user();
+
+            // Get the radius limit in kilometers from settings and convert to meters
+            $radiusLimitKm = get_settings_value('max_provider_radius') ?? 30;
+            $radiusLimitMeters = $radiusLimitKm * 1000; // Convert km to meters
+
+            // Get the closest featured service provider within the radius limit
+            $featuredProvider = User::select(DB::raw('*, ST_Distance_Sphere(point(longitude, latitude), point(?, ?)) as distance'))
+                ->where('is_featured', true)
+                ->where('account_type', 'providers')
+                ->whereRaw('ST_Distance_Sphere(point(longitude, latitude), point(?, ?)) <= ?', [
+                    $property->longitude,
+                    $property->latitude,
+                    $radiusLimitMeters
+                ])
+                ->orderBy('distance')
+                ->first();
+
+            if (!$featuredProvider) {
+                return get_error_response("No featured service provider found nearby", [], 404);
+            }
+
+            return get_success_response($featuredProvider, "Nearby featured service provider retrieved successfully");
+        } catch (\Throwable $th) {
+            return get_error_response($th->getMessage(), [], 500);
+        }
+    }
+
 }

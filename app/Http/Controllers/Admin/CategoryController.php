@@ -50,6 +50,7 @@ class CategoryController extends Controller
                 'category_name' => 'required|string|max:255',
                 'category_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
                 'category_description' => 'nullable|string',
+                'category_service_area_id' => 'nullable|exists:service_areas,id',
             ]);
 
             $validatedData['category_slug'] = Str::slug($validatedData['category_name']);

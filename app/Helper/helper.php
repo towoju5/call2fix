@@ -143,7 +143,7 @@ if (!function_exists('save_media')) {
             // Return the file URL
             $url = Storage::disk('spaces')->url($path);
 
-            return $url;
+            return str_replace("https://lon1.digitaloceanspaces.com/", "https://alphamead.lon1.digitaloceanspaces.com/", $url);
         }
 
         return false;

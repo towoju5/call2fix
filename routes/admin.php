@@ -23,7 +23,7 @@ Route::domain(env('ADMIN_URL'))->group(function () {
         return view('login');
     })->name('admin.login');
 
-    Route::post('admin/login', [AdminController::class, 'login'])->name('admin.login');
+    Route::post('admin/login/process', [AdminController::class, 'login'])->name('admin.login.submit');
 
     Route::middleware('auth:admin')->prefix('cp')->as('admin.')->group(function () {
         Route::get('dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');

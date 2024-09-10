@@ -4,10 +4,19 @@ namespace App\Http\Controllers;
 
 use App\Models\TransactionRecords;
 use App\Models\User;
+use App\Services\PaystackServices;
 use Illuminate\Http\Request;
 
 class WebhookLogController extends Controller
 {
+    protected $paystackSecretKey;
+    protected $paystackBaseUrl = 'https://api.paystack.co';
+
+    public function __construct()
+    {
+        $this->paystackSecretKey = getenv("PAYSTACK_SECRET_KEY");
+    }
+
     /**
      * Summary of paystackWebhook
      * @param Request $request
@@ -64,5 +73,35 @@ class WebhookLogController extends Controller
             \Log::channel('deposit-log')->error('Paystack Webhook Error: ' . $e->getMessage());
             return http_response_code($e->getCode());
         }
+    }
+
+
+    public function handleWebhook(Request $request)
+    {
+        $paystackSignature = $request->header('x-paystack-signature');
+        $computedSignature = hash_hmac('sha512', $request->getContent(), $this->paystackSecretKey);
+
+        if ($paystackSignature !== $computedSignature) {
+            return response()->json(['error' => 'Invalid signature'], 400);
+        }
+
+        $paystack = new PaystackServices();
+
+        $payload = $request->all();
+        $event = $payload['event'];
+
+        switch ($event) {
+            case 'charge.success':
+                $paystack->handleSuccessfulCharge($payload['data']);
+                break;
+            case 'transfer.success':
+                $paystack->handleSuccessfulTransfer($payload['data']);
+                break;
+            case 'dedicated_account.assign.success':
+                $paystack->handleVirtualAccountCreation($payload['data']);
+                break;
+        }
+
+        return response()->json(['message' => 'Webhook processed']);
     }
 }

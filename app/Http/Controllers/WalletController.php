@@ -53,7 +53,6 @@ class WalletController extends Controller
         }
     }
 
-
     public function processDeposit(Request $request, $walletType = 'ngn')
     {
         $user = $request->user();

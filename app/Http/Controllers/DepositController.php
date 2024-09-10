@@ -6,5 +6,8 @@ use Illuminate\Http\Request;
 
 class DepositController extends Controller
 {
-    //
+    public function index()
+    {
+        // get deposits
+    }
 }

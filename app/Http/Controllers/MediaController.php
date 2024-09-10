@@ -33,15 +33,18 @@ class MediaController extends Controller
 
             $path = save_media($file);
 
-            return get_success_response(['path' => $path]);
+            return get_success_response(['path' => $path], "File upploaded successfully");
         } catch (\Throwable $th) {
-            return get_error_response($th->getMessage(), ['error' => $th->getTraceAsString()], 400);
+            return get_error_response($th->getMessage(), ['error' => $th->getMessage()], 400);
         }
     }
 
     public function fetch($path)
     {
         try {
+            if (str_contains($path, 'https://alphamead.lon1.digitaloceanspaces.com/')) {
+                $path = str_replace("https://alphamead.lon1.digitaloceanspaces.com/", "", $path);
+            }
             // Check if the file exists in DigitalOcean Spaces
             if (!Storage::disk('spaces')->exists($path)) {
                 throw new \Exception('File not found');
@@ -62,6 +65,9 @@ class MediaController extends Controller
     public function destroy($path)
     {
         try {
+            if (str_contains($path, 'https://alphamead.lon1.digitaloceanspaces.com/')) {
+                $path = str_replace("https://alphamead.lon1.digitaloceanspaces.com/", "", $path);
+            }
             // Check if the file exists in DigitalOcean Spaces
             if (!Storage::disk('spaces')->exists($path)) {
                 throw new \Exception('File not found');

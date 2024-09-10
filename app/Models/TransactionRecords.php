@@ -8,5 +8,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class TransactionRecords extends BaseModel
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
+
+
+    protected $guarded = [];
 }
