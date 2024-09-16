@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Str;
+use Illuminate\Support\Str;
 
 class Order extends BaseModel
 {
@@ -22,7 +22,8 @@ class Order extends BaseModel
         'order_id'
     ];
 
-    public function leasableProducts() {
+    public function leasableProducts()
+    {
         return $this->where('is_leasable', true);
     }
 
@@ -36,6 +37,11 @@ class Order extends BaseModel
         return $this->belongsTo(User::class);
     }
 
+    public function seller()
+    {
+        return $this->belongsTo(User::class);
+    }
+
     public function item()
     {
         return $this->belongsTo(Item::class);
@@ -44,6 +50,10 @@ class Order extends BaseModel
     public function product()
     {
         return $this->belongsTo(Product::class);
+    }
+    public function products()
+    {
+        return $this->hasMany(Product::class);
     }
 
     public function payment()
@@ -56,8 +66,8 @@ class Order extends BaseModel
         parent::boot();
 
         static::creating(function ($model) {
-            if (!$model->order_id()) {
-                $model->order_id = (self::count() + 1);
+            if (!$model->order_id) {
+                $model->order_id = (string)(self::count() + 1);
             }
         });
     }

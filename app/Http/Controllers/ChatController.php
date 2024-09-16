@@ -7,6 +7,7 @@ use App\Models\Message;
 use App\Events\NewMessage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Validator;
 
 class ChatController extends Controller
 {
@@ -33,6 +34,11 @@ class ChatController extends Controller
     public function show(Chat $chat)
     {
         return get_success_response($chat->load('participants', 'messages.user'));
+    }
+
+    public function updateChat(Request $request, $messageId)
+    {
+        $validated = Validator::make($request->all(), [
     }
 
     public function sendMessage(Request $request, Chat $chat)

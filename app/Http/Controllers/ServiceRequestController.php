@@ -12,8 +12,8 @@ class ServiceRequestController extends Controller
 {
     public function index()
     {
-        $serviceRequests = ServiceRequest::where('user_id', auth()->id())->get();
-        return response()->json($serviceRequests);
+        $serviceRequests = ServiceRequest::whereUserId(auth()->id())->get();
+        return get_success_response($serviceRequests);
     }
 
     public function store(Request $request)

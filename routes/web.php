@@ -2,6 +2,7 @@
 
 use App\Events\MessageSent;
 use App\Http\Controllers\Admin\ServiceAreaController;
+use App\Http\Controllers\WebhookLogController;
 use App\Http\Middleware\JsonRequestMiddleware;
 use App\Models\Category;
 use App\Models\ChatMessage;
@@ -12,7 +13,7 @@ use Illuminate\Support\Facades\Route;
 use Spatie\Permission\Models\Role;
 
 
-Route::middleware('web')->domain(env('APP_URL'))->group(function () {
+Route::middleware(['auth:sanctum'])->domain(env('APP_URL'))->group(function () {
     Route::get('/', function () {
         return view('welcome');
     });
@@ -30,21 +31,6 @@ Route::fallback(function () {
     ], 404);
 });
 
-
-Route::get('p', function () {
-    Role::truncate();
-    $role = [
-        Role::create(['guard_name' => 'web', 'name' => 'artisan']),
-        Role::create(['guard_name' => 'web', 'name' => 'providers']),
-        Role::create(['guard_name' => 'web', 'name' => 'co-operate_accounts']),
-        Role::create(['guard_name' => 'web', 'name' => 'private_accounts']),
-        Role::create(['guard_name' => 'web', 'name' => 'affiliates']),
-        Role::create(['guard_name' => 'web', 'name' => 'suppliers']),
-    ];
-
-    return response()->json($role);
-});
-
 // Route::prefix('admin')->name('admin.')->group(function () {
 //     Route::resource('service_areas', ServiceAreaController::class);
 // });
@@ -54,7 +40,7 @@ Route::get('/chat/{friend}', function (User $friend) {
     return view('chat', [
         'friend' => $friend
     ]);
-})->middleware(['auth'])->name('chat');
+})->middleware(['auth:sanctum'])->name('chat');
 
 
 Route::post('/messages/{friend}', function (User $friend) {
@@ -67,7 +53,7 @@ Route::post('/messages/{friend}', function (User $friend) {
     broadcast(new MessageSent($message));
 
     return $message;
-});
+})->middleware(['auth:sanctum']);
 
 Route::get('/messages/{friend}', function (User $friend) {
     return ChatMessage::query()
@@ -82,4 +68,9 @@ Route::get('/messages/{friend}', function (User $friend) {
         ->with(['sender', 'receiver'])
         ->orderBy('id', 'asc')
         ->get();
-})->middleware(['auth']);
+})->middleware(['auth:sanctum']);
+
+
+Route::withoutMiddleware(VerifyCsrfToken::class)->group(function () {
+    Route::any('webhook/callback/paystack', [WebhookLogController::class, 'handleWebhook']);
+});

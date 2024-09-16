@@ -6,6 +6,7 @@ use App\Models\TransactionRecords;
 use App\Models\User;
 use App\Services\PaystackServices;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class WebhookLogController extends Controller
 {
@@ -14,94 +15,86 @@ class WebhookLogController extends Controller
 
     public function __construct()
     {
-        $this->paystackSecretKey = getenv("PAYSTACK_SECRET_KEY");
+        $this->paystackSecretKey = config('services.paystack.secret_key');
+    }
+
+    public function paystackWebhook(Request $request)
+    {
+        return $this->handleWebhook($request);
     }
 
     /**
-     * Summary of paystackWebhook
+     * Handle Paystack webhook
      * @param Request $request
-     * @return mixed
+     * @return \Illuminate\Http\JsonResponse
      */
-    public function paystackWebhook(Request $request)
+    public function handleWebhook(Request $request)
     {
         try {
-            $paystackSecretKey = config('services.paystack.secret_key');
-            $calculatedSignature = hash_hmac('sha512', $request->getContent(), $paystackSecretKey);
-
-            if ($calculatedSignature !== $request->header('x-paystack-signature')) {
-                throw new \Exception('Invalid webhook signature');
+            if (!$this->isValidRequest($request)) {
+                Log::warning('Invalid Paystack webhook request received');
+                return response()->json(['error' => 'Invalid request'], 400);
             }
 
-            $event = $request->event;
-            $data = $request->data;
-            http_response_code(200);
-            if ($event == 'charge.success') {
-                $user = User::where('email', $data['customer']['email'])->first();
-                if (!$user) {
-                    throw new \Exception('User not found');
-                    exit;
-                }
+            $input = $request->getContent();
+            $event = json_decode($input, true);
 
-                $deposit_exists = Deposit::where('deposit_reference', $data['reference'])->first();
+            // if (!$this->isValidSignature($input)) {
+            //     Log::warning('Invalid Paystack signature');
+            //     return response()->json(['error' => 'Invalid signature'], 400);
+            // }
 
-                if ($deposit_exists) {
-                    throw new \Exception('Transaction already processed');
-                    exit;
-                }
+            $paystack = new PaystackServices();
+            $eventType = $event['event'];
 
+            Log::info("Processing Paystack webhook event: {$eventType}");
 
-                $amount = $data['amount'] / 100;
-                credit_user($user->id, $amount);
-
-                // Update transaction status in your database
-                // You might want to create a Transaction model to handle this
-                TransactionRecords::updateOrCreate(
-                    ['deposit_reference' => $data['reference']],
-                    [
-                        'user_id' => $user->id,
-                        'amount' => $amount,
-                        'status' => 'success',
-                        'payment_method' => 'paystack',
-                        'deposit_method' => $data['channel'],
-                        'deposit_meta' => $data
-                    ]
-                );
+            switch ($eventType) {
+                case 'charge.success':
+                    $paystack->handleSuccessfulCharge($event['data']);
+                    break;
+                case 'transfer.success':
+                    $paystack->handleSuccessfulTransfer($event['data']);
+                    break;
+                case 'dedicated_account.assign.success':
+                    $paystack->handleVirtualAccountCreation($event['data']);
+                    break;
+                default:
+                    Log::info("Unhandled event type: {$eventType}");
+                    break;
             }
 
-            return http_response_code(200);
+            Log::info("Paystack webhook processed successfully: {$eventType}");
+            return response()->json(['message' => 'Webhook processed successfully']);
         } catch (\Exception $e) {
-            \Log::channel('deposit-log')->error('Paystack Webhook Error: ' . $e->getMessage());
-            return http_response_code($e->getCode());
+            Log::error('Paystack Webhook Error: ' . $e->getMessage(), [
+                'exception' => $e,
+                'trace' => $e->getTraceAsString()
+            ]);
+            return response()->json(['error' => 'Internal server error'], 500);
         }
     }
 
-
-    public function handleWebhook(Request $request)
+    /**
+     * Check if the request is valid
+     * @param Request $request
+     * @return bool
+     */
+    private function isValidRequest(Request $request): bool
     {
-        $paystackSignature = $request->header('x-paystack-signature');
-        $computedSignature = hash_hmac('sha512', $request->getContent(), $this->paystackSecretKey);
+        return $request->isMethod('post') && $request->hasHeader('X-Paystack-Signature');
+    }
 
-        if ($paystackSignature !== $computedSignature) {
-            return response()->json(['error' => 'Invalid signature'], 400);
-        }
+    /**
+     * Validate the Paystack signature
+     * @param string $input
+     * @return bool
+     */
+    private function isValidSignature(string $input): bool
+    {
+        $calculatedSignature = hash_hmac('sha512', $input, $this->paystackSecretKey);
+        $paystackSignature = request()->header('X-Paystack-Signature');
 
-        $paystack = new PaystackServices();
-
-        $payload = $request->all();
-        $event = $payload['event'];
-
-        switch ($event) {
-            case 'charge.success':
-                $paystack->handleSuccessfulCharge($payload['data']);
-                break;
-            case 'transfer.success':
-                $paystack->handleSuccessfulTransfer($payload['data']);
-                break;
-            case 'dedicated_account.assign.success':
-                $paystack->handleVirtualAccountCreation($payload['data']);
-                break;
-        }
-
-        return response()->json(['message' => 'Webhook processed']);
+        return hash_equals($calculatedSignature, $paystackSignature);
     }
 }

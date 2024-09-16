@@ -159,7 +159,7 @@ class PaystackServices
         return ['success' => false, 'message' => $response->json()['message'] ?? 'Transfer initiation failed'];
     }
 
-    private function handleSuccessfulCharge($data)
+    public function handleSuccessfulCharge($data)
     {
         $user = User::where('email', $data['customer']['email'])->first();
         if ($user) {
@@ -167,21 +167,21 @@ class PaystackServices
                 'user_id' => $user->id,
                 'wallet_id' => $user->wallet->id,
                 'transaction_reference' => $data['reference'],
-                'transaction_type' => 'deposit',
+                'transaction_type' => 'credit',
                 'transaction_slug' => 'paystack_charge',
-                'transaction_status' => 'completed',
+                'transaction_status' => 'successful',
                 'transaction_amount' => $data['amount'] / 100, // Convert from kobo to naira
             ]);
             $user->wallet->deposit($data['amount']);
         }
     }
 
-    private function handleSuccessfulTransfer($data)
+    public function handleSuccessfulTransfer($data)
     {
         // Handle successful transfers (payouts)
     }
 
-    private function handleVirtualAccountCreation($data)
+    public function handleVirtualAccountCreation($data)
     {
         $user = User::where('paystack_customer_id', $data['customer']['customer_code'])->first();
         if ($user) {

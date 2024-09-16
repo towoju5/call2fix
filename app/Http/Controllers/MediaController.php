@@ -11,34 +11,38 @@ class MediaController extends Controller
     {
         try {
             $request->validate([
-                'file' => 'required|file|max:10240', // 10MB max size
+                'files' => 'required|array',
+                'files.*' => 'file|max:10240', // 10MB max size
                 'type' => 'required|in:image,video,document',
             ]);
 
-            $file = $request->file('file');
             $type = $request->input('type');
+            $uploadedFiles = [];
 
-            // Additional validations based on file type
-            switch ($type) {
-                case 'image':
-                    $request->validate(['file' => 'image|mimes:jpeg,png,jpg,gif|max:2048']); // 2MB max for images
-                    break;
-                case 'video':
-                    $request->validate(['file' => 'mimetypes:video/avi,video/mpeg,video/quicktime,video/mp4|max:10240']); // 60MB max for videos
-                    break;
-                case 'document':
-                    $request->validate(['file' => 'mimes:pdf,doc,docx,txt|max:5120']); // 5MB max for documents
-                    break;
+            foreach ($request->file('files') as $file) {
+                // Additional validations based on file type
+                switch ($type) {
+                    case 'image':
+                        $this->validate($request, ['files.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048']); // 2MB max for images
+                        break;
+                    case 'video':
+                        $this->validate($request, ['files.*' => 'mimetypes:video/avi,video/mpeg,video/quicktime,video/mp4|max:10240']); // 60MB max for videos
+                        break;
+                    case 'document':
+                        $this->validate($request, ['files.*' => 'mimes:pdf,doc,docx,txt|max:5120']); // 5MB max for documents
+                        break;
+                }
+
+                $path = save_media($file);
+                $uploadedFiles[] = $path;
             }
 
-            $path = save_media($file);
-
-            return get_success_response(['path' => $path], "File upploaded successfully");
+            return get_success_response(['paths' => $uploadedFiles], "Files uploaded successfully");
         } catch (\Throwable $th) {
             return get_error_response($th->getMessage(), ['error' => $th->getMessage()], 400);
         }
     }
-
+    
     public function fetch($path)
     {
         try {

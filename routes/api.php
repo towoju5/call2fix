@@ -32,6 +32,7 @@ Route::middleware(['api'])->domain(env('API_URL'))->prefix('v1')->group(function
     // Protected routes 
     Route::middleware('auth:sanctum')->group(function () {
         Route::get('profile', [AuthController::class, 'profile']);
+        Route::get('user/{userId}', [AuthController::class, 'getUserById']);
         Route::post('logout', [AuthController::class, 'logout']);
         Route::put('update-profile', [AuthController::class, 'updateProfile']);
         Route::post('verify-email', [AuthController::class, 'verifyEmail']);
@@ -108,14 +109,6 @@ Route::middleware(['api'])->domain(env('API_URL'))->prefix('v1')->group(function
             Route::get('quotes', [ArtisanController::class, 'quotes']);
         });
 
-        Route::prefix('providers')->group(function () {
-            Route::get('artisans', [ServiceProviderController::class, 'artisans']);
-            Route::get('artisan/quotes', [ServiceProviderController::class, 'artisanQuotes']);
-            Route::get('requests', [ServiceProviderController::class, 'requests']);
-            Route::post('submit-quote', [ServiceProviderController::class, 'submitQuote']);
-            Route::get("artisan/{artisanId}", [ServiceProviderController::class, 'viewArtisan']);
-            Route::delete("artisan/{artisanId}", [ServiceProviderController::class, 'deleteArtisan']);
-        });
 
 
         Route::group(['middleware' => 'google2fa'], function () {

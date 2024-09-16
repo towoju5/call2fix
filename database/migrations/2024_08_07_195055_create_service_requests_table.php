@@ -11,6 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
+        Schema::dropIfExists('service_requests');
         Schema::create('service_requests', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->foreignId('user_id')->constrained();
@@ -20,7 +21,7 @@ return new class extends Migration
             $table->foreignId('service_id')->nullable()->constrained();
             $table->string('problem_title');
             $table->text('problem_description');
-            $table->time('inspection_time');
+            $table->string('inspection_time');
             $table->date('inspection_date');
             $table->json('problem_images');
             $table->boolean('use_featured_providers')->default(false);

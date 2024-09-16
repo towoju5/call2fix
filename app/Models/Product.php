@@ -53,6 +53,7 @@ class Product extends BaseModel
         return $this->hasMany(Order::class);
     }
 
+
     public function leasable()
     {
         $this->where('is_leasable', true)->where('seller_id', auth()->id());

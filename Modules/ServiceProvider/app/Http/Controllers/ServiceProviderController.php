@@ -16,11 +16,20 @@ use Validator;
 
 class ServiceProviderController extends Controller
 {
+    protected $radiusLimitKm;
+    public function __construct(){
+        $this->radiusLimitKm = get_settings_value('max_provider_radius') ?? 30;
+    }
+
     public function artisans()
     {
-        $artisans = User::whereHas('artisan', function ($query) {
-            $query->where('service_provider_id', auth()->id());
-        })->with('artisan_quotes')->latest()->get();
+        $artisans = User::role('artisan')->where('service_provider_id', auth()->id())
+            // ->whereHas('artisan', function ($query) {
+            //     $query->where('service_provider_id', auth()->id());
+            // })
+            ->with('artisan_quotes')
+            ->latest()
+            ->get();
         return get_success_response($artisans, "All artisans retrieved successfully");
     }
 
@@ -55,6 +64,11 @@ class ServiceProviderController extends Controller
         return get_success_response(null, "Artisan deleted successfully");
     }
 
+    /**
+     * Add new artisan
+     * @param \Illuminate\Http\Request $request
+     * @return mixed|\Illuminate\Http\JsonResponse
+     */
     public function store(Request $request)
     {
         try {
@@ -81,6 +95,7 @@ class ServiceProviderController extends Controller
             }
             $validateData = $validator->validate();
             $validateData['account_type'] = "artisan";
+            $validateData['service_provider_id'] = auth()->id();
 
             if (User::createOrFirst($validateData)) {
                 return get_success_response($validateData, "Artisan created successfully", 200);
@@ -191,8 +206,8 @@ class ServiceProviderController extends Controller
             $user = auth()->user();
 
             // Get the radius limit in kilometers from settings and convert to meters
-            $radiusLimitKm = get_settings_value('max_provider_radius') ?? 30;
-            $radiusLimitMeters = $radiusLimitKm * 1000; // Convert km to meters
+            
+            $radiusLimitMeters = $this->radiusLimitKm * 1000; // Convert km to meters
 
             // Get the closest featured service provider within the radius limit
             $featuredProvider = User::select(DB::raw('*, ST_Distance_Sphere(point(longitude, latitude), point(?, ?)) as distance'))

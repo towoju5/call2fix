@@ -10,9 +10,9 @@ class CreateOrdersTable extends Migration
     {
         Schema::create('orders', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->foreignId('user_id')->constrained();
-            $table->foreignId('seller_id')->constrained();
-            $table->foreignId('product_id')->constrained();
+            $table->string('user_id')->constrained();
+            $table->string('seller_id')->constrained('users');
+            $table->string('product_id')->constrained();
             $table->string('status');
             $table->string('order_id');
             $table->enum('delivery_type', ['home_delivery', 'pickup'])->default('home_delivery');

@@ -333,4 +333,17 @@ class AuthController extends Controller
             return get_error_response($th->getMessage(), ['error' => $th->getMessage()]);
         }
     }
+
+    public function getUserById($userId)
+    {
+        try {
+            $user = User::find($userId);
+            if (!$user) {
+                return get_error_response('User not found', ['error' => 'User not found']);
+            }
+            return get_success_response(['user' => $user]);
+        } catch (\Throwable $th) {
+            return get_error_response($th->getMessage(), ['error' => $th->getMessage()]);
+        }
+    }
 }
