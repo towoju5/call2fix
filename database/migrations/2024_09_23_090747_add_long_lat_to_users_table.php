@@ -11,8 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('service_categories', function (Blueprint $table) {
-            $table->uuid('id')->primary();
+        Schema::table('users', function (Blueprint $table) {
+            $table->string('longitude')->nullable()->after('is_banned');
+            $table->string('latitude')->nullable()->after('longitude');
         });
     }
 
@@ -21,6 +22,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        //
+        Schema::table('users', function (Blueprint $table) {
+            //
+        });
     }
 };

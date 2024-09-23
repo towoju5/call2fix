@@ -143,7 +143,7 @@ class AuthController extends Controller
                     Auth::logoutOtherDevices($request->password);
 
                     // Remove all old tokens
-                    $user->tokens()->delete();
+                    // $user->tokens()->delete();
 
                     // Update device_id
                     $user->update(['device_id' => $request->device_id]);
@@ -155,7 +155,7 @@ class AuthController extends Controller
 
             return get_error_response('Invalid credentials', ['message' => 'Invalid credentials']);
         } catch (\Exception $e) {
-            return get_error_response('An error occurred during authentication', ['message' => 'An error occurred during authentication']);
+            return get_error_response('An error occurred during authentication', ['error' => $e->getMessage()]);
         }
     }
 

@@ -16,6 +16,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ServiceRequestController;
 use Modules\Artisan\Http\Controllers\ArtisanController;
 use Modules\ServiceProvider\Http\Controllers\ServiceProviderController;
+use App\Http\Controllers\PlanController;
 
 
 Route::middleware(['api'])->domain(env('API_URL'))->prefix('v1')->group(function () {
@@ -124,7 +125,6 @@ Route::middleware(['api'])->domain(env('API_URL'))->prefix('v1')->group(function
             Route::delete('{mediaPath}', 'destroy');
         });
 
-
         Route::prefix('chats')->group(function () {
             Route::get('/', [ChatController::class, 'index']);
             Route::post('/', [ChatController::class, 'store']);
@@ -132,6 +132,12 @@ Route::middleware(['api'])->domain(env('API_URL'))->prefix('v1')->group(function
             Route::post('{chat}/messages', [ChatController::class, 'sendMessage']);
         });
 
+        Route::prefix('plans')->group(function () {
+            Route::get('/', [PlanController::class, 'index'])->name('plans.index');
+            Route::get('{planId}/features', [PlanController::class, 'planFeatures'])->name('plans.features');
+            Route::post('{planId}/subscribe', [PlanController::class, 'subscribe'])->name('plans.subscribe');
+            Route::post('{planId}/change', [PlanController::class, 'changePlan'])->name('plans.change');
+        });
     });
 
 });

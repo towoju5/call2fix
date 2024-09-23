@@ -32,6 +32,8 @@ abstract class Controller
      * @return void
      */
 
+     CONST SERVICE_PROVIDERS = 'providers';
+
     public function authorize($ability, $arguments = [])
     {
         if (!auth()->user()->can($ability)) {

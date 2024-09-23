@@ -206,7 +206,6 @@ class ServiceProviderController extends Controller
             $user = auth()->user();
 
             // Get the radius limit in kilometers from settings and convert to meters
-            
             $radiusLimitMeters = $this->radiusLimitKm * 1000; // Convert km to meters
 
             // Get the closest featured service provider within the radius limit

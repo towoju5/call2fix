@@ -13,9 +13,9 @@ return new class extends Migration
     {
         Schema::create('artisan_can_submit_quote', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->unsignedBigInteger('artisan_id');
-            $table->unsignedBigInteger('request_id');
-            $table->unsignedBigInteger('service_provider_id')->nullable();
+            $table->string('artisan_id');
+            $table->string('request_id');
+            $table->string('service_provider_id')->nullable();
             $table->timestamps();
             $table->softDeletes();
             $table->unique(['artisan_id','request_id'],'service_provider_id');

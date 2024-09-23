@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('item_requests', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->foreignId('request_category')->constrained('request_categories')->onDelete('cascade');
+            $table->string('request_category')->constrained('request_categories')->onDelete('cascade');
             $table->timestamps();
             $table->softDeletes();
         });

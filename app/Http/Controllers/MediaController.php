@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Storage;
+use Validator;
 
 class MediaController extends Controller
 {
@@ -12,7 +13,7 @@ class MediaController extends Controller
         try {
             $request->validate([
                 'files' => 'required|array',
-                'files.*' => 'file|max:10240', // 10MB max size
+                'files.*' => 'max:10240', // 10MB max size
                 'type' => 'required|in:image,video,document',
             ]);
 
@@ -21,22 +22,41 @@ class MediaController extends Controller
 
             foreach ($request->file('files') as $file) {
                 // Additional validations based on file type
-                switch ($type) {
-                    case 'image':
-                        $this->validate($request, ['files.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048']); // 2MB max for images
-                        break;
-                    case 'video':
-                        $this->validate($request, ['files.*' => 'mimetypes:video/avi,video/mpeg,video/quicktime,video/mp4|max:10240']); // 60MB max for videos
-                        break;
-                    case 'document':
-                        $this->validate($request, ['files.*' => 'mimes:pdf,doc,docx,txt|max:5120']); // 5MB max for documents
-                        break;
+                $validator = Validator::make(['file' => $file], [
+                    'file' => [
+                        'required',
+                        function ($attribute, $value, $fail) use ($type) {
+                            switch ($type) {
+                                case 'image':
+                                    if (!in_array($value->getMimeType(), ['image/jpeg', 'image/png', 'image/jpg', 'image/gif']) || $value->getSize() > 2048000) {
+                                        $fail('The file must be an image (jpeg, png, jpg, gif) and not exceed 2MB.');
+                                    }
+                                    break;
+                                case 'video':
+                                    if (!in_array($value->getMimeType(), ['video/avi', 'video/mpeg', 'video/quicktime', 'video/mp4']) || $value->getSize() > 10240000) {
+                                        $fail('The file must be a video (avi, mpeg, quicktime, mp4) and not exceed 10MB.');
+                                    }
+                                    break;
+                                case 'document':
+                                    if (!in_array($value->getClientOriginalExtension(), ['pdf', 'doc', 'docx', 'txt']) || $value->getSize() > 5120000) {
+                                        $fail('The file must be a document (pdf, doc, docx, txt) and not exceed 5MB.');
+                                    }
+                                    break;
+                            }
+                        },
+                    ],
+                ]);
+
+                if ($validator->fails()) {
+                    return response()->json(['error' => $validator->errors()->first()], 422);
                 }
 
                 $path = save_media($file);
+                if (empty($path)) {
+                    return response()->json(['error' => 'Failed to save file. Path cannot be empty.'], 500);
+                }
                 $uploadedFiles[] = $path;
             }
-
             return get_success_response(['paths' => $uploadedFiles], "Files uploaded successfully");
         } catch (\Throwable $th) {
             return get_error_response($th->getMessage(), ['error' => $th->getMessage()], 400);

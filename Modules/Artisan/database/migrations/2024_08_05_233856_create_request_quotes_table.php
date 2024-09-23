@@ -11,10 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
+        Schema::dropIfExists('request_quotes');
         Schema::create('request_quotes', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->foreignId('artisan_id')->constrained('users')->onDelete('cascade');
-            $table->foreignId("request_id")->constrained('service_requests')->onDelete('cascade');
+            $table->string('artisan_id')->constrained('users')->onDelete('cascade');
+            $table->string("request_id")->constrained('service_requests')->onDelete('cascade');
             $table->string("workmanship")->nullable();
             $table->json("items")->nullable();
             $table->string("sla_duration")->nullable();

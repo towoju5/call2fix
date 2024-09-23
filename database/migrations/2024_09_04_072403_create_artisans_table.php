@@ -11,13 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('artisans', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('artisan_id')->constrained('users');
-            $table->foreignId('service_provider_id')->constrained('users');
-            $table->timestamps();
-            $table->softDeletes();
-        });
+        // Schema::dropIfExists('artisans');
+        // Schema::create('artisans', function (Blueprint $table) {
+        //     $table->id();
+        //     $table->string('artisan_id')->constrained('users');
+        //     $table->string('service_provider_id')->constrained('users');
+        //     $table->timestamps();
+        //     $table->softDeletes();
+        // });
     }
 
     /**

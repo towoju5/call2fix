@@ -13,16 +13,16 @@ class CreateReferralsTable extends Migration
      */
     public function up()
     {
-        Schema::create('referrals', function (Blueprint $table) {
-            
+        Schema::dropIfExists('referrals');
+        Schema::create('referrals', function (Blueprint $table) {  
             $table->id();
-            $table->unsignedBigInteger('user_id');
+            $table->uuid('user_id');
             $table->string('referral_code')->unique();
-            $table->unsignedBigInteger('referrer_id')->nullable();
+            $table->uuid('referrer_id')->nullable();
             $table->timestamps();
 
-            $table->foreign('referrer_id')->references('id')->on('users')->onDelete('set null');
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
+            $table->foreign('referrer_id')->references('id')->on('users')->onDelete('set null');
 
             $table->index('referral_code');
             $table->index('user_id');

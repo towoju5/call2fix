@@ -11,9 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
+        Schema::dropIfExists('services');
         Schema::create('services', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->foreignId('category_id')->constrained()->cascadeOnDelete();
+            $table->string('category_id')->constrained()->cascadeOnDelete();
             $table->string('service_name');
             $table->string('service_slug');
             $table->json('metadata')->nullable();

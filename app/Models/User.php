@@ -16,12 +16,13 @@ use Illuminate\Support\Facades\Cookie;
 use Jijunair\LaravelReferral\Models\Referral;
 use Jijunair\LaravelReferral\Traits\Referrable;
 use Laravel\Sanctum\HasApiTokens;
+use Laravelcm\Subscriptions\Traits\HasPlanSubscriptions;
 use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
 {
     use HasFactory, HasApiTokens, Notifiable, HasWallet, HasWallets, HasWalletFloat, SoftDeletes, TwoFactorAuthenticatable;
-    use Referrable, HasRoles, SoftDeletes;
+    use Referrable, HasRoles, SoftDeletes, HasPlanSubscriptions;
 
     /**
      * The attributes that are mass assignable.
@@ -31,6 +32,7 @@ class User extends Authenticatable
     protected $fillable = [
         'first_name',
         'last_name',
+        'username',
         'email',
         'password',
         'device_id',

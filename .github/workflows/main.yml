@@ -31,14 +31,27 @@ jobs:
       - name: Migrate Database
         run: php artisan migrate --seed --force 
 
-      - name: 📂 Deploy via FTP
+      - name: Create ZIP file
+        run: zip -r release.zip . -x "**/.git*" "**/.git*/**" "**/node_modules/**"
+
+      - name: Upload ZIP file via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
           server: ${{ secrets.FTP_SERVER }}
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
           server-dir: /
-          exclude: |
-            **/.git*
-            **/.git*/**
-            **/node_modules/**
+          local-dir: ./
+          include: |
+            release.zip
+
+      - name: Unzip file on server
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          script: |
+            cd /path/to/your/server/directory
+            unzip -o release.zip
+            rm release.zip

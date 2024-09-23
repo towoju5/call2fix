@@ -11,10 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
+        Schema::dropIfExists('tasks');
         Schema::create('tasks', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('artisan_id')->constrained('users')->onDelete('cascade');
-            $table->foreignId('request_id')->constrained('requests')->onDelete('cascade');
+            $table->string('artisan_id')->constrained('users')->onDelete('cascade');
+            $table->string('request_id')->constrained('requests')->onDelete('cascade');
             $table->timestamps();
         });
     }

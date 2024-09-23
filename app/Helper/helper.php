@@ -135,15 +135,18 @@ if (!function_exists('save_media')) {
     {
         if (is_file($file)) {
             // Store the file in the 'spaces' disk
-            $path = Storage::disk('spaces')->put(auth()->id(),$file, [
+            $path = Storage::disk('spaces')->put(auth()->id(), $file, [
                 'visibility' => 'public',
                 'CacheControl' => 'max-age=31536000',
             ]);
 
-            // Return the file URL
-            $url = Storage::disk('spaces')->url($path);
+            // Check if the path is not empty
+            if (!empty($path)) {
+                // Return the file URL
+                $url = Storage::disk('spaces')->url($path);
 
-            return str_replace("https://lon1.digitaloceanspaces.com/", "https://alphamead.lon1.digitaloceanspaces.com/", $url);
+                return str_replace("https://lon1.digitaloceanspaces.com/", "https://alphamead.lon1.digitaloceanspaces.com/", $url);
+            }
         }
 
         return false;

@@ -14,7 +14,7 @@ use Modules\ServiceProvider\Http\Controllers\ServiceProviderController;
  *
  */
 
-Route::middleware(['auth:api'])->domain(env('API_URL'))->prefix('v1')->group(function () {
+Route::middleware(['auth:sanctum'])->domain(env('API_URL'))->prefix('v1')->group(function () {
     Route::apiResource('serviceprovider', ServiceProviderController::class)->names('serviceprovider');
 
     Route::get('provider/artisan', [ServiceProviderController::class, 'artisans'])->name('serviceprovider.artisans');

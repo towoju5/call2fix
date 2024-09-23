@@ -14,11 +14,11 @@ return new class extends Migration
         Schema::dropIfExists('service_requests');
         Schema::create('service_requests', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->foreignId('user_id')->constrained();
-            $table->foreignId('department_id')->nullable();
-            $table->foreignId('property_id')->constrained();
-            $table->foreignId('service_category_id')->nullable()->constrained();
-            $table->foreignId('service_id')->nullable()->constrained();
+            $table->string('user_id')->constrained();
+            $table->string('department_id')->nullable();
+            $table->string('property_id')->constrained();
+            $table->string('service_category_id')->nullable()->constrained();
+            $table->string('service_id')->nullable()->constrained();
             $table->string('problem_title');
             $table->text('problem_description');
             $table->string('inspection_time');

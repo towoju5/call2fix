@@ -11,9 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
+        Schema::dropIfExists('deposits');
         Schema::create('deposits', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->foreignId('user_id')->constrained('users');
+            $table->string('user_id')->constrained('users');
             $table->string('amount');
             $table->string('reference');
             $table->string('payment_method')->comment('bank_transfer or credit_card');

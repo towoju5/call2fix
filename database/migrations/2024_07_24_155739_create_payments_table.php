@@ -8,9 +8,10 @@ class CreatePaymentsTable extends Migration
 {
     public function up()
     {
+        Schema::dropIfExists('payments');
         Schema::create('payments', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->foreignId('order_id')->constrained();
+            $table->string('order_id')->constrained();
             $table->decimal('amount', 10, 2);
             $table->string('status');
             $table->string('payment_method');

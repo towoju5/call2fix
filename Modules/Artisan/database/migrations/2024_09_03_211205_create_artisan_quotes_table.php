@@ -13,9 +13,9 @@ return new class extends Migration
     {
         Schema::create('artisan_quotes', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('artisan_id')->constrained();
-            $table->foreignId('request_id')->constrained();
-            $table->foreignId('service_provider_id')->constrained();
+            $table->string('artisan_id')->constrained();
+            $table->string('request_id')->constrained();
+            $table->string('service_provider_id')->constrained();
             $table->text('workmanship');
             $table->json('items');
             $table->integer('sla_duration');

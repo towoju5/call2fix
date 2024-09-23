@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('bank_accounts', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->foreignId('user_id')->constrained();
+            $table->string('user_id')->constrained();
             $table->string('account_number');
             $table->string('account_name');
             $table->string('bank_name');

@@ -11,10 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
+        Schema::dropIfExists('department_user');
         Schema::create('department_user', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->foreignId('department_id')->constrained()->onDelete('cascade');
+            $table->string('user_id')->constrained()->onDelete('cascade');
+            $table->string('department_id')->constrained()->onDelete('cascade');
             $table->timestamps();
             $table->softDeletes();
         });
