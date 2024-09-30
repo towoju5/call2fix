@@ -27,6 +27,7 @@ return Application::configure(basePath: dirname(__DIR__))
             prepend: [
                 JsonRequestMiddleware::class,
                 'google2fa' => Google2faMiddleware::class,
+                // 'check.plan.limits' => \App\Http\Middleware\CheckPlanLimits::class,
             ]
         );
         $middleware->statefulApi();

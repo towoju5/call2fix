@@ -22,7 +22,7 @@ return new class extends Migration {
             $table->string('transaction_amount')->default(0);
             $table->timestamps();
             $table->softDeletes();
-            $table->foreign('id')->references('id')->on('users');
+            $table->foreign('user_id')->references('id')->on('users');
             // $table->foreign('wallet_id')->references('id')->on('wallets')->onDelete('cascade');
         });    
     }

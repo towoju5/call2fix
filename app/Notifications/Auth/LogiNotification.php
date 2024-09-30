@@ -6,6 +6,7 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
+use NotificationChannels\Fcm\FcmMessage;
 
 class LogiNotification extends Notification
 {
@@ -26,7 +27,7 @@ class LogiNotification extends Notification
      */
     public function via(object $notifiable): array
     {
-        return ['mail', 'database'];
+        return ['mail', 'database', 'fcm'];
     }
 
     /**
@@ -53,5 +54,14 @@ class LogiNotification extends Notification
             'title' => 'Successful Login',
             'message' => 'A successful login was detected on your account at ' . now()->toDateTimeString() . ' from IP: ' . request()->ip(),
         ];
+    }
+
+    public function toFcm($notifiable)
+    {
+        return FcmMessage::create()
+            ->setData(['action' => "Successful Login", 'data' => 'A successful login was detected on your account at ' . now()->toDateTimeString() . ' from IP: ' . request()->ip()])
+            ->setNotification(\NotificationChannels\Fcm\Resources\Notification::create()
+                ->title('Successful Login')
+                ->body('A successful login was detected on your account at ' . now()->toDateTimeString() . ' from IP: ' . request()->ip()));
     }
 }

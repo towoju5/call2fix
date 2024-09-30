@@ -63,19 +63,20 @@ class ServiceRequestController extends Controller
             $property = Property::findOrFail($propertyId);
             // Get the radius limit in kilometers from settings and convert to meters
             $radiusLimitMeters = $this->radiusLimitKm * 1000; // Convert km to meters
-            $providers = User::role(Controller::SERVICE_PROVIDERS)
-                ->where('account_type', 'providers')
-                ->select(DB::raw('*, ST_Distance_Sphere(point(longitude, latitude), point(?, ?)) as distance'))
-                ->whereRaw('ST_Distance_Sphere(point(longitude, latitude), point(?, ?)) <= ?', [
-                    $property->longitude,
-                    $property->latitude,
-                    $property->longitude,
-                    $property->latitude,
-                    $radiusLimitMeters
-                ])
+            $providers = User::where('account_type', 'providers')
+                // ->select(DB::raw('*, ST_Distance_Sphere(point(longitude, latitude), point(?, ?)) as distance'))
+                // ->whereRaw('ST_Distance_Sphere(point(longitude, latitude), point(?, ?)) <= ?', [
+                //     $property->longitude,
+                //     $property->latitude,
+                //     $property->longitude,
+                //     $property->latitude,
+                //     $radiusLimitMeters
+                // ])
+                ->whereNot('id', auth()->id())
                 ->inRandomOrder()
-                ->orderBy('distance')
-                ->get('id');
+                ->take(5)
+                // ->orderBy('distance')
+                ->pluck('id');
 
             if (empty($providers) || count($providers) < 1) {
                 return get_error_response('No provider found!', ['error' => 'No service provider found nearby']);

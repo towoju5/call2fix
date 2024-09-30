@@ -27,16 +27,35 @@ class WalletController extends Controller
 
             switch ($request->payment_mode) {
                 case 'bank_transfer':
-                    if (!$user->bank_account) {
+                    $bankAccount = $user->bankAccount()->first();
+                    if (!$bankAccount) {
                         // generate deposit account for customer
-                        $account_info = BankAccounts::generateAccount($user->id);
-                        return response()->json($account_info);
+                        $accountInfo = BankAccounts::generateAccount();
+
+                        if (isset($accountInfo['error'])) {
+                            return get_error_response($accountInfo['error'], 'Failed to create account');
+                        }
+                        // var_dump($accountInfo); exit;
+
+                        $user->bankAccount()->create([
+                            'account_number' => $accountInfo['account_number'],
+                            'account_name' => $accountInfo['account_name'],
+                            'bank_name' => $accountInfo['bank_name'],
+                            'bank_code' => $accountInfo['bank_code'],
+                            'provider_response' => $accountInfo['provider_response'] ?? null,
+                        ]);
+
+                        return get_success_response($accountInfo, 'Account info created and retrieved successfully');
                     }
 
-                    $account_info = $user->bank_account;
-
-                    if ($account_info) {
-                        return get_success_response($account_info, 'Account info retrieved successfully');
+                    if ($bankAccount) {
+                        $accountInfo = [
+                            'account_number' => $bankAccount->account_number,
+                            'account_name' => $bankAccount->account_name,
+                            'bank_name' => $bankAccount->bank_name,
+                            'bank_code' => $bankAccount->bank_code,
+                        ];
+                        return get_success_response($accountInfo, 'Account info retrieved successfully');
                     }
 
                     return get_error_response('Unable to retrieve bank account', ['error' => 'Unable to retrieve bank account']);
@@ -127,9 +146,9 @@ class WalletController extends Controller
             $arr = array_merge($validate->validated(), [
                 "action" => "Transfer between wallets",
             ]);
-            
+
             $fromWallet->transfer($toWallet, $amount, $arr);
-            return get_success_response($fromWallet->only(['name', 'slug','meta','balance', 'decimal_places']), 'Transfer successful');
+            return get_success_response($fromWallet->only(['name', 'slug', 'meta', 'balance', 'decimal_places']), 'Transfer successful');
         } catch (\Exception $e) {
             return get_error_response($e->getMessage());
         }
@@ -148,6 +167,34 @@ class WalletController extends Controller
     {
         $user = auth()->user();
         $wallets = $user->my_wallets();
+        if ($wallets->isEmpty()) {
+            // generate wallet for user
+            $mainWallet = $user->createWallet([
+                'name' => 'Naira Wallet',
+                'slug' => 'ngn',
+                'meta' => [
+                    'symbol' => '₦',
+                    'code' => 'NGN',
+                ],
+            ]);
+
+            if (!$mainWallet) {
+                return get_error_response('Failed to create main wallet');
+            }
+
+            $bonusWallet = $user->createWallet([
+                'name' => 'Bonus Wallet',
+                'slug' => 'bonus',
+                'meta' => [
+                    'symbol' => '₱',
+                    'code' => 'bonus',
+                ]
+            ]);
+
+            if (!$bonusWallet) {
+                return get_error_response('Failed to create bonus wallet');
+            }
+        }
         return get_success_response($wallets, 'All wallets retrieved successfully');
     }
 
@@ -157,7 +204,7 @@ class WalletController extends Controller
             $user = auth()->user();
             $walletName = $request->input('wallet_name');
             $walletSlug = $request->input('wallet_slug');
-            
+
             $wallet = $user->createWallet([
                 'name' => $walletName,
                 'slug' => $walletSlug,

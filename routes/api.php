@@ -6,6 +6,7 @@ use App\Http\Controllers\DepartmentController;
 use App\Http\Controllers\Google2faController;
 use App\Http\Controllers\MarketplaceController;
 use App\Http\Controllers\MediaController;
+use App\Http\Controllers\MerchantController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProductController;
@@ -138,6 +139,12 @@ Route::middleware(['api'])->domain(env('API_URL'))->prefix('v1')->group(function
             Route::post('{planId}/subscribe', [PlanController::class, 'subscribe'])->name('plans.subscribe');
             Route::post('{planId}/change', [PlanController::class, 'changePlan'])->name('plans.change');
         });
+
+        Route::group(['middleware' => ['auth', 'check.plan.limits']], function () {
+            Route::post('subscribe', [MerchantController::class, 'subscribe']);
+            Route::get('merchant-details', [MerchantController::class, 'getMerchantDetails']);
+        });
+        
     });
 
 });

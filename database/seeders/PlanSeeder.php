@@ -15,25 +15,31 @@ class PlanSeeder extends Seeder
      */
     public function run(): void
     {
-        $plan = Plan::create([
-            'name' => 'Pro',
-            'description' => 'Pro plan',
-            'price' => 9.99,
-            'signup_fee' => 1.99,
-            'invoice_period' => 1,
-            'invoice_interval' => Interval::MONTH->value,
-            'trial_period' => 15,
-            'trial_interval' => Interval::DAY->value,
-            'sort_order' => 1,
-            'currency' => 'USD',
+        Plan::create([
+            'name' => 'Basic Plan',
+            'price' => 5000,
+            'service_category_limit' => 3,
+            'artisan_limit' => 5,
+            'product_category_limit' => 3,
+            'product_limit' => 15,
         ]);
-        
-        // Create multiple plan features at once
-        $plan->features()->saveMany([
-            new Feature(['name' => 'priority_badge', 'value' => 50, 'sort_order' => 1]),
-            new Feature(['name' => 'featured_listing', 'value' => 10, 'sort_order' => 5]),
-            new Feature(['name' => 'listing_duration_days', 'value' => 30, 'sort_order' => 10, 'resettable_period' => 1, 'resettable_interval' => 'month']),
-            new Feature(['name' => 'listing_title_bold', 'value' => 'Y', 'sort_order' => 15])
+
+        Plan::create([
+            'name' => 'Standard Plan',
+            'price' => 10000,
+            'service_category_limit' => 6,
+            'artisan_limit' => 10,
+            'product_category_limit' => 6,
+            'product_limit' => 20,
+        ]);
+
+        Plan::create([
+            'name' => 'Premium Plan',
+            'price' => 25000,
+            'service_category_limit' => null, // Unlimited
+            'artisan_limit' => null, // Unlimited
+            'product_category_limit' => null, // Unlimited
+            'product_limit' => null, // Unlimited
         ]);
     }
 }

@@ -11,12 +11,12 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  *  quotes for a particular service request.
  * 
  */
-class SubmittedQuotes extends Model
+class SubmittedQuotes extends BaseModel
 {
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
-        "artisan_id",
+        "provider_id", // service provider ID
         "request_id",
         "workmanship",
         "items",
@@ -27,6 +27,10 @@ class SubmittedQuotes extends Model
         "service_vat",
         "attachments",
         "quote_status",
+    ];
+
+    protected $casts = [
+        "items" => "array"
     ];
 }
 

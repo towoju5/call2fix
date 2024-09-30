@@ -168,7 +168,7 @@ class AuthController extends Controller
     public function profile()
     {
         try {
-            $user = Auth::user()->with("properties", "orders", "transactions", "products", "bank_account", "wallets", "business_info")->first();
+            $user = Auth::user()->with("properties", "orders", "transactions", "products", "bank_account", "wallets", "business_info", "roles")->first();
             if (!$user) {
                 return get_error_response('User not found', ['message' => 'User not found']);
             }

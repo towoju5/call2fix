@@ -42,7 +42,9 @@ class User extends Authenticatable
         'password_reset_code',
         'password_reset_code_expires_at',
         'profile_picture',
-        'is_banned'
+        'is_banned',
+        'longitude',
+        'latitude'
     ];
 
     /**
@@ -131,7 +133,7 @@ class User extends Authenticatable
         return $this->hasMany(Artisans::class, 'artisans_id', 'id');
     }
 
-    public function bank_account()
+    public function bankAccount()
     {
         return $this->hasOne(BankAccounts::class, 'user_id');
     }

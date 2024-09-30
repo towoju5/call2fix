@@ -23,7 +23,8 @@ class OrderController extends Controller
                 "quantity" => "required|integer|min:1",
                 "additional_info" => "sometimes|string",
                 "product_id" => "required|exists:products,id",
-                // "debit_wallet"
+                "longitude" => "required_if:delivery_type,home_delivery|string",
+                "latitude" => "required_if:delivery_type,home_delivery|string",
             ]);
 
             if ($validator->fails()) {
@@ -42,8 +43,8 @@ class OrderController extends Controller
 
             // retrieve user wallet & balance
             $wallet = $user->getWallet("ngn");
-            $wallet->deposit(40000*100);
-            if(!$wallet) {
+
+            if (!$wallet) {
                 return get_error_response("User wallet not found", [], 404);
             }
 
@@ -55,7 +56,7 @@ class OrderController extends Controller
                 return get_success_response($order, "Order placed successfully", 201);
             }
 
-            return get_error_response("Order placement failed!", ["error" => "Order placement failed"] , 500);
+            return get_error_response("Order placement failed!", ["error" => "Order placement failed"], 500);
         } catch (\Exception $e) {
             return get_error_response($e->getMessage(), ["error" => $e->getMessage()], 500);
         }

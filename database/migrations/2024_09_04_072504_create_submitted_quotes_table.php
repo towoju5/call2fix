@@ -11,10 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::dropIfExists('submitted_quotes');
         Schema::create('submitted_quotes', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->string('artisan_id')->constrained('users')->onDelete('cascade');
+            $table->string('provider_id')->constrained('users')->onDelete('cascade');
             $table->string("request_id")->constrained('service_requests')->onDelete('cascade');
             $table->string("workmanship")->nullable();
             $table->json("items")->nullable();

@@ -6,11 +6,19 @@ use App\Http\Controllers\WebhookLogController;
 use App\Http\Middleware\JsonRequestMiddleware;
 use App\Models\Category;
 use App\Models\ChatMessage;
+use App\Models\Order;
 use App\Models\Property;
 use App\Models\User;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Support\Facades\Route;
 use Spatie\Permission\Models\Role;
+
+
+
+Route::get('g', function() {
+    $order = Order::with('customer', 'seller', 'product')->first();
+    return response()->json($order);
+});
 
 
 Route::middleware(['auth:sanctum'])->domain(env('APP_URL'))->group(function () {

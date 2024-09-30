@@ -23,7 +23,9 @@ class Product extends BaseModel
         'is_active',
         'is_leasable',
         'product_currency',
-        'product_location'
+        'product_location',
+        'product_longitude',
+        'product_latitude'
     ];
 
     protected $casts = [

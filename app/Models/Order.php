@@ -19,7 +19,8 @@ class Order extends BaseModel
         'total_price',
         'estimated_delivery',
         'is_leasable',
-        'order_id'
+        'order_id',
+        'kwik_order_id'
     ];
 
     public function leasableProducts()

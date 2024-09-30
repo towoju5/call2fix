@@ -33,7 +33,7 @@ class PaystackServices
             ]);
 
             if ($response->successful()) {
-                $customerData = $response->json()['data'];
+                return $customerData = $response->json()['data'];
                 $user->update(['paystack_customer_id' => $customerData['customer_code']]);
             } else {
                 throw new \Exception('Failed to create Paystack customer');
@@ -41,10 +41,12 @@ class PaystackServices
         }
     }
 
-    public function generateVirtualAccount(Request $request)
+    public function generateVirtualAccount()
     {
-        $user = User::findOrFail($request->user_id);
-        $this->ensureCustomerId($user);
+        $user = User::findOrFail(auth()->id());
+        if(!$this->ensureCustomerId($user)) {
+            throw new \Exception('Failed to create Paystack customer');
+        }
 
         $response = Http::withHeaders([
             'Authorization' => 'Bearer ' . $this->paystackSecretKey,
@@ -69,10 +71,10 @@ class PaystackServices
                 ]
             );
 
-            return response()->json(['message' => 'Virtual account generated successfully', 'data' => $accountData]);
+            return $accountData;
         }
 
-        return response()->json(['error' => 'Failed to generate virtual account'], 500);
+        return ['error' => $response->reason()];
     }
 
     public function initiatePayment($amount)

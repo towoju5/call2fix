@@ -6,6 +6,7 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
+use NotificationChannels\Fcm\FcmMessage;
 
 class RegisteredNotification extends Notification
 {
@@ -55,5 +56,14 @@ class RegisteredNotification extends Notification
             'title' => 'Welcome to ' . config('app.name'),
             'message' => 'Thank you for registering. We are excited to have you on board!',
         ];
+    }
+
+    public function toFcm($notifiable)
+    {
+        return FcmMessage::create()
+            ->setData(['action' => 'Welcome to ' . config('app.name'), 'data' => 'Thank you for registering. We are excited to have you on board!'])
+            ->setNotification(\NotificationChannels\Fcm\Resources\Notification::create()
+                ->title('Welcome to ' . config('app.name'))
+                ->body('Thank you for registering. We are excited to have you on board!'));
     }
 }

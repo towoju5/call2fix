@@ -25,6 +25,7 @@ Route::middleware(['auth:sanctum'])->domain(env('API_URL'))->prefix('v1')->group
 
     Route::prefix('providers')->group(function () {
         Route::get('artisans', [ServiceProviderController::class, 'artisans']);
+        Route::get('quotes', [ServiceProviderController::class, 'getQuotes']);
         Route::get('artisan/quotes', [ServiceProviderController::class, 'artisanQuotes']);
         Route::get('requests', [ServiceProviderController::class, 'requests']);
         Route::post('submit-quote', [ServiceProviderController::class, 'submitQuote']);

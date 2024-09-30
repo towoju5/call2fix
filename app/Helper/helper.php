@@ -120,13 +120,13 @@ if (!function_exists('fcm')) {
 
 
 if (!function_exists('get_settings_value')) {
-    function get_settings_value($key)
+    function get_settings_value($key, $default = null)
     {
         $setting = Settings::where('key', $key)->first();
         if ($setting) {
             return $setting->value;
         }
-        return null;
+        return $default;
     }
 }
 
