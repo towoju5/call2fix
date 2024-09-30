@@ -111,7 +111,7 @@ class KwikDeliveryController extends Controller
             'auto_assignment' => true,
             'pickup_custom_field_template' => 'default_pickup_template',
             'user_id' => 1,
-            'payment_method' => 32, // Card payment
+            'payment_method' => 32,
             'form_id' => 2,
             'is_schedule_task' => 0,
             'pickups' => [

@@ -79,8 +79,8 @@ class ServiceProviderController extends Controller
                 "last_name" => "required|string|max:255",
                 "email" => "required|email|unique:users,email",
                 "phone" => "required|string|max:20",
-                "trade" => "required|string|max:255",
-                "location" => "required|string|max:255",
+                "trade" => "required|string|max:255", // category the artisan is registered under - max.
+                "location" => "required|string|max:255", // locations service provider offers services.
                 "id_type" => "required|string|in:national_id,drivers_license,passport,voters_card",
                 "id_image" => "required|image|mimes:jpeg,png,jpg|max:2048",
                 "trade_certificate" => "required|file|mimes:pdf,jpeg,png,jpg|max:2048",

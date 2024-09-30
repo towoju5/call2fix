@@ -90,6 +90,7 @@ class WalletController extends Controller
     {
         $validate = Validator::make($request->all(), [
             'amount' => 'required|min:100|numeric',
+            'bank_id' => 'required|exists:bank_accounts,id'
         ]);
 
         if ($validate->fails()) {
@@ -99,9 +100,18 @@ class WalletController extends Controller
         $user = $request->user();
         $wallet = $user->getWallet($walletType);
         $amount = $request->amount;
+        $withdrawal_fee = get_settings_value('withdrawal_fee', 0);
+
+        if ($wallet->balance < $amount + $withdrawal_fee()) {
+            return get_error_response('Insufficient funds', ['error' => 'Insufficient funds']);
+        }
 
         try {
             $transaction = $wallet->withdraw($amount, $request->toArray());
+            $transaction = $wallet->withdraw($amount, ['message', "Withdrawal fee for {$transaction->id}"]);
+
+            // send request to paystack for withdrawal
+            //
             return get_success_response($transaction, 'Withdrawal successful');
         } catch (\Exception $e) {
             return get_error_response($e->getMessage());
@@ -216,4 +226,36 @@ class WalletController extends Controller
         }
     }
 
+    public function addBankAccount(Request $request)
+    {
+        try {
+            $validate = Validator::make($request->all(), [
+                "account_name" => "required|string",
+                "bank_name" => "required|string",
+                "account_number" => "required|string",
+                "bank_code" => "required|string",
+            ]);
+
+            $validate = $validate->validated();
+
+            $validate['user_id'] = auth()->id();
+            $validate['account_type'] = 'withdrawal';
+
+            if ($account = BankAccounts::create($validate)) {
+                return get_success_response($account, "Bank account processed successfully", 200);
+            }
+        } catch (\Throwable $th) {
+            return get_error_response($th->getMessage(), ['error' => $th->getMessage()]);
+        }
+    }
+
+    public function getBankAccount()
+    {
+        try {
+            $accounts = BankAccounts::where(['user_id' => auth()->id(), 'account_type' => 'withdrawal'])->get();
+            return get_success_response($accounts, "Bank accounts retrieved successfully", 200);
+        } catch (\Throwable $th) {
+            return get_error_response($th->getMessage(), ['error' => $th->getMessage()]);
+        }
+    }
 }

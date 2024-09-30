@@ -346,4 +346,22 @@ class AuthController extends Controller
             return get_error_response($th->getMessage(), ['error' => $th->getMessage()]);
         }
     }
+
+    public function deleteAccount(Request $request)
+    {
+        try {
+            $user = $request->user();
+            if (!$user) {
+                return get_error_response('User not found', ['error' => 'User not found']);
+            }
+            if ($user->delete()) {
+                Auth::logout();
+                return get_success_response([], "Account deleted successfully");
+            } else {
+                return get_error_response('Failed to delete account', ['error' => 'Failed to delete account']);
+            }
+        } catch (\Throwable $th) {
+            return get_error_response($th->getMessage(), ['error' => $th->getMessage()]);
+        }
+    }
 }

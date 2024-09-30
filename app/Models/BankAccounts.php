@@ -24,6 +24,7 @@ class BankAccounts extends Model
         'bank_code',
         'provider_response',
         'provider_name',
+        'account_type' // deposit or withdrawal
     ];
 
     protected $hidden = [

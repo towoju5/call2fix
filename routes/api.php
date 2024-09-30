@@ -11,6 +11,8 @@ use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\PropertyController;
+use App\Http\Controllers\RoleController;
+use App\Http\Controllers\SubAccountsController;
 use App\Http\Controllers\WalletController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
@@ -36,10 +38,18 @@ Route::middleware(['api'])->domain(env('API_URL'))->prefix('v1')->group(function
         Route::get('profile', [AuthController::class, 'profile']);
         Route::get('user/{userId}', [AuthController::class, 'getUserById']);
         Route::post('logout', [AuthController::class, 'logout']);
+        Route::delete('delete-account', [AuthController::class, 'deleteAccount']);
         Route::put('update-profile', [AuthController::class, 'updateProfile']);
         Route::post('verify-email', [AuthController::class, 'verifyEmail']);
         Route::put('update-password', [AuthController::class, 'updatePassword']);
         Route::post('business-profile', [AuthController::class, 'businessProfile']);
+
+
+        Route::prefix('account-type')->group(function () {
+            Route::get('/', [RoleController::class, 'getUserRoles']);
+            Route::post('add', [RoleController::class, 'addRoleToUser']);
+            Route::post('remove', [RoleController::class, 'removeRoleFromUser']);
+        });
 
         // wallet routes
         Route::prefix('wallets')->group(function () {
@@ -50,6 +60,11 @@ Route::middleware(['api'])->domain(env('API_URL'))->prefix('v1')->group(function
             Route::post('transfer', [WalletController::class, 'transfer']);
             Route::post('new', [WalletController::class, 'addNewWallet']);
             Route::get('{walletType}/transactions', [WalletController::class, 'transactions']);
+        });
+
+        Route::prefix('banks')->group(function () {
+            Route::get('accounts', [WalletController::class, 'getBankAccount']);
+            Route::post('accounts', [WalletController::class, 'addBankAccount']);
         });
 
 
@@ -66,16 +81,6 @@ Route::middleware(['api'])->domain(env('API_URL'))->prefix('v1')->group(function
             Route::get('show/{categoryId}', 'show');
             Route::get('service/{categoryId}', 'service');
         });
-
-        // Route::prefix('marketplace')->group(function () {
-        //     Route::get('browse', [MarketplaceController::class, 'browseItems']);
-        //     Route::get('product/{productId}', [MarketplaceController::class, 'ItemDetails']);
-        //     Route::post('purchase', [MarketplaceController::class, 'purchaseItem']);
-        //     Route::post('request', [MarketplaceController::class, 'requestItem']);
-        //     Route::post('pay', [MarketplaceController::class, 'payForProduct']);
-        //     Route::get('track', [MarketplaceController::class, 'trackOrder']);
-        //     Route::post('sell', [MarketplaceController::class, 'sellItem']);
-        // });
 
         Route::prefix('services')->controller(ServiceRequestController::class)->group(function () {
             Route::get('/', 'index');
@@ -144,7 +149,19 @@ Route::middleware(['api'])->domain(env('API_URL'))->prefix('v1')->group(function
             Route::post('subscribe', [MerchantController::class, 'subscribe']);
             Route::get('merchant-details', [MerchantController::class, 'getMerchantDetails']);
         });
-        
+
+
+        Route::prefix('accounts')->group(function () {
+            Route::get('sub-accounts', [SubAccountsController::class, 'getSubAccounts'])->name('sub-accounts.index');
+            Route::post('sub-accounts/add', [SubAccountsController::class, 'addSubAccount'])->name('sub-accounts.store');
+            Route::post('sub-accounts/login/{subAccountId}', [SubAccountsController::class, 'loginSubAccount'])->name('sub-accounts.login');
+            Route::get('sub-accounts/{subAccountId}', [SubAccountsController::class, 'fetchSubAccount'])->name('sub-accounts.show');
+            Route::delete('sub-accounts/{subAccountId}', [SubAccountsController::class, 'deleteSubAccount'])->name('sub-accounts.destroy');
+            Route::post('sub-accounts/{subAccountId}/fund', [SubAccountsController::class, 'fundSubAccount'])->name('sub-accounts.fund');
+            Route::post('sub-accounts/{subAccountId}/transfer', [SubAccountsController::class, 'transferFromSubAccount'])->name('sub-accounts.transfer');
+            Route::get('sub-accounts/{subAccountId}/balance', [SubAccountsController::class, 'getSubAccountBalance'])->name('sub-accounts.balance');
+        });
+
     });
 
 });

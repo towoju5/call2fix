@@ -2,5 +2,6 @@
     "MarketPlace": true,
     "ServiceProvider": true,
     "Suppliers": true,
-    "Artisan": true
+    "Artisan": true,
+    "Referrer": true
 }

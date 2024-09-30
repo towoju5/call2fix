@@ -29,23 +29,25 @@ class User extends Authenticatable
      *
      * @var array<int, string>
      */
-    protected $fillable = [
-        'first_name',
-        'last_name',
-        'username',
-        'email',
-        'password',
-        'device_id',
-        'account_type',
-        'phone',
-        'is_social',
-        'password_reset_code',
-        'password_reset_code_expires_at',
-        'profile_picture',
-        'is_banned',
-        'longitude',
-        'latitude'
-    ];
+    protected $guarded = [];
+    
+    // protected $fillable = [
+    //     'first_name',
+    //     'last_name',
+    //     'username',
+    //     'email',
+    //     'password',
+    //     'device_id',
+    //     'account_type',
+    //     'phone',
+    //     'is_social',
+    //     'password_reset_code',
+    //     'password_reset_code_expires_at',
+    //     'profile_picture',
+    //     'is_banned',
+    //     'longitude',
+    //     'latitude'
+    // ];
 
     /**
      * The attributes that should be hidden for serialization.
@@ -57,7 +59,8 @@ class User extends Authenticatable
         'password',
         'remember_token',
         'updated_at',
-        'created_at'
+        'created_at',
+        // 'deleted_at'
     ];
 
     /**

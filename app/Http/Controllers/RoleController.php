@@ -15,9 +15,26 @@ class RoleController extends Controller
         ]);
 
         $user = auth()->user();
-        $user->assignRole($request->role);
+        
+        try {
+            $user->assignRole($request->role);
+            $user->load('roles');
+            
+            return get_success_response($user->getRoleNames(), 'Role added successfully');
+        } catch (\Exception $e) {
+            return get_error_response("Unable to enable/activate requested service: " . $e->getMessage());
+        }
+    }
 
-        return redirect()->back()->with('success', 'Role added successfully');
+    public function getUserRoles()
+    {
+        
+        try {
+            $user = auth()->user();
+            return get_success_response($user->getRoleNames(), 'Roles fetched successfully');
+        } catch (\Exception $e) {
+            return get_error_response("Unable to retrieve requested service: " . $e->getMessage());
+        }
     }
 
     public function removeRoleFromUser(Request $request)
