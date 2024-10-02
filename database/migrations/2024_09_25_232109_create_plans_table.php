@@ -11,16 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // Schema::create('plans', function (Blueprint $table) {
-        //     $table->id();
-        //     $table->string('name');
-        //     $table->integer('price');
-        //     $table->integer('service_category_limit')->nullable(); // null for unlimited
-        //     $table->integer('artisan_limit')->nullable();
-        //     $table->integer('product_category_limit')->nullable();
-        //     $table->integer('product_limit')->nullable();
-        //     $table->timestamps();
-        // });
+        Schema::table('plans', function (Blueprint $table) {
+            $table->integer('service_category_limit')->nullable(); // null for unlimited
+            $table->integer('artisan_limit')->nullable();
+            $table->integer('product_category_limit')->nullable();
+            $table->integer('product_limit')->nullable();
+        });
     }
 
     /**

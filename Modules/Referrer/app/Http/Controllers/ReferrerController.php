@@ -9,5 +9,9 @@ use Illuminate\Http\Response;
 
 class ReferrerController extends Controller
 {
+    public function earningHistory()
+    {
+        // get the list of there completed tasks and how much they earn
+    }
     // retrieve lists of all referred services providers
 }

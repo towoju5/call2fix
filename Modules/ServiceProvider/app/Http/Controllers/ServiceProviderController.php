@@ -257,44 +257,4 @@ class ServiceProviderController extends Controller
             return get_error_response($th->getMessage(), ["error" => $th->getMessage()]);
         }
     }
-
-    public function acceptQuote($quoteId, $requestId)
-    {
-        try {
-            $requests = SubmittedQuotes::whereRequestId($requestId)->get();
-            if ($requests->isEmpty()) {
-                return get_error_response("Quote not found", ["error" => "Quote not found!"], 404);
-            }
-
-            $requests->each(function ($request) use ($quoteId) {
-                $request->status = ($request->id == $quoteId) ? "accepted" : "rejected";
-            });
-
-            $acceptedRequest = $requests->firstWhere('id', $quoteId);
-            if ($acceptedRequest && $acceptedRequest->save()) {
-                return get_success_response($acceptedRequest, "Request approved successfully");
-            }
-
-            return get_error_response("Failed to save", ["error" => "Failed to save the accepted quote"], 500);
-        } catch (\Throwable $th) {
-            return get_error_response($th->getMessage(), ["error" => $th->getMessage()]);
-        }
-    }
-
-    public function rejectQuote($quoteId, $requestId)
-    {
-        try {
-            $request = SubmittedQuotes::whereRequestId($requestId)->whereId($quoteId)->first();
-            if (!$request->exists()) {
-                return get_error_response("Quote not found", ["error" => "Quote not found!"], 404);
-            }
-
-            $request->status = "rejected";
-            if ($request->save()) {
-                return get_success_response($request, "Request rejected successfully");
-            }
-        } catch (\Throwable $th) {
-            return get_error_response($th->getMessage(), ["error" => $th->getMessage()]);
-        }
-    }
 }

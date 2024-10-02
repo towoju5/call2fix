@@ -3,6 +3,7 @@
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ChatController;
 use App\Http\Controllers\DepartmentController;
+use App\Http\Controllers\FaqsController;
 use App\Http\Controllers\Google2faController;
 use App\Http\Controllers\MarketplaceController;
 use App\Http\Controllers\MediaController;
@@ -64,11 +65,14 @@ Route::middleware(['api'])->domain(env('API_URL'))->prefix('v1')->group(function
 
         Route::prefix('banks')->group(function () {
             Route::get('accounts', [WalletController::class, 'getBankAccount']);
+            Route::get('accounts/{accountId}', [WalletController::class, 'getSingleBankAccount']);
             Route::post('accounts', [WalletController::class, 'addBankAccount']);
+            Route::delete('accounts/{accountId}', [WalletController::class, 'deleteBankAccount']);
         });
 
 
         Route::apiResource('products', ProductController::class);
+        Route::get('my-products', [ProductController::class, 'myProducts']);
         Route::apiResource('property', PropertyController::class);
         Route::resource('categories', CategoryController::class);
         Route::resource('departments', DepartmentController::class)->only(['store']);
@@ -87,6 +91,10 @@ Route::middleware(['api'])->domain(env('API_URL'))->prefix('v1')->group(function
             Route::post('request', 'store');
             Route::put('/update/{serviceRequestId}', 'update');
             Route::get('providers', 'serviceProviders');
+            Route::post('accept/{quoteId}/{requestId}', 'acceptQuote');
+            Route::post('reject/{quoteId}/{requestId}', 'rejectQuote');
+            Route::post('update-status/{requestId}', 'updateStatus');
+            Route::post('update/{quoteId}/{requestId}/request', 'updateStatus'); // Request updates
         });
 
         Route::prefix('notifications')->group(function () {
@@ -103,9 +111,10 @@ Route::middleware(['api'])->domain(env('API_URL'))->prefix('v1')->group(function
         Route::prefix('orders')->group(function () {
             Route::post('/new', [OrderController::class, 'place_order']);
             Route::get('/', [OrderController::class, 'getUserOrders']);
-            Route::get('{id}', [OrderController::class, 'getOrderStatus']);
             Route::get('status/{status}', [OrderController::class, 'getOrdersByStatus']);
             Route::get('sorted', [OrderController::class, 'getSortedOrders']);
+            Route::post('track', [OrderController::class, 'trackOrder']);
+            Route::get('{id}', [OrderController::class, 'getOrderStatus']);
         });
 
         Route::prefix('artisans')->group(function () {
@@ -163,5 +172,8 @@ Route::middleware(['api'])->domain(env('API_URL'))->prefix('v1')->group(function
         });
 
     });
+
+    Route::apiResource('faqs', FaqsController::class);
+    Route::post('support/email', [FaqsController::class, 'sendSupportEmail']);
 
 });

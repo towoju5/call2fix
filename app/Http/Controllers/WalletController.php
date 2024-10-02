@@ -248,12 +248,33 @@ class WalletController extends Controller
             return get_error_response($th->getMessage(), ['error' => $th->getMessage()]);
         }
     }
-
     public function getBankAccount()
     {
         try {
             $accounts = BankAccounts::where(['user_id' => auth()->id(), 'account_type' => 'withdrawal'])->get();
             return get_success_response($accounts, "Bank accounts retrieved successfully", 200);
+        } catch (\Throwable $th) {
+            return get_error_response($th->getMessage(), ['error' => $th->getMessage()]);
+        }
+    }
+
+    public function getSingleBankAccount($id)
+    {
+        try {
+            $account = BankAccounts::where(['id' => $id, 'user_id' => auth()->id(), 'account_type' => 'withdrawal'])->firstOrFail();
+            return get_success_response($account, "Bank account retrieved successfully", 200);
+        } catch (\Throwable $th) {
+            return get_error_response($th->getMessage(), ['error' => $th->getMessage()]);
+        }
+    }
+
+    public function deleteBankAccount($id)
+    {
+        try {
+            $account = BankAccounts::where(['id' => $id, 'user_id' => auth()->id(), 'account_type' => 'withdrawal'])->firstOrFail();
+            if ($account->delete()) {
+                return get_success_response(null, "Bank account deleted successfully", 200);
+            }
         } catch (\Throwable $th) {
             return get_error_response($th->getMessage(), ['error' => $th->getMessage()]);
         }

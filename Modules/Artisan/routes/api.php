@@ -14,7 +14,7 @@ use Modules\Artisan\Http\Controllers\ArtisanController;
  *
 */
 
-Route::middleware(['auth:sanctum'])->prefix('v1')->group(function () {
+Route::middleware(['auth:sanctum'])->domain(env('API_URL'))->prefix('v1')->group(function () {
     Route::apiResource('artisan', ArtisanController::class)->names('artisan');
 
 

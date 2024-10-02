@@ -38,7 +38,7 @@ class ChatController extends Controller
 
     public function updateChat(Request $request, $messageId)
     {
-        $validated = Validator::make($request->all(), [
+        // $validated = Validator::make($request->all(), [
     }
 
     public function sendMessage(Request $request, Chat $chat)

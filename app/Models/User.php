@@ -222,4 +222,19 @@ class User extends Authenticatable
         $this->current_department_id = null;
         $this->save();
     }
+
+    public function routeNotificationForMail()
+    {
+        return $this->email;
+    }
+
+    public function routeNotificationForNexmo()
+    {
+        return $this->phone;
+    }
+
+    public function preferredChannel()
+    {
+        return filter_var($this->email, FILTER_VALIDATE_EMAIL) ? ['mail'] : ['nexmo'];
+    }
 }

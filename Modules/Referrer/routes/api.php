@@ -14,6 +14,6 @@ use Modules\Referrer\Http\Controllers\ReferrerController;
  *
 */
 
-Route::middleware(['auth:sanctum'])->prefix('v1')->group(function () {
+Route::middleware(['auth:sanctum'])->domain(env('API_URL'))->prefix('v1')->group(function () {
     Route::apiResource('referrer', ReferrerController::class)->names('referrer');
 });

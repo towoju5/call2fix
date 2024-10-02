@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Property;
 use App\Models\ServiceRequest;
+use App\Models\SubmittedQuotes;
 use App\Models\User;
 use DB;
 use Illuminate\Http\Request;
@@ -166,7 +167,7 @@ class ServiceRequestController extends Controller
         }
     }
 
-    public function updateStatus(Request $request, ServiceRequest $serviceRequest)
+    public function updateStatus(Request $request, $requestId)
     {
         try {
             $validStatuses = [
@@ -186,6 +187,12 @@ class ServiceRequestController extends Controller
                 "Rejected"
             ];
 
+            $serviceRequest = ServiceRequest::where("user_id", auth()->id())->whereId($requestId)->first();
+
+            if(!$serviceRequest) {
+                return get_error_response("Service request not found", ["error" => "Service request not found"]);
+            }
+
             $validatedData = $request->validate([
                 'status' => ['required', Rule::in($validStatuses)],
             ]);
@@ -200,6 +207,71 @@ class ServiceRequestController extends Controller
         }
     }
 
+    public function inspectionRequest(Request $request, $requestId)
+    {
+        $validate = Validator::make($request->all(), []);
+
+        $request = ServiceRequest::whereId($requestId)->first();
+        if(!$request) {
+            return get_error_response("Service Request not found");
+        }
+
+        
+
+    }
+
+    public function acceptQuote($quoteId, $requestId)
+    {
+        try {
+            $requests = SubmittedQuotes::whereRequestId($requestId)->get();
+            if ($requests->isEmpty()) {
+                return get_error_response("Quote not found", ["error" => "Quote not found!"], 404);
+            }
+
+            $requests->each(function ($request) use ($quoteId) {
+                $request->status = ($request->id == $quoteId) ? "accepted" : "rejected";
+            });
+
+            $acceptedRequest = $requests->firstWhere('id', $quoteId);
+            if ($acceptedRequest && $acceptedRequest->save()) {
+                return get_success_response($acceptedRequest, "Request approved successfully");
+            }
+
+            return get_error_response("Failed to save", ["error" => "Failed to save the accepted quote"], 500);
+        } catch (\Throwable $th) {
+            return get_error_response($th->getMessage(), ["error" => $th->getMessage()]);
+        }
+    }
+
+    public function rejectQuote($quoteId, $requestId)
+    {
+        try {
+            $request = SubmittedQuotes::whereRequestId($requestId)->whereId($quoteId)->first();
+            if (!$request) {
+                return get_error_response("Quote not found", ["error" => "Quote not found!"], 404);
+            }
+
+            $request->status = "rejected";
+            if ($request->save()) {
+                return get_success_response($request, "Request rejected successfully");
+            }
+        } catch (\Throwable $th) {
+            return get_error_response($th->getMessage(), ["error" => $th->getMessage()]);
+        }
+    }
+
+    public function issueRework(Request $request, $requestId)
+    {
+        $validate = Validator::make($request->all(), [
+            "media_file" => "required|file",
+            "message" => "required|string"
+        ]);
+
+        $request = ServiceRequest::whereId($requestId)->first();
+        if(!$request) {
+            return get_error_response("Service Request not found");
+        }
+    }
 
     public function serviceProviders()
     {
@@ -209,5 +281,10 @@ class ServiceRequestController extends Controller
         } catch (\Throwable $th) {
             return get_error_response('An error occurred while fetching service providers', ['error' => $th->getMessage()], 500);
         }
+    }
+
+    public function markRequestAsCompleted(Request $request)
+    {
+        //
     }
 }

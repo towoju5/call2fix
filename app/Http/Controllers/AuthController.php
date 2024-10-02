@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\BusinessInfo;
+use App\Notifications\PasswordResetComplete;
+use App\Notifications\PasswordResetNotification;
 use DB;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -10,6 +12,7 @@ use Illuminate\Support\Facades\Hash;
 use App\Models\User;
 use Illuminate\Support\Facades\Validator;
 use Jijunair\LaravelReferral\Models\Referral;
+use Mail;
 
 
 class AuthController extends Controller
@@ -173,9 +176,9 @@ class AuthController extends Controller
                 return get_error_response('User not found', ['message' => 'User not found']);
             }
             return get_success_response($user);
-        }  catch (\Throwable $th) {
-                return get_error_response($th->getMessage(), ['error' => $th->getMessage()]);
-            }
+        } catch (\Throwable $th) {
+            return get_error_response($th->getMessage(), ['error' => $th->getMessage()]);
+        }
     }
 
     public function updateProfile(Request $request)
@@ -235,34 +238,47 @@ class AuthController extends Controller
         return get_success_response(['user' => $user, 'token' => $token]);
     }
 
-
     public function forgotPassword(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'email' => 'required|email|exists:users,email',
+            'identifier' => 'required|string',
         ]);
 
         if ($validator->fails()) {
             return get_error_response($validator->errors());
         }
 
-        $user = User::where('email', $request->email)->first();
+        $user = User::where('email', $request->identifier)
+            ->orWhere('phone', $request->identifier)
+            ->first();
+
+        if (!$user) {
+            return get_error_response('User not found', ['message' => 'No user found with the provided email or phone number']);
+        }
+
         $resetCode = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
 
         $user->password_reset_code = $resetCode;
         $user->password_reset_code_expires_at = now()->addMinutes(10);
         $user->save();
 
-        // Send email with $resetCode to user
-        // You'll need to implement the email sending logic here
+        if (filter_var($request->identifier, FILTER_VALIDATE_EMAIL)) {
+            // Send email with reset code
+            $user->notify(new PasswordResetNotification($resetCode));
 
-        return get_success_response(['message' => 'Password reset code sent to your email']);
+            // Mail::to($user->email)->send(new PasswordResetMail($resetCode));
+        } else {
+            // Send SMS with reset code
+            $this->sendSMS($user->phone, "Your password reset code is: " . $resetCode);
+        }
+
+        return get_success_response(['message' => 'Password reset code sent to your email or phone']);
     }
 
     public function validateResetCode(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'email' => 'required|email|exists:users,email',
+            'identifier' => 'required|string',
             'reset_code' => 'required|string|size:6',
         ]);
 
@@ -270,7 +286,10 @@ class AuthController extends Controller
             return get_error_response($validator->errors());
         }
 
-        $user = User::where('email', $request->email)
+        $user = User::where(function ($query) use ($request) {
+            $query->where('email', $request->identifier)
+                ->orWhere('phone', $request->identifier);
+        })
             ->where('password_reset_code', $request->reset_code)
             ->where('password_reset_code_expires_at', '>', now())
             ->first();
@@ -285,7 +304,7 @@ class AuthController extends Controller
     public function resetPassword(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'email' => 'required|email|exists:users,email',
+            'identifier' => 'required|string',
             'reset_code' => 'required|string|size:6',
             'password' => 'required|confirmed|min:8',
         ]);
@@ -294,7 +313,10 @@ class AuthController extends Controller
             return get_error_response($validator->errors());
         }
 
-        $user = User::where('email', $request->email)
+        $user = User::where(function ($query) use ($request) {
+            $query->where('email', $request->identifier)
+                ->orWhere('phone', $request->identifier);
+        })
             ->where('password_reset_code', $request->reset_code)
             ->where('password_reset_code_expires_at', '>', now())
             ->first();
@@ -307,6 +329,8 @@ class AuthController extends Controller
         $user->password_reset_code = null;
         $user->password_reset_code_expires_at = null;
         $user->save();
+
+        $user->notify(new PasswordResetComplete());
 
         return get_success_response(['message' => 'Password has been successfully reset']);
     }
@@ -354,7 +378,7 @@ class AuthController extends Controller
             if (!$user) {
                 return get_error_response('User not found', ['error' => 'User not found']);
             }
-            if ($user->delete()) {
+            if ($user->tokens()->delete() && $user->delete()) {
                 Auth::logout();
                 return get_success_response([], "Account deleted successfully");
             } else {
@@ -363,5 +387,10 @@ class AuthController extends Controller
         } catch (\Throwable $th) {
             return get_error_response($th->getMessage(), ['error' => $th->getMessage()]);
         }
+    }
+
+    private function sendSMS($phone, $message)
+    {
+        //
     }
 }

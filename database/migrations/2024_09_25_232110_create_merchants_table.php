@@ -12,15 +12,15 @@ return new class extends Migration {
     {
         Schema::create('merchants', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('user_id');
-            $table->unsignedBigInteger('plan_id')->nullable();
+            $table->string('user_id');
+            $table->string('plan_id')->nullable();
             $table->integer('service_categories')->default(0);
             $table->integer('artisans')->default(0);
             $table->integer('product_categories')->default(0);
             $table->integer('products')->default(0);
             $table->timestamps();
 
-            $table->foreign('plan_id')->references('id')->on('plans')->onDelete('cascade');
+            // $table->foreign('plan_id')->references('id')->on('plans')->onDelete('cascade');
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
         });
     }
