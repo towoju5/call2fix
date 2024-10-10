@@ -64,7 +64,7 @@ class UserSeeder extends Seeder
         foreach ($users as $user) {
             User::firstOrCreate(
                 ['email' => $user['email']],
-                array_merge($user, ['password' => $password])
+                array_merge($user, ['password' => $password, 'main_account_role' => $user['account_type'], 'username' => explode("@", $user['email'])[0]])
             );
         }
 

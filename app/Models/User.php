@@ -136,6 +136,11 @@ class User extends Authenticatable
         return $this->hasMany(Artisans::class, 'artisans_id', 'id');
     }
 
+    public function artisans()
+    {
+        return $this->hasMany(Artisans::class, 'artisans_id', 'id');
+    }
+
     public function bankAccount()
     {
         return $this->hasOne(BankAccounts::class, 'user_id');

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Order;
 use App\Models\Product;
+use App\Notifications\Order\OrderPlacedSuccessfully;
 use App\Services\KwikDeliveryService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -24,8 +25,8 @@ class OrderController extends Controller
             "quantity" => "required|integer|min:1",
             "additional_info" => "sometimes|string",
             "product_id" => "required|exists:products,id",
-            "longitude" => "required_if:delivery_type,home_delivery|string",
-            "latitude" => "required_if:delivery_type,home_delivery|string",
+            "delivery_longitude" => "required_if:delivery_type,home_delivery|string",
+            "delivery_latitude" => "required_if:delivery_type,home_delivery|string",
         ]);
 
         if ($validator->fails()) {
@@ -37,8 +38,12 @@ class OrderController extends Controller
             $user = $request->user();
             $wallet = $user->getWallet("ngn");
 
+            if (!$product) {
+                return get_error_response("Product not found!", ["error" => "Product not found!"], 404);
+            }
+
             if (!$wallet) {
-                return get_error_response("User wallet not found", [], 404);
+                return get_error_response("User wallet not found", ["error" => "User wallet not found"], 404);
             }
 
             $orderData = $validator->validated();
@@ -51,6 +56,15 @@ class OrderController extends Controller
 
             $order = Order::create($orderData);
 
+            if($order) {
+                $kwik = new KwikDeliveryController();
+                $kwikOrder = $kwik->createPickupAndDeliveryTask($order->id);
+                
+                $order->order_id = $kwikOrder['unique_order_id'] ?? "error_please_contact_spport";
+                $order->save();
+            }
+            
+            $user->notify(new OrderPlacedSuccessfully($order));
             return get_success_response($order, "Order placed successfully", 201);
         } catch (ModelNotFoundException $e) {
             return get_error_response("Product not found", [], 404);

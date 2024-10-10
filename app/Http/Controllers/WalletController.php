@@ -248,6 +248,7 @@ class WalletController extends Controller
             return get_error_response($th->getMessage(), ['error' => $th->getMessage()]);
         }
     }
+    
     public function getBankAccount()
     {
         try {

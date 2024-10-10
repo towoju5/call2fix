@@ -171,7 +171,7 @@ class AuthController extends Controller
     public function profile()
     {
         try {
-            $user = Auth::user()->with("properties", "orders", "transactions", "products", "bank_account", "wallets", "business_info", "roles")->first();
+            $user = Auth::user()->with("properties", "orders", "transactions", "products", "bankAccount", "wallets", "business_info", "roles")->first();
             if (!$user) {
                 return get_error_response('User not found', ['message' => 'User not found']);
             }
@@ -393,4 +393,29 @@ class AuthController extends Controller
     {
         //
     }
+
+    public function updatePassword(Request $request)
+    {
+        try {
+            $request->validate([
+                'current_password' => 'required',
+                'new_password' => 'required|min:8|different:current_password',
+                'new_password_confirmation' => 'required|same:new_password',
+            ]);
+
+            $user = $request->user();
+
+            if (!Hash::check($request->current_password, $user->password)) {
+                return get_error_response('Current password is incorrect', ['error' => 'Current password is incorrect']);
+            }
+
+            $user->password = Hash::make($request->new_password);
+            $user->save();
+
+            return get_success_response(['message' => 'Password updated successfully']);
+        } catch (\Throwable $th) {
+            return get_error_response($th->getMessage(), ['error' => $th->getMessage()]);
+        }
+    }
+
 }

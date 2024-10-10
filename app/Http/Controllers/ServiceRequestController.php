@@ -21,12 +21,13 @@ class ServiceRequestController extends Controller
 
     public function index()
     {
-        $user = request()->user();
-        if ($user->role == Controller::SERVICE_PROVIDERS) {
-            $serviceRequests = ServiceRequest::whereJsonContains('featured_providers_id', [auth()->id()])->get();
-        } else {
-            $serviceRequests = ServiceRequest::whereUserId(auth()->id())->get();
-        }
+        $serviceRequests = ServiceRequest::whereUserId(auth()->id())->get();
+        return get_success_response($serviceRequests);
+    }
+
+    public function serviceProviderRequest()
+    {
+        $serviceRequests = ServiceRequest::whereJsonContains('featured_providers_id', [auth()->id()])->get();
         return get_success_response($serviceRequests);
     }
 
@@ -189,7 +190,7 @@ class ServiceRequestController extends Controller
 
             $serviceRequest = ServiceRequest::where("user_id", auth()->id())->whereId($requestId)->first();
 
-            if(!$serviceRequest) {
+            if (!$serviceRequest) {
                 return get_error_response("Service request not found", ["error" => "Service request not found"]);
             }
 
@@ -212,11 +213,11 @@ class ServiceRequestController extends Controller
         $validate = Validator::make($request->all(), []);
 
         $request = ServiceRequest::whereId($requestId)->first();
-        if(!$request) {
+        if (!$request) {
             return get_error_response("Service Request not found");
         }
 
-        
+
 
     }
 
@@ -260,16 +261,69 @@ class ServiceRequestController extends Controller
         }
     }
 
+    public function submittedQuotes($requestId)
+    {
+        try {
+            $requests = SubmittedQuotes::whereRequestId($requestId)->get();
+            if (!$requests) {
+                return get_error_response("No Quotes found for request", ["error" => "No Quotes found for request!"], 404);
+            }
+
+            return get_success_response($requests, "Quotes fetched successfully");
+        } catch (\Throwable $th) {
+            return get_error_response($th->getMessage(), ["error" => $th->getMessage()]);
+        }
+    }
+
+    public function submittedQuote($requestId, $providerId)
+    {
+        try {
+            $request = SubmittedQuotes::whereRequestId($requestId)->whereProviderId($providerId)->first();
+            if (!$request) {
+                return get_error_response("Quote not found", ["error" => "Quote not found!"], 404);
+            }
+
+            return get_success_response($request, "Quote retrieved successfully");
+        } catch (\Throwable $th) {
+            return get_error_response($th->getMessage(), ["error" => $th->getMessage()]);
+        }
+    }
+
+    /**
+     * Issue a rework for a service request.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  int  $requestId
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function issueRework(Request $request, $requestId)
     {
-        $validate = Validator::make($request->all(), [
-            "media_file" => "required|file",
-            "message" => "required|string"
-        ]);
+        try {
+            $validate = Validator::make($request->all(), [
+                "media_file" => "required|file",
+                "message" => "required|string"
+            ]);
 
-        $request = ServiceRequest::whereId($requestId)->first();
-        if(!$request) {
-            return get_error_response("Service Request not found");
+            if ($validate->fails()) {
+                return get_error_response("Validation failed", $validate->errors(), 422);
+            }
+
+            $serviceRequest = ServiceRequest::whereId($requestId)->first();
+            if (!$serviceRequest) {
+                return get_error_response("Service Request not found", [], 404);
+            }
+
+            $serviceRequest->status = "rework";
+            if ($serviceRequest->save()) {
+                $serviceRequest->addMedia($request->file('media_file'))->toMediaCollection('rework_files');
+                $serviceRequest->reworkMessages()->create(['message' => $request->message]);
+
+                return get_success_response($serviceRequest, "Rework issued successfully");
+            } else {
+                return get_error_response("Failed to save rework status", [], 500);
+            }
+        } catch (\Throwable $th) {
+            return get_error_response($th->getMessage(), ["error" => $th->getMessage()], 500);
         }
     }
 

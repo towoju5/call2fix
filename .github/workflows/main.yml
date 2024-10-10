@@ -7,6 +7,7 @@ jobs:
   web-deploy:
     name: Deploy
     runs-on: ubuntu-latest
+    timeout-minutes: 0
     steps:
       - name: Get the latest code
         uses: actions/checkout@v3
@@ -42,5 +43,3 @@ jobs:
           password: ${{ secrets.FTP_PASSWORD }}
           server-dir: /
           local-dir: ./
-          include: |
-            release.zip

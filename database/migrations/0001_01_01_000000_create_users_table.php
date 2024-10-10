@@ -26,6 +26,7 @@ return new class extends Migration
             $table->string('profile_picture')->nullable();
             $table->string('account_type')->default('private_account');
             $table->string('device_id')->nullable();
+            $table->string(column: 'service_provider_id')->nullable();
             // $table->json('user_meta')->nullable();
             $table->boolean('is_banned')->default(false);
             $table->string('google2fa_secret')->nullable();

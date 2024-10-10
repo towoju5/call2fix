@@ -32,7 +32,6 @@ class ServiceRequest extends BaseModel
         'featured_providers_id' => 'array',
         'use_featured_providers' => 'boolean',
         'inspection_date' => 'date',
-        'inspection_time' => 'datetime',
     ];
 
 
@@ -59,5 +58,10 @@ class ServiceRequest extends BaseModel
     public function featuredProviders()
     {
         return $this->belongsToMany(User::class, 'featured_providers_id');
+    }
+
+    public function reworkMessages()
+    {
+        return $this->hasMany(ReworkMessage::class);
     }
 }

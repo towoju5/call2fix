@@ -61,6 +61,8 @@ class ProductController extends Controller
                 'is_leasable' => 'boolean',
                 'product_currency' => 'required|string|max:3',
                 'product_location' => 'required|string',
+                'product_longitude' => 'required|string',
+                'product_latitude' => 'required|string',
             ]);
 
             if ($validator->fails()) {

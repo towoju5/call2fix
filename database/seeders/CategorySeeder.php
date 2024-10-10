@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\Category;
+use App\Models\Service;
 use App\Models\ServiceArea;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
@@ -1237,10 +1238,10 @@ class CategorySeeder extends Seeder
             $service_category = Category::where('category_name', $service['scat_category'])->first();
 
             if ($service_area) {
-                Category::firstOrCreate(
+                Service::firstOrCreate(
                     ['service_slug' => $service['service_slug']],
                     [
-                        "category_id" => $service_category->id,
+                        "category_id" => $service_category->id ?? generate_uuid(),
                         "service_name" => $service['service_name'],
                         "service_slug" => $service['service_slug']
                     ]

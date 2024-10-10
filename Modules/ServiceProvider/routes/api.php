@@ -29,6 +29,7 @@ Route::middleware(['auth:sanctum'])->domain(env('API_URL'))->prefix('v1')->group
         Route::get('artisan/quotes', [ServiceProviderController::class, 'artisanQuotes']);
         Route::get('requests', [ServiceProviderController::class, 'requests']);
         Route::post('submit-quote', [ServiceProviderController::class, 'submitQuote']);
+        Route::post('invite-artisan', [ServiceProviderController::class, 'addArtisanToRequest']);
         Route::get("artisans/{artisanId}", [ServiceProviderController::class, 'viewArtisan']);
         Route::delete("artisan/{artisanId}", [ServiceProviderController::class, 'deleteArtisan']);
     });

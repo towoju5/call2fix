@@ -2,6 +2,7 @@
 
 use App\Models\Settings;
 use App\Models\User;
+use Google\Auth\Credentials\ServiceAccountCredentials;
 // use Storage;
 
 if (!function_exists('get_success_response')) {
@@ -78,6 +79,30 @@ if (!function_exists('generate_uuid')) {
 }
 
 
+if (!function_exists('getGoogleAccessToken')) {
+    /**
+     * Returns access Token for Google Firebase
+     * @return mixed
+     */
+    function getGoogleAccessToken() {
+        // Path to the service account JSON key file
+        $serviceAccountFilePath = storage_path('call2fix.json');
+    
+        $scopes = ['https://www.googleapis.com/auth/firebase.messaging'];
+    
+        // Create credentials object
+        $credentials = new ServiceAccountCredentials(['*'], $serviceAccountFilePath);
+    
+        // Fetch the access token
+        $credentials->fetchAuthToken();
+        $accessToken = $credentials->getLastReceivedToken();
+    
+        // Return the access token string
+        return $accessToken['access_token'];
+    }
+};
+
+
 if (!function_exists('fcm')) {
     function fcm($title, $body, $deviceId = null)
     {
@@ -87,7 +112,7 @@ if (!function_exists('fcm')) {
             $firebaseToken = $deviceId;
         }
 
-        $SERVER_API_KEY = 'BFW7n7Hpu1w8Y7c3zp8vMnuAh1i2n2tH0vMiGZrZGemkt-OodDvOR3Gao0Z8hg47lRrcgpwY5e8Vo8xoTCCoB_s';
+        $SERVER_API_KEY = getGoogleAccessToken();
 
         $data = [
             "registration_ids" => $firebaseToken,
@@ -99,13 +124,13 @@ if (!function_exists('fcm')) {
         $dataString = json_encode($data);
 
         $headers = [
-            'Authorization: key=' . $SERVER_API_KEY,
+            "Authorization: Bearer $SERVER_API_KEY",
             'Content-Type: application/json',
         ];
 
         $ch = curl_init();
 
-        curl_setopt($ch, CURLOPT_URL, 'https://fcm.googleapis.com/fcm/send');
+        curl_setopt($ch, CURLOPT_URL, 'https://fcm.googleapis.com/v1/projects/call2fix-54a46/messages:send');
         curl_setopt($ch, CURLOPT_POST, true);
         curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);

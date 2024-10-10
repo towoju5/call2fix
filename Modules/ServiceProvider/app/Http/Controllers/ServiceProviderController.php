@@ -3,6 +3,7 @@
 namespace Modules\ServiceProvider\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Models\ArtisanCanSubmitQuote;
 use App\Models\Artisans;
 use App\Models\Property;
 use App\Models\ServiceRequest;
@@ -13,6 +14,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Modules\Artisan\Models\ArtisanQuotes;
+use Modules\ServiceProvider\Models\ServiceLocations;
 use Validator;
 
 class ServiceProviderController extends Controller
@@ -38,7 +40,7 @@ class ServiceProviderController extends Controller
     public function viewArtisan($id)
     {
         $artisan = User::where('id', $id)
-            ->whereHas('artisans', function ($query) {
+            ->whereHas('artisan', function ($query) {
                 $query->where('service_provider_id', auth()->id());
             })
             ->with('artisan_quotes')
@@ -69,7 +71,7 @@ class ServiceProviderController extends Controller
     /**
      * Add new artisan
      * @param \Illuminate\Http\Request $request
-     * @return mixed|\Illuminate\Http\JsonResponse
+     * @return 
      */
     public function store(Request $request)
     {
@@ -82,8 +84,8 @@ class ServiceProviderController extends Controller
                 "trade" => "required|string|max:255", // category the artisan is registered under - max.
                 "location" => "required|string|max:255", // locations service provider offers services.
                 "id_type" => "required|string|in:national_id,drivers_license,passport,voters_card",
-                "id_image" => "required|image|mimes:jpeg,png,jpg|max:2048",
-                "trade_certificate" => "required|file|mimes:pdf,jpeg,png,jpg|max:2048",
+                "id_image" => "required",
+                "trade_certificate" => "required",
                 "payment_plan" => "required|string|in:percentage,fixed",
                 "payment_amount" => "required|numeric|min:0",
                 "bank_code" => "required|string|max:20",
@@ -93,13 +95,13 @@ class ServiceProviderController extends Controller
             ]);
 
             if ($validator->fails()) {
-                return get_error_response("Validation error", $validator->errors(), 422);
+                return get_error_response("Validation error", $validator->errors()->toArray(), 422);
             }
-            $validateData = $validator->validate();
+            $validateData = $validator->validated();
             $validateData['account_type'] = "artisan";
             $validateData['service_provider_id'] = auth()->id();
 
-            if (User::createOrFirst($validateData)) {
+            if (Artisans::firstOrCreate($validateData)) {
                 return get_success_response($validateData, "Artisan created successfully", 200);
             }
 
@@ -137,7 +139,7 @@ class ServiceProviderController extends Controller
             }
 
             // Check if quote already submitted
-            if (SubmittedQuotes::where(["artisan_id" => auth()->id(), "request_id" => $request->request_id])->exists()) {
+            if (SubmittedQuotes::where(["provider_id" => auth()->id(), "request_id" => $request->request_id])->exists()) {
                 return get_error_response("You have already submitted a quote for this request", ["error" => "You have already submitted a quote for this request"]);
             }
 
@@ -179,7 +181,7 @@ class ServiceProviderController extends Controller
     public function getQuotes()
     {
         try {
-            $quotes = SubmittedQuotes::whereArtisanId(auth()->id())->latest()->get();
+            $quotes = SubmittedQuotes::where("provider_id", auth()->id())->latest()->get();
             return get_success_response($quotes, "Service provider quotes retrieved successfully");
         } catch (\Throwable $th) {
             return get_error_response($th->getMessage(), ["error" => $th->getMessage()]);
@@ -253,6 +255,71 @@ class ServiceProviderController extends Controller
         try {
             $requests = ServiceRequest::whereJsonContains('featured_providers_id', [auth()->id()])->get();
             return get_success_response($requests, "Service provider requests retrieved successfully");
+        } catch (\Throwable $th) {
+            return get_error_response($th->getMessage(), ["error" => $th->getMessage()]);
+        }
+    }
+
+    public function addServiceLocations(Request $request)
+    {
+        try {
+            $validate = Validator::make($request->all(), [
+                "address" => "required|string",
+                "latitude" => "required|string",
+                "longitude" => "required|string"
+            ]);
+
+            if ($validate->fails()) {
+                return get_error_response("Validation Error", ['error' => $validate->errors()->toArray()]);
+            }
+
+            $location = new ServiceLocations();
+            $location->address = $request->address;
+            $location->latitude = $request->latitude;
+            $location->longitude = $request->longitude;
+            $location->user_id = auth()->id();
+
+            if ($location->save()) {
+                return get_success_response($location, "Service location added successfully");
+            }
+            return get_error_response("Unable to add Service location", ["error" => "Unable to add service location"]);
+        } catch (\Throwable $th) {
+            return get_error_response($th->getMessage(), ["error" => $th->getMessage()]);
+        }
+    }
+
+    public function getServiceLocations(Request $request)
+    {
+        try {
+            $location = ServiceLocations::where('user_id', auth()->id())->get();
+            if ($location) {
+                return get_success_response($location, "Service location retrieved successfully");
+            }
+            return get_error_response("Unable to retrieved Service location", ["error" => "Unable to retrieved service location"]);
+        } catch (\Throwable $th) {
+            return get_error_response($th->getMessage(), ["error" => $th->getMessage()]);
+        }
+    }
+
+    public function addArtisanToRequest(Request $request)
+    {
+        try {
+            $validate = Validator::make($request->all(), [
+                "request_id" => "required|exists:service_requests,id",
+                "artisan_id" => "required|exists:users,id",
+                "provider_id" => "required|exists:users,id"
+            ]);
+
+
+            if ($validate->fails()) {
+                return get_error_response("Validation Error", $validate->errors()->toArray());
+            }
+
+            if ($artisan = ArtisanCanSubmitQuote::create($validate->validated())) {
+                return get_success_response($artisan, "Artisan invited successfully");
+            }
+
+            return get_error_response("Error encountered", ["error" => "Error encountered, please contact support."]);
         } catch (\Throwable $th) {
             return get_error_response($th->getMessage(), ["error" => $th->getMessage()]);
         }

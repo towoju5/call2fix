@@ -19,6 +19,8 @@ class CreateOrdersTable extends Migration
             $table->integer('quantity')->default(1);
             $table->decimal('total_price', 10, 2);
             $table->string('delivery_address')->nullable();
+            $table->string('delivery_longitude')->nullable();
+            $table->string('delivery_latitude')->nullable();
             $table->text('additional_info')->nullable();
             $table->dateTime('estimated_delivery')->nullable();
             $table->timestamps();

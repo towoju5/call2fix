@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\BankController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ChatController;
 use App\Http\Controllers\DepartmentController;
@@ -64,6 +65,8 @@ Route::middleware(['api'])->domain(env('API_URL'))->prefix('v1')->group(function
         });
 
         Route::prefix('banks')->group(function () {
+            Route::get("/", [BankController::class, 'getBanks']);
+            Route::get("validate-account", [BankController::class, 'validateAccountNumber']);
             Route::get('accounts', [WalletController::class, 'getBankAccount']);
             Route::get('accounts/{accountId}', [WalletController::class, 'getSingleBankAccount']);
             Route::post('accounts', [WalletController::class, 'addBankAccount']);
@@ -89,12 +92,16 @@ Route::middleware(['api'])->domain(env('API_URL'))->prefix('v1')->group(function
         Route::prefix('services')->controller(ServiceRequestController::class)->group(function () {
             Route::get('/', 'index');
             Route::post('request', 'store');
+            Route::post('add-service-locations', 'addServiceLocations');
+            Route::post('get-service-locations', 'getServiceLocations');
             Route::put('/update/{serviceRequestId}', 'update');
+            Route::get('quotes/{requestId}', 'submittedQuotes');
+            Route::get('quotes/{requestId}/{providerId}', 'submittedQuote');
             Route::get('providers', 'serviceProviders');
             Route::post('accept/{quoteId}/{requestId}', 'acceptQuote');
             Route::post('reject/{quoteId}/{requestId}', 'rejectQuote');
             Route::post('update-status/{requestId}', 'updateStatus');
-            Route::post('update/{quoteId}/{requestId}/request', 'updateStatus'); // Request updates
+            Route::post('update/{quoteId}/{requestId}/request', 'updateStatus');
         });
 
         Route::prefix('notifications')->group(function () {
@@ -107,6 +114,7 @@ Route::middleware(['api'])->domain(env('API_URL'))->prefix('v1')->group(function
 
         Route::apiResource('service-requests', ServiceRequestController::class);
         Route::get('service-requests/{serviceRequest}/featured-providers', [ServiceRequestController::class, 'getFeaturedProviders']);
+        Route::get('service-requests/service-providers/all-requests', [ServiceRequestController::class, 'serviceProviderRequest']);
 
         Route::prefix('orders')->group(function () {
             Route::post('/new', [OrderController::class, 'place_order']);
@@ -124,8 +132,6 @@ Route::middleware(['api'])->domain(env('API_URL'))->prefix('v1')->group(function
             Route::post('{quoteId}/update-quote-status', [ArtisanController::class, 'updateQuoteStatus']);
             Route::get('quotes', [ArtisanController::class, 'quotes']);
         });
-
-
 
         Route::group(['middleware' => 'google2fa'], function () {
             Route::post('generate-2fa-secret', [Google2faController::class, 'generateSecret']);
