@@ -2,10 +2,7 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
-use Bavix\Wallet\Traits\HasWallet;
-use Bavix\Wallet\Traits\HasWalletFloat;
-use Bavix\Wallet\Traits\HasWallets;
+use App\Traits\HasWallets;
 use DB;
 use Emargareten\TwoFactor\TwoFactorAuthenticatable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -21,10 +18,12 @@ use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
 {
-    use HasFactory, HasApiTokens, Notifiable, HasWallet, HasWallets, HasWalletFloat, SoftDeletes, TwoFactorAuthenticatable;
+    use HasFactory, HasApiTokens, Notifiable, HasWallets, SoftDeletes, TwoFactorAuthenticatable;
     use Referrable, HasRoles, SoftDeletes, HasPlanSubscriptions;
+    
 
-    /**
+    /**use HasWallets;
+
      * The attributes that are mass assignable.
      *
      * @var array<int, string>
@@ -156,9 +155,9 @@ class User extends Authenticatable
         return $this->referralAccount;
     }
 
-    public function my_referral_code()
+    public function RefCode()
     {
-        return $this->getReferralCode();
+        return self::getReferralCode();
     }
 
     public function business_info()

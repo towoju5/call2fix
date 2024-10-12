@@ -24,5 +24,9 @@ class BaseModel extends Model
                 $model->{$model->getKeyName()} = (string) Uuid::uuid4();
             }
         });
+
+        static::creating(function ($model) {
+            $model->_account_type = active_role();
+        });
     }
 }

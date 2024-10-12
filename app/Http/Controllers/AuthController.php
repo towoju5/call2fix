@@ -36,6 +36,7 @@ class AuthController extends Controller
                 'password' => 'required|string|min:8',
                 'username' => 'required|string|max:255|unique:users',
                 'profile_picture' => 'nullable|string',
+                'referred_by' => 'sometimes|string',
             ]);
 
             if ($validator->fails()) {
@@ -51,6 +52,7 @@ class AuthController extends Controller
                 'is_social' => false,
                 'account_type' => $request->account_type,
                 'device_id' => $request->device_id,
+                'current_role' => $request->account_type,
             ];
 
             if ($request->has('email')) {
@@ -109,6 +111,9 @@ class AuthController extends Controller
                     }
                 }
 
+                $referrer = Referral::userByReferralCode($request->referred_by);
+                $user->createReferralAccount($referrer->id);
+
                 return $user;
             });
 
@@ -153,7 +158,8 @@ class AuthController extends Controller
                 }
 
                 $token = $user->createToken('auth_token')->plainTextToken;
-                return get_success_response(['user' => $user, 'token' => $token]);
+                $token = explode('|', $token);
+                return get_success_response(['user' => $user, 'token' => $token[1]], 'Login successful');
             }
 
             return get_error_response('Invalid credentials', ['message' => 'Invalid credentials']);
@@ -175,6 +181,8 @@ class AuthController extends Controller
             if (!$user) {
                 return get_error_response('User not found', ['message' => 'User not found']);
             }
+            $user['ref_code'] = $user?->getReferralCode();
+            $user['referrer'] = $user?->referralAccount?->referrer;
             return get_success_response($user);
         } catch (\Throwable $th) {
             return get_error_response($th->getMessage(), ['error' => $th->getMessage()]);
@@ -184,21 +192,13 @@ class AuthController extends Controller
     public function updateProfile(Request $request)
     {
         $user = Auth::user();
-        $validator = Validator::make($request->all(), [
-            'name' => 'string|max:255',
-            'phone' => 'string|max:20',
-            'email' => 'sometimes|string|max:20',
-            'username' => 'string|max:255|unique:users,username,' . $user->id,
-            'profile_picture' => 'nullable|string',
-        ]);
 
-        if ($validator->fails()) {
-            return get_error_response($validator->errors());
-        }
+        // Update all fields except email and phone
+        $user->update($request->except(['email', 'phone']));
 
-        $user->update($request->only(['name', 'phone', 'username', 'profile_picture']));
         return get_success_response(['user' => $user], 'Profile updated successfully');
     }
+
 
     public function verifyEmail(Request $request)
     {
@@ -417,5 +417,4 @@ class AuthController extends Controller
             return get_error_response($th->getMessage(), ['error' => $th->getMessage()]);
         }
     }
-
 }

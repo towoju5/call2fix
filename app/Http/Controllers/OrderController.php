@@ -50,17 +50,17 @@ class OrderController extends Controller
             $orderData["user_id"] = $user->id;
             $orderData["seller_id"] = $product->seller_id;
             $orderData["status"] = "pending";
-            $orderData["total_price"] = ($product->price * $request->quantity);
+            $orderData["total_price"] = $product->price * $request->quantity;
 
-            $wallet->withdraw($orderData["total_price"] * 100, ["description" => "Order placed"]);
+            $wallet->withdraw(get_default_currency($user->id), $orderData["total_price"] * 100, ["description" => "Order placed", "Order placement"]);
 
             $order = Order::create($orderData);
 
             if($order) {
                 $kwik = new KwikDeliveryController();
-                $kwikOrder = $kwik->createPickupAndDeliveryTask($order->id);
+                $kwikOrder = $kwik->calculatePricing($order->id);
                 
-                $order->order_id = $kwikOrder['unique_order_id'] ?? "error_please_contact_spport";
+                $order->order_id = $kwikOrder['unique_order_id'] ?? "will_be_available_when_order_is_accepted";
                 $order->save();
             }
             

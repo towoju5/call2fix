@@ -27,7 +27,7 @@ return new class extends Migration
             $table->boolean('use_featured_providers')->default(false);
             $table->json('featured_providers_id')->nullable();
             $table->boolean('assesment_fee_paid')->default(false);
-            $table->enum('request_status', ["Draft","Pending","Processing","Bidding In Progress","Quote Accepted","Awaiting Payment","Payment Confirmed","On Hold","Work In Progress","Cancelled","Completed","Overdue","Closed","Rejected"])->default('Pending');
+            $table->enum('request_status', ["Draft","Pending","Processing","Bidding In Progress","Quote Accepted","Awaiting Payment","Payment Confirmed","On Hold","Work In Progress","Cancelled","Completed","Overdue","Closed","Rejected", "Rework issued"])->default('Pending');
             $table->timestamps();
             $table->softDeletes();
         });

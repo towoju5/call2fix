@@ -29,7 +29,8 @@ class PlanController extends Controller
             if (!$plan) {
                 return get_error_response("No Plan Found!", ['error' => "Plans not found"], 404);
             }
-            $plan->features;
+            
+            return get_success_response($plan->features);
         } catch (\Throwable $th) {
             return get_error_response($th->getMessage(), ["error" => $th->getMessage()], 400);
         }

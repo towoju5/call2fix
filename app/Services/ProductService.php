@@ -75,6 +75,12 @@ class ProductService
         return $product;
     }
 
+    public function getTopProducts()
+    {
+        $products = Product::withCount('orders')->orderBy('orders_count', 'desc')->take(20)->get();
+        return $products;
+    }
+
     public function deleteProduct(Product $product)
     {
         return $product->delete();

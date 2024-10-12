@@ -168,7 +168,7 @@ class WalletController extends Controller
     {
         $user = auth()->user();
         $wallet = $user->getWallet($walletType);
-        $transactions = $wallet->transactions()->select('type', 'amount', 'meta')->orderBy('created_at', 'desc')->paginate(20); //->makeHidden();
+        $transactions = $wallet->transactions()->select('*')->orderBy('created_at', 'desc')->paginate(20); //->makeHidden();
 
         return get_success_response($transactions, 'Transactions retrieved successfully');
     }
@@ -212,12 +212,19 @@ class WalletController extends Controller
     {
         try {
             $user = auth()->user();
+            if ($user->getWallet($request->wallet_slug)) {
+                return get_error_response('Wallet already exists');
+            }
             $walletName = $request->input('wallet_name');
             $walletSlug = $request->input('wallet_slug');
 
             $wallet = $user->createWallet([
                 'name' => $walletName,
                 'slug' => $walletSlug,
+                'meta' => [
+                    'symbol' => 'w',
+                    'code' => 'extra_wallet_' . sha1(time()),
+                ],
             ]);
 
             return get_success_response($wallet, 'New wallet added successfully');
@@ -248,7 +255,7 @@ class WalletController extends Controller
             return get_error_response($th->getMessage(), ['error' => $th->getMessage()]);
         }
     }
-    
+
     public function getBankAccount()
     {
         try {

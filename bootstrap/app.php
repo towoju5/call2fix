@@ -2,6 +2,7 @@
 
 use App\Http\Middleware\Google2faMiddleware;
 use App\Http\Middleware\JsonRequestMiddleware;
+use App\Http\Middleware\LogRequestResponse;
 use App\Listeners\MyBalanceUpdatedListener;
 use Bavix\Wallet\Internal\Events\BalanceUpdatedEventInterface;
 use Illuminate\Auth\AuthenticationException;
@@ -27,6 +28,7 @@ return Application::configure(basePath: dirname(__DIR__))
             prepend: [
                 JsonRequestMiddleware::class,
                 'google2fa' => Google2faMiddleware::class,
+                LogRequestResponse::class,
                 // 'check.plan.limits' => \App\Http\Middleware\CheckPlanLimits::class,
             ]
         );

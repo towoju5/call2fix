@@ -67,7 +67,7 @@ class ArtisanController extends Controller
                 }
 
                 // Process quote submission 
-                $createQuote = ArtisanQuotes::firstOrCreate(
+                $createQuote = ArtisanQuotes::updateOrCreate(
                     [
                         "artisan_id" => auth()->id(),
                         "request_id" => $request->request_id,

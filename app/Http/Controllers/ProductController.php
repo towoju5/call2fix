@@ -126,4 +126,14 @@ class ProductController extends Controller
             return get_error_response($e->getMessage());
         }
     }
+
+    public function topProducts()
+    {
+        try {
+            $products = $this->productService->getTopProducts();
+            return get_success_response($products);
+        } catch (\Exception $e) {
+            return get_error_response($e->getMessage());
+        }
+    }
 }

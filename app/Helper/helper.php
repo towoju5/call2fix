@@ -29,6 +29,27 @@ if (!function_exists('get_error_response')) {
     }
 }
 
+if (!function_exists('active_role')) {
+    function active_role()
+    {
+        if (auth()->guest()) {
+            return null;
+        }
+        $request = request();
+        if (!$request->has('_active_role')) {
+            return $request->_active_role ?? $request->user()->current_role;
+        }
+        return $request->_active_role;
+    }
+}
+
+if (!function_exists('get_default_currency')) {
+    function get_default_currency($userId, $default = 'ngn')
+    {
+        return $default;
+    }
+}
+
 if (!function_exists('credit_user')) {
     function credit_user($userId, $amount)
     {
@@ -84,23 +105,25 @@ if (!function_exists('getGoogleAccessToken')) {
      * Returns access Token for Google Firebase
      * @return mixed
      */
-    function getGoogleAccessToken() {
+    function getGoogleAccessToken()
+    {
         // Path to the service account JSON key file
         $serviceAccountFilePath = storage_path('call2fix.json');
-    
+
         $scopes = ['https://www.googleapis.com/auth/firebase.messaging'];
-    
+
         // Create credentials object
         $credentials = new ServiceAccountCredentials(['*'], $serviceAccountFilePath);
-    
+
         // Fetch the access token
         $credentials->fetchAuthToken();
         $accessToken = $credentials->getLastReceivedToken();
-    
+
         // Return the access token string
         return $accessToken['access_token'];
     }
-};
+}
+;
 
 
 if (!function_exists('fcm')) {
@@ -160,17 +183,22 @@ if (!function_exists('save_media')) {
     {
         if (is_file($file)) {
             // Store the file in the 'spaces' disk
-            $path = Storage::disk('spaces')->put(auth()->id(), $file, [
+
+            // Define a unique file name and path
+            $fileName = uniqid() . '_' . $file->getClientOriginalName();
+            $path = auth()->id() . '/' . $fileName;
+
+            // Store the file in DigitalOcean Spaces
+            Storage::disk('spaces')->put($path, file_get_contents($file), [
                 'visibility' => 'public',
                 'CacheControl' => 'max-age=31536000',
             ]);
 
-            // Check if the path is not empty
             if (!empty($path)) {
                 // Return the file URL
                 $url = Storage::disk('spaces')->url($path);
 
-                return str_replace("https://lon1.digitaloceanspaces.com/", "https://alphamead.lon1.digitaloceanspaces.com/", $url);
+                return $url;
             }
         }
 

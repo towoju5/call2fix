@@ -56,27 +56,26 @@ return [
             'throw' => false,
         ],
 
-        // 'spaces' => [
-        //     'driver' => 's3',
-        //     'key' => env('DO_SPACES_KEY'),
-        //     'secret' => env('DO_SPACES_SECRET'),
-        //     'region' => env('DO_SPACES_REGION'),
-        //     'bucket' => env('DO_SPACES_BUCKET'),
-        //     'endpoint' => env('DO_SPACES_ENDPOINT'),
-        //     'url' => env('DO_SPACES_ENDPOINT'),
-        //     'use_path_style_endpoint' => false,
-        // ],
-
         'spaces' => [
             'driver' => 's3',
             'key' => env('DO_SPACES_KEY'),
             'secret' => env('DO_SPACES_SECRET'),
-            'endpoint' => 'https://lon1.digitaloceanspaces.com',  // Ensure this is correctly set
-            'region' => 'lon1',
+            'endpoint' => env('DO_SPACES_ENDPOINT'),
+            'region' => env('DO_SPACES_REGION'),
             'bucket' => env('DO_SPACES_BUCKET'),
-            'url' => env('DO_SPACES_URL', 'https://alphamead.lon1.digitaloceanspaces.com'), // Ensure the bucket name is here
             'visibility' => 'public',
         ],
+
+        // 'spaces' => [
+        //     'driver' => 's3',
+        //     'key' => env('DO_SPACES_KEY'),
+        //     'secret' => env('DO_SPACES_SECRET'),
+        //     'endpoint' => 'https://lon1.digitaloceanspaces.com',  // Ensure this is correctly set
+        //     'region' => 'lon1',
+        //     'bucket' => env('DO_SPACES_BUCKET'),
+        //     'url' => env('DO_SPACES_URL', 'https://alphamead.lon1.digitaloceanspaces.com'), // Ensure the bucket name is here
+        //     'visibility' => 'public',
+        // ],
     ],
 
     /*

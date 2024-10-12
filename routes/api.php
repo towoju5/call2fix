@@ -4,6 +4,7 @@ use App\Http\Controllers\BankController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ChatController;
 use App\Http\Controllers\DepartmentController;
+use App\Http\Controllers\EventsController;
 use App\Http\Controllers\FaqsController;
 use App\Http\Controllers\Google2faController;
 use App\Http\Controllers\MarketplaceController;
@@ -76,10 +77,10 @@ Route::middleware(['api'])->domain(env('API_URL'))->prefix('v1')->group(function
 
         Route::apiResource('products', ProductController::class);
         Route::get('my-products', [ProductController::class, 'myProducts']);
+        Route::get('top-products', [ProductController::class, 'topProducts']);
         Route::apiResource('property', PropertyController::class);
         Route::resource('categories', CategoryController::class);
-        Route::resource('departments', DepartmentController::class)->only(['store']);
-
+        Route::resource('departments', DepartmentController::class)->only(['store', 'orders']);
 
 
         Route::prefix('categories')->controller(CategoryController::class)->group(function () {
@@ -87,6 +88,11 @@ Route::middleware(['api'])->domain(env('API_URL'))->prefix('v1')->group(function
             Route::get('list/service-areas', 'service_areas');
             Route::get('show/{categoryId}', 'show');
             Route::get('service/{categoryId}', 'service');
+        });
+
+        Route::prefix('logs')->group(function () {
+            Route::get('all', [EventsController::class, 'index']);
+            Route::get('show/{eventId}', [EventsController::class, 'show']);
         });
 
         Route::prefix('services')->controller(ServiceRequestController::class)->group(function () {

@@ -27,4 +27,14 @@ class DepartmentController extends Controller
             return get_error_response('An error occurred while creating the department.', 500);
         }
     }
+
+    public function orders($departmentId)
+    {
+        try {
+            $user = auth()->user();
+            $department = $user->department;
+        } catch (\Exception $e) {
+            return get_error_response('An error occurred while fetching the department.', 500);
+        }
+    }
 }
