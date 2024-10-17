@@ -64,4 +64,9 @@ class ServiceRequest extends BaseModel
     {
         return $this->hasMany(ReworkMessage::class);
     }
+
+    public function checkIns()
+    {
+        return $this->hasMany(CheckIn::class);
+    }
 }

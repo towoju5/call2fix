@@ -73,7 +73,7 @@ class ServiceProviderController extends Controller
      * @param \Illuminate\Http\Request $request
      * @return 
      */
-    public function store(Request $request)
+    public function addArtisan(Request $request)
     {
         try {
             $validator = Validator::make($request->all(), [
@@ -121,6 +121,11 @@ class ServiceProviderController extends Controller
         }
     }
 
+    /**
+     * Summary of submit Quote for Service Requests
+     * @param \Illuminate\Http\Request $request
+     * @return mixed|\Illuminate\Http\JsonResponse
+     */
     public function submitQuote(Request $request)
     {
         try {
@@ -144,7 +149,7 @@ class ServiceProviderController extends Controller
             }
 
             // Process quote submission 
-            $createQuote = SubmittedQuotes::firstOrCreate(
+            $createQuote = SubmittedQuotes::updateOrCreate(
                 [
                     "provider_id" => auth()->id(),
                     "request_id" => $request->request_id,

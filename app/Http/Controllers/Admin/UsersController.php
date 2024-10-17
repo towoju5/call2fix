@@ -55,7 +55,7 @@ class UsersController extends Controller
         ]);
 
         try {
-            $user->withdraw($request->amount);
+            $user->withdraw($request->amount, 'ngn');
             return redirect()->back()->with('success', 'Wallet debited successfully.');
         } catch (InsufficientFunds $exception) {
             return redirect()->back()->with('error', 'Insufficient funds in the wallet.');

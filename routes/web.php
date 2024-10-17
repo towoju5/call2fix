@@ -18,6 +18,79 @@ use Spatie\Permission\Models\Role;
 
 
 
+Route::get('gee', function () {
+	$baseUrl = "https://bitso.com";
+	$requestPath = "/api/v3/funding_details/pse/payment_links";
+	$apiKey = "AUFEXQubph";
+	$apiSecret = "115cdcaab9cc969acc2b0d70eb813635";
+	$nonce = round(microtime(true) * 1000); // Current time in milliseconds
+
+	$data = [
+		"amount" => 1000,
+		"cellphone" => "+573103922790",
+		"email" => "towojuads@gmail.com",
+		"document_type" => "CC",
+		"document_number" => "1053851282",
+		"full_name" => "Daniela Aldana Valencia",
+	];
+
+	$JSONPayload = json_encode($data);
+	$signatureData = $nonce . 'POST' . $requestPath . $JSONPayload;
+	$signature = hash_hmac('sha256', $signatureData, $apiSecret);
+	$authHeader = "Bitso $apiKey:$nonce:$signature";
+	$url = $baseUrl . $requestPath;
+
+	// Log request data
+	error_log(json_encode([
+		"payload" => $JSONPayload,
+		"signature" => $signature,
+		"authHeader" => $authHeader,
+		"url" => $url,
+		"nonce" => $nonce
+	]));
+
+	// Initialize cURL session
+	$ch = curl_init($url);
+	curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+	curl_setopt($ch, CURLOPT_HTTPHEADER, [
+		"Authorization: $authHeader",
+		'Content-Type: application/json'
+	]);
+	curl_setopt($ch, CURLOPT_TIMEOUT, 30);
+	curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'POST');
+	curl_setopt($ch, CURLOPT_POSTFIELDS, $JSONPayload);
+
+	// Execute cURL request
+	$response = curl_exec($ch);
+	$httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+	error_log(json_encode($response));
+
+	if (curl_errno($ch)) {
+		$errorMsg = curl_error($ch);
+		curl_close($ch);
+		echo "Error: " . $errorMsg;
+	} else {
+		curl_close($ch);
+		$response = json_decode($response, true); // Decode JSON response
+
+		if ($httpCode !== 200) {
+			if (isset($response['error'])) {
+				echo "Error: " . $response['error']['message'];
+			} else {
+				echo "Error: Unexpected response " . json_encode($response);
+			}
+		} else {
+			if (isset($response["success"]) && $response["success"] == true) {
+				print_r($response['payload']);
+			} else {
+				print_r($response);
+			}
+		}
+	}
+});
+
+
+
 Route::get('g', function () {
 	// $order = Order::with('customer', 'seller', 'product')->first();
 	// return response()->json($order);

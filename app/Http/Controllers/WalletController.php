@@ -107,8 +107,8 @@ class WalletController extends Controller
         }
 
         try {
-            $transaction = $wallet->withdraw($amount, $request->toArray());
-            $transaction = $wallet->withdraw($amount, ['message', "Withdrawal fee for {$transaction->id}"]);
+            $transaction = $wallet->withdraw($amount, 'ngn', $request->toArray());
+            $transaction = $wallet->withdraw($amount, 'ngn', ['message', "Withdrawal fee for {$transaction->id}"]);
 
             // send request to paystack for withdrawal
             //
@@ -223,7 +223,7 @@ class WalletController extends Controller
                 'slug' => $walletSlug,
                 'meta' => [
                     'symbol' => 'w',
-                    'code' => 'extra_wallet_' . sha1(time()),
+                    'code' => sha1(time()),
                 ],
             ]);
 

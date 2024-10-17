@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Wallet extends Model
+class Wallet extends BaseModel
 {
     protected $fillable = ['user_id', 'currency', '_account_type', 'balance', 'meta', 'title'];
 

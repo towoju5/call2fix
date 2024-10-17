@@ -70,6 +70,22 @@ class AuthController extends Controller
                     return get_error_response('Failed to create user');
                 }
 
+                // implement referal system
+                if ($request->has('referred_by')) {
+                    $referral = Referral::create([
+                        'user_id' => $user->id,
+                        'referred_by' => $request->referred_by,
+                    ]);
+
+                    $referrer = Referral::userByReferralCode($request->referred_by);
+                    if ($referrer) {
+                        $wallet = $user->getWallet('bonus');
+                        if ($wallet) {
+                            $wallet->deposit(get_settings_value('referal_commission', 0));
+                        }
+                    }
+                }
+
                 $user->assignRole($request->account_type);
 
                 // create customer wallets

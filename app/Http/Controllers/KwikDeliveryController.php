@@ -168,7 +168,9 @@ class KwikDeliveryController extends Controller
             'size' => 1, // 0 for bike, 1 for small, 2 for medium, 3 for large
         ];
 
-        return $this->kwikService->fetchVehicleId($task);
+        return 1;
+
+        // return $this->kwikService->fetchVehicleId($task);
     }
 
     public function calculatePricing($orderId)
@@ -179,7 +181,7 @@ class KwikDeliveryController extends Controller
             "access_token" => $this->kwikService->getAccessToken(),
             "domain_name" => env('KWIK_DELIVERY_DOMAIN_NAME'),
             "timezone" => 1,
-            "vendor_id" => env('KWIK_DELIVERY_VENDOR_ID'),
+            "vendor_id" => env('KWIK_DELIVERY_VENDOR_ID', 151),
             "is_multiple_tasks" => 1,
             "layout_type" => 0,
             "pickup_custom_field_template" => "pricing-template",
@@ -215,7 +217,13 @@ class KwikDeliveryController extends Controller
             "is_cod_job" => 1,
             "parcel_amount" => 1000
         ];
-        return $this->kwikService->calculatePricing($task);
+
+        $response = $this->kwikService->calculatePricing($task);
+        if(isset($response['data']['per_task_cost'])) {
+            return $response['data']['per_task_cost'];
+        }
+
+        return 0;
     }
 
     public function getEstimatedFare($orderId)

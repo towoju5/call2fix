@@ -21,6 +21,8 @@ class SettingsSeeder extends Seeder
             ['key' => 'administrative_fee', 'value' => '5.00'],
             ['key' => 'website_name', 'value' => 'Your Website Name'],
             ['key' => 'alphamaed_service_account_id', 'value' => 'your_service_account_id'],
+            ['key' => 'recharge_points', 'value' => '0.05'],
+            ['key' => 'referal_commission', 'value' => '50'],
         ];
 
         foreach ($settings as $setting) {

@@ -21,7 +21,7 @@ Route::middleware(['auth:sanctum'])->domain(env('API_URL'))->prefix('v1')->group
     Route::get('providers/featured/{propertyId}', [ServiceProviderController::class, 'getFeaturedProvider'])->name('serviceprovider.property.viewArtisan');
     Route::get('providers/artisan/{id}', [ServiceProviderController::class, 'viewArtisan'])->name('serviceprovider.viewArtisan');
     Route::delete('providers/delete-artisan/{id}', [ServiceProviderController::class, 'deleteArtisan'])->name('serviceprovider.deleteArtisan');
-    Route::post('providers/artisan', [ServiceProviderController::class, 'store'])->name('serviceprovider.storeArtisan');
+    Route::post('providers/artisan', [ServiceProviderController::class, 'addArtisan'])->name('serviceprovider.storeArtisan');
 
     Route::prefix('providers')->group(function () {
         Route::get('artisans', [ServiceProviderController::class, 'artisans']);

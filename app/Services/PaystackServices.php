@@ -174,7 +174,7 @@ class PaystackServices
                 'transaction_status' => 'successful',
                 'transaction_amount' => $data['amount'] / 100, // Convert from kobo to naira
             ]);
-            $user->deposit($data['currency'], $data['metadata']['_account_type'], $data['amount'], ['source' => 'Card payment via Paystack'], 'Card payment via Paystack');
+            $user->deposit($data['amount'], $data['currency'], $data['metadata']['_account_type'], ['source' => 'Card payment via Paystack'], 'Card payment via Paystack');
             $user->wallet->deposit($data['amount']);
         }
     }

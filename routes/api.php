@@ -3,6 +3,7 @@
 use App\Http\Controllers\BankController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ChatController;
+use App\Http\Controllers\CheckInOutController;
 use App\Http\Controllers\DepartmentController;
 use App\Http\Controllers\EventsController;
 use App\Http\Controllers\FaqsController;
@@ -15,6 +16,7 @@ use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\PropertyController;
 use App\Http\Controllers\RoleController;
+use App\Http\Controllers\ServiceRequestRatingsController;
 use App\Http\Controllers\SubAccountsController;
 use App\Http\Controllers\WalletController;
 use Illuminate\Support\Facades\Route;
@@ -80,7 +82,7 @@ Route::middleware(['api'])->domain(env('API_URL'))->prefix('v1')->group(function
         Route::get('top-products', [ProductController::class, 'topProducts']);
         Route::apiResource('property', PropertyController::class);
         Route::resource('categories', CategoryController::class);
-        Route::resource('departments', DepartmentController::class)->only(['store', 'orders']);
+        // Route::resource('departments', DepartmentController::class)->only(['store', 'orders', 'ServiceRequests']);
 
 
         Route::prefix('categories')->controller(CategoryController::class)->group(function () {
@@ -94,6 +96,12 @@ Route::middleware(['api'])->domain(env('API_URL'))->prefix('v1')->group(function
             Route::get('all', [EventsController::class, 'index']);
             Route::get('show/{eventId}', [EventsController::class, 'show']);
         });
+
+        Route::prefix('ratings')->group(function () {
+            Route::post('service-request-ratings', [ServiceRequestRatingsController::class, 'store']);
+            Route::get('service-request-ratings/{id}', [ServiceRequestRatingsController::class, 'show']);
+        });
+
 
         Route::prefix('services')->controller(ServiceRequestController::class)->group(function () {
             Route::get('/', 'index');
@@ -121,6 +129,7 @@ Route::middleware(['api'])->domain(env('API_URL'))->prefix('v1')->group(function
         Route::apiResource('service-requests', ServiceRequestController::class);
         Route::get('service-requests/{serviceRequest}/featured-providers', [ServiceRequestController::class, 'getFeaturedProviders']);
         Route::get('service-requests/service-providers/all-requests', [ServiceRequestController::class, 'serviceProviderRequest']);
+        Route::put('service-requests/{requestId}/clock', [CheckInOutController::class, 'clock']);
 
         Route::prefix('orders')->group(function () {
             Route::post('/new', [OrderController::class, 'place_order']);
@@ -183,6 +192,11 @@ Route::middleware(['api'])->domain(env('API_URL'))->prefix('v1')->group(function
             Route::get('sub-accounts/{subAccountId}/balance', [SubAccountsController::class, 'getSubAccountBalance'])->name('sub-accounts.balance');
         });
 
+        Route::prefix('departments')->group(function () {
+            Route::post('/', [DepartmentController::class, 'store'])->name('departments.store');
+            Route::get('/{departmentId}/orders', [DepartmentController::class, 'orders'])->name('departments.orders');
+            Route::get('/{departmentId}/service-requests', [DepartmentController::class, 'ServiceRequests'])->name('departments.serviceRequests');
+        });
     });
 
     Route::apiResource('faqs', FaqsController::class);

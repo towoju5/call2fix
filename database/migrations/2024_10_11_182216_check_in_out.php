@@ -14,8 +14,11 @@ return new class extends Migration
         Schema::create('check_ins', function (Blueprint $table) {
             $table->id();
             $table->string('user_id')->constrained()->onDelete('cascade');
+            $table->string('service_request_id')->constrained()->onDelete('cascade');
             $table->dateTime('check_in_time');
             $table->dateTime('check_out_time')->nullable();
+            $table->text('expected_work')->nullable(); // clock in message 
+            $table->text('achievements')->nullable(); // clock out message 
             $table->timestamps();
         });
     }

@@ -42,7 +42,7 @@ class BankController extends Controller
 
         $url = "https://api.paystack.co/bank/resolve?account_number=" . $request->account_number . "&bank_code=" . $request->bank_code;
         $headers = [
-            "Authorization: Bearer " . config('services.paystack.secret_key'),
+            "Authorization: Bearer " . env('PAYSTACK_SECRET_KEY'),
             "Cache-Control: no-cache",
         ];
 

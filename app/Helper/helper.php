@@ -36,10 +36,7 @@ if (!function_exists('active_role')) {
             return null;
         }
         $request = request();
-        if (!$request->has('_active_role')) {
-            return $request->_active_role ?? $request->user()->current_role;
-        }
-        return $request->_active_role;
+        return $request->user()->current_role ?? $request->user()->account_type;
     }
 }
 

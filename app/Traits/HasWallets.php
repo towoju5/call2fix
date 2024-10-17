@@ -44,7 +44,7 @@ trait HasWallets
     }
 
     // Deposit into a specific wallet
-    public function deposit($currency = 'ngn', $role, $amount = 0, $meta = [], $description = '', $decimalPlaces = 2)
+    public function deposit($amount = 0, $currency = 'ngn', $role, $meta = [], $description = '', $decimalPlaces = 2)
     {
         $role ??= active_role();
         $wallet = $this->getWallet($currency, $role);
@@ -54,7 +54,7 @@ trait HasWallets
     }
 
     // Withdraw from a specific wallet
-    public function withdraw($currency, $amount, $meta = [], $description = '', $decimalPlaces = 2)
+    public function withdraw($amount, $currency = 'ngn', $meta = [], $description = '', $decimalPlaces = 2)
     {
         $role = active_role();
         $wallet = $this->getWallet($currency, $role);
@@ -63,7 +63,7 @@ trait HasWallets
             throw new Exception('Insufficient balance');
         }
 
-        $wallet->withdraw($amount, $meta, $description, $decimalPlaces);
+        $wallet->withdraw($amount, 'ngn', $meta, $description, $decimalPlaces);
 
         return $wallet->toArray();
     }

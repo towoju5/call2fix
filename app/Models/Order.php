@@ -20,7 +20,11 @@ class Order extends BaseModel
         'estimated_delivery',
         'is_leasable',
         'order_id',
-        'kwik_order_id'
+        'kwik_order_id',
+        'duration_type',
+        'lease_duration',
+        'lease_rate',
+        'lease_notes',
     ];
 
     public function leasableProducts()

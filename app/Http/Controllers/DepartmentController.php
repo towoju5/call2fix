@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Order;
+use App\Models\ServiceRequest;
 use Illuminate\Http\Request;
 
 class DepartmentController extends Controller
@@ -32,7 +34,18 @@ class DepartmentController extends Controller
     {
         try {
             $user = auth()->user();
-            $department = $user->department;
+            $department = Order::whereUserId($departmentId)->paginate(10);
+            return get_success_response($department,'Department orders retrieved successfully.');
+        } catch (\Exception $e) {
+            return get_error_response('An error occurred while fetching the department.', 500);
+        }
+    }
+
+    public function ServiceRequests($departmentId)
+    {
+        try {
+            $department = ServiceRequest::whereUserId($departmentId)->paginate(10);
+            return get_success_response($department,'Department orders retrieved successfully.');
         } catch (\Exception $e) {
             return get_error_response('An error occurred while fetching the department.', 500);
         }

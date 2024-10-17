@@ -19,28 +19,32 @@ class OrderController extends Controller
 
     public function place_order(Request $request)
     {
-        $validator = Validator::make($request->all(), [
-            "delivery_type" => "required|in:home_delivery,pick_up",
-            "delivery_address" => "required_if:delivery_type,home_delivery|string",
-            "quantity" => "required|integer|min:1",
-            "additional_info" => "sometimes|string",
-            "product_id" => "required|exists:products,id",
-            "delivery_longitude" => "required_if:delivery_type,home_delivery|string",
-            "delivery_latitude" => "required_if:delivery_type,home_delivery|string",
-        ]);
-
-        if ($validator->fails()) {
-            return get_error_response("Validation error", $validator->errors(), 422);
-        }
-
         try {
             $product = Product::findOrFail($request->product_id);
+
+            // Validation rules
+            $validationRules = [
+                "delivery_type" => "required|in:home_delivery,pick_up",
+                "delivery_address" => "required_if:delivery_type,home_delivery|string",
+                "quantity" => "required|integer|min:1",
+                "additional_info" => "sometimes|string",
+                "product_id" => "required|exists:products,id",
+                "delivery_longitude" => "required_if:delivery_type,home_delivery|string",
+                "delivery_latitude" => "required_if:delivery_type,home_delivery|string",
+                "duration_type" => "required|in:days,weekly,months",
+                "lease_duration" => "required|integer|min:1",
+                "lease_rate" => "required|numeric|min:0",
+                "lease_notes" => "sometimes|string",
+            ];
+
+            $validator = Validator::make($request->all(), $validationRules);
+
+            if ($validator->fails()) {
+                return get_error_response("Validation error", $validator->errors(), 422);
+            }
+
             $user = $request->user();
             $wallet = $user->getWallet("ngn");
-
-            if (!$product) {
-                return get_error_response("Product not found!", ["error" => "Product not found!"], 404);
-            }
 
             if (!$wallet) {
                 return get_error_response("User wallet not found", ["error" => "User wallet not found"], 404);
@@ -50,25 +54,37 @@ class OrderController extends Controller
             $orderData["user_id"] = $user->id;
             $orderData["seller_id"] = $product->seller_id;
             $orderData["status"] = "pending";
-            $orderData["total_price"] = $product->price * $request->quantity;
 
-            $wallet->withdraw(get_default_currency($user->id), $orderData["total_price"] * 100, ["description" => "Order placed", "Order placement"]);
+            // Calculate total price and shipping fee
+            $kwik = new KwikDeliveryService();
+            $kwikOrder = $kwik->calculatePricing($orderData);
+            $shippingFee = $kwikOrder['shipping_fee'] ?? 0;
 
+            // Calculate total price based on lease or normal purchase
+            if ($orderData['lease_duration']) {
+                $rentablePrice = $this->getRentablePrice($product->id, $orderData['duration_type']);
+                $orderData['rentable_price'] = $rentablePrice;
+                $orderData["total_price"] = floatval($rentablePrice * $orderData['quantity']) + $shippingFee;
+            } else {
+                $orderData["total_price"] = floatval($product->price * $orderData['quantity']) + $shippingFee;
+            }
+
+            // Withdraw from wallet
+            $wallet->withdraw($orderData["total_price"] * 100, get_default_currency($user->id), ["description" => "Order placed", "Order placement"]);
+
+            // Create order
             $order = Order::create($orderData);
 
-            if($order) {
-                $kwik = new KwikDeliveryController();
-                $kwikOrder = $kwik->calculatePricing($order->id);
-                
-                $order->order_id = $kwikOrder['unique_order_id'] ?? "will_be_available_when_order_is_accepted";
-                $order->save();
-            }
-            
+            // Notify the user
             $user->notify(new OrderPlacedSuccessfully($order));
+
             return get_success_response($order, "Order placed successfully", 201);
+
         } catch (ModelNotFoundException $e) {
             return get_error_response("Product not found", [], 404);
         } catch (\Exception $e) {
+            // Log the actual error for debugging
+            \Log::error('Order placement error: ' . $e->getMessage());
             return get_error_response("Order placement failed", ["error" => $e->getMessage()], 500);
         }
     }
@@ -79,6 +95,7 @@ class OrderController extends Controller
             $orders = Order::with('product', 'seller', 'user')->where('user_id', auth()->id())->get();
             return get_success_response($orders, "User orders retrieved successfully");
         } catch (\Exception $e) {
+            \Log::error('Error retrieving user orders: ' . $e->getMessage());
             return get_error_response("Failed to retrieve user orders", ["error" => $e->getMessage()], 500);
         }
     }
@@ -87,15 +104,17 @@ class OrderController extends Controller
     {
         try {
             $orders = Order::with('product', 'seller', 'user')
-                ->where(function($query) {
+                ->where(function ($query) {
                     $query->where('user_id', auth()->id())
-                          ->orWhere('seller_id', auth()->id());
+                        ->orWhere('seller_id', auth()->id());
                 })
                 ->findOrFail($orderId);
+
             return get_success_response($orders, "Order retrieved successfully");
         } catch (ModelNotFoundException $e) {
             return get_error_response("Order not found", [], 404);
         } catch (\Exception $e) {
+            \Log::error('Error retrieving order: ' . $e->getMessage());
             return get_error_response("Failed to retrieve order", ["error" => $e->getMessage()], 500);
         }
     }
@@ -108,6 +127,7 @@ class OrderController extends Controller
         } catch (ModelNotFoundException $e) {
             return get_error_response("Order not found", [], 404);
         } catch (\Exception $e) {
+            \Log::error('Error retrieving order status: ' . $e->getMessage());
             return get_error_response("Failed to retrieve order status", ["error" => $e->getMessage()], 500);
         }
     }
@@ -118,6 +138,7 @@ class OrderController extends Controller
             $orders = Order::where('user_id', auth()->id())->where('status', $status)->get();
             return get_success_response($orders, "Orders retrieved successfully");
         } catch (\Exception $e) {
+            \Log::error('Error retrieving orders by status: ' . $e->getMessage());
             return get_error_response("Failed to retrieve orders", ["error" => $e->getMessage()], 500);
         }
     }
@@ -128,6 +149,7 @@ class OrderController extends Controller
             $orders = Order::where('user_id', auth()->id())->orderBy('status')->get();
             return get_success_response($orders, "Sorted orders retrieved successfully");
         } catch (\Exception $e) {
+            \Log::error('Error retrieving sorted orders: ' . $e->getMessage());
             return get_error_response("Failed to retrieve sorted orders", ["error" => $e->getMessage()], 500);
         }
     }
@@ -142,7 +164,19 @@ class OrderController extends Controller
         } catch (ModelNotFoundException $e) {
             return get_error_response("Order not found", [], 404);
         } catch (\Exception $e) {
+            \Log::error('Error tracking order: ' . $e->getMessage());
             return get_error_response("Failed to track order", ["error" => $e->getMessage()], 400);
         }
+    }
+
+    public function getRentablePrice($productId, $durationKey)
+    {
+        $product = Product::findOrFail($productId);
+        $rentablePrice = $product->rentable_price;
+        if (isset($rentablePrice) && is_array($rentablePrice)) {
+            return $rentablePrice[$durationKey] ?? null;
+        }
+
+        return null;
     }
 }
