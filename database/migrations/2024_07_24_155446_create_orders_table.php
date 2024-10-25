@@ -21,13 +21,13 @@ class CreateOrdersTable extends Migration
             $table->string('delivery_address')->nullable();
             $table->string('delivery_longitude')->nullable();
             $table->string('delivery_latitude')->nullable();
+            $table->string('shipping_fee')->nullable();
+            $table->string('kwik_order_id')->nullable();
             $table->text('additional_info')->nullable();
             $table->dateTime('estimated_delivery')->nullable();
             $table->timestamps();
             $table->softDeletes();
         });
-
-
     }
 
     public function down()

@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Auth;
 use Bavix\Wallet\Traits\HasWallet;
 
-class SubAccounts extends Model
+class SubAccounts extends BaseModel
 {
     use HasFactory, SoftDeletes, HasWallet; // Use Bavix HasWallet for wallet management
 

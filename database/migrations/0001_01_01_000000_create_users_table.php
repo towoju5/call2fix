@@ -26,9 +26,10 @@ return new class extends Migration
             $table->string('profile_picture')->nullable();
             $table->string('account_type')->default('private_account');
             $table->string('device_id')->nullable();
-            $table->string(column: 'service_provider_id')->nullable();
-            // $table->json('user_meta')->nullable();
+            $table->string('service_provider_id')->nullable();
+            $table->string('paystack_customer_id')->nullable();
             $table->boolean('is_banned')->default(false);
+            $table->boolean('is_department')->default(false);
             $table->string('google2fa_secret')->nullable();
             $table->string('google2fa_enabled')->nullable();
             $table->rememberToken();

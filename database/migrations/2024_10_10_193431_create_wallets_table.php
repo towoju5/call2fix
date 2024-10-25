@@ -11,16 +11,16 @@ return new class extends Migration {
     public function up(): void
     {
         Schema::create('wallets', function (Blueprint $table) {
-            $table->id();
+            $table->uuid('id')->primary();
             $table->string('user_id')->constrained()->onDelete('cascade');
-            $table->string('currency');
-            $table->string('role');
-            $table->decimal('balance', 20, 2)->default(0);
+            $table->string('currency')->nullable();
+            $table->string('_account_type')->nullable();
+            $table->string('balance')->default(0);
             $table->json('meta')->nullable();
             $table->string('title')->nullable(); // Add the wallet title field
             $table->timestamps();
 
-            $table->unique(['user_id', 'currency', 'role']);
+            $table->unique(['user_id', 'currency', '_account_type']);
         });
     }
 

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use Illuminate\Http\Request;
+use Jijunair\LaravelReferral\Models\Referral;
 use Modules\Artisan\Models\Task as AffiliateTask;
 use App\Models\User as Affiliate;
 use App\Models\ServiceProvider;
@@ -14,7 +15,28 @@ class TasksController extends Controller
     public function index()
     {
         $tasks = AffiliateTask::all();
-        return view('tasks.index', compact('tasks'));
+        return get_success_response($tasks, "Affiliate tasks rertrieved successfully");
+    }
+
+    public function monthlyTasks()
+    {
+        $tasks = AffiliateTask::whereMonth('created_at', now()->month)->whereYear('created_at', now()->year)->get();
+        return get_success_response($tasks, "Affiliate tasks rertrieved successfully");
+    }
+
+    public function allReferal()
+    {
+        $tasks = Referral::where('referrer_id', auth()->user()->id)->get();
+        return get_success_response($tasks, "Record retrieved successfully");
+    }
+
+    public function monthlyReferrals()
+    {
+        $tasks = Referral::where('referrer_id', auth()->user()->id)
+                    ->whereMonth('created_at', now()->month)
+                    ->whereYear('created_at', now()->year)
+                    ->get();
+        return get_success_response($tasks, "Record retrieved successfully");
     }
 
     public function createAffiliateTask(Request $request)

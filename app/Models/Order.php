@@ -14,6 +14,7 @@ class Order extends BaseModel
     protected $fillable = [
         'user_id',
         'item_id',
+        'seller_id',
         'status',
         'quantity',
         'total_price',
@@ -25,6 +26,16 @@ class Order extends BaseModel
         'lease_duration',
         'lease_rate',
         'lease_notes',
+        'product_id',
+        'delivery_address',
+        'delivery_longitude',
+        'delivery_latitude',
+        'additional_info',
+        'shipping_fee'
+    ];
+
+    protected $hidden = [
+        'kwik_order_id',
     ];
 
     public function leasableProducts()

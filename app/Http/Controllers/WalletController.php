@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\BankAccounts;
+use App\Models\Department;
 use Illuminate\Http\Request;
 use App\Models\User;
 use Bavix\Wallet\Models\Wallet;
@@ -15,7 +16,7 @@ class WalletController extends Controller
     {
         try {
             $validate = Validator::make($request->all(), [
-                'amount' => 'required|min:100|numeric',
+                'amount' => 'sometimes|min:100|numeric',
                 'payment_mode' => 'required|in:credit_card,bank_transfer',
             ]);
 
@@ -33,7 +34,7 @@ class WalletController extends Controller
                         $accountInfo = BankAccounts::generateAccount();
 
                         if (isset($accountInfo['error'])) {
-                            return get_error_response($accountInfo['error'], 'Failed to create account');
+                            return get_error_response($accountInfo['error'], ['error' => 'Failed to create account']);
                         }
                         // var_dump($accountInfo); exit;
 
@@ -68,7 +69,7 @@ class WalletController extends Controller
                     return get_success_response($checkoutUrl);
             }
         } catch (\Throwable $th) {
-            return get_error_response($th->getMessage());
+            return get_error_response($th->getMessage(), ['error' => $th->getMessage()]);
         }
     }
 
@@ -168,7 +169,7 @@ class WalletController extends Controller
     {
         $user = auth()->user();
         $wallet = $user->getWallet($walletType);
-        $transactions = $wallet->transactions()->select('*')->orderBy('created_at', 'desc')->paginate(20); //->makeHidden();
+        $transactions = $wallet->transactions()->select('*')->where('_account_type', active_role())->orderBy('created_at', 'desc')->paginate(20); //->makeHidden();
 
         return get_success_response($transactions, 'Transactions retrieved successfully');
     }
@@ -204,6 +205,7 @@ class WalletController extends Controller
             if (!$bonusWallet) {
                 return get_error_response('Failed to create bonus wallet');
             }
+            $wallets = $user->my_wallets();
         }
         return get_success_response($wallets, 'All wallets retrieved successfully');
     }
@@ -212,9 +214,19 @@ class WalletController extends Controller
     {
         try {
             $user = auth()->user();
+
+            if ($request->has('department_id')) {
+                $user = Department::whereId($request->department_id)->where('owner_id', auth()->id())->first();
+            }
+            
+            if (!$user) {
+                return get_error_response('Department not found', ['error' => 'Department not found']);
+            }
+
             if ($user->getWallet($request->wallet_slug)) {
                 return get_error_response('Wallet already exists');
             }
+
             $walletName = $request->input('wallet_name');
             $walletSlug = $request->input('wallet_slug');
 
@@ -229,7 +241,7 @@ class WalletController extends Controller
 
             return get_success_response($wallet, 'New wallet added successfully');
         } catch (\Throwable $th) {
-            return get_error_response($th->getMessage());
+            return get_error_response($th->getMessage(), ['error' => $th->getMessage()]);
         }
     }
 

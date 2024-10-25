@@ -16,13 +16,35 @@ class MediaController extends Controller
                 'type' => 'required|in:image,video,document',
             ]);
 
-            // Get the file from the request
             $file = $request->file('file');
-
             $filePath = save_media($file);
+            return get_success_response(['path' => $filePath], "File uploaded successfully");
+        } catch (\Throwable $th) {
+            // Return error response
+            return get_error_response($th->getMessage(), ['error' => $th->getMessage()], 400);
+        }
+
+    }
+
+    public function bulkUpload(Request $request)
+    {
+        try {
+            $request->validate([
+                'files' => 'required|array',
+                'files.*' => 'file|max:10240', // 10MB max size
+                'types' => 'required|array',
+                'types.*' => 'in:image,video,document',
+            ]);
+
+            $uploadedFiles = [];
+
+            foreach ($request->file('files') as $index => $file) {
+                $uploadedFiles[$index] = save_media($file);
+            }
 
             // Return success response
-            return get_success_response(['path' => $filePath], "File uploaded successfully");
+            return get_success_response(['files' => $uploadedFiles], "Files uploaded successfully");
+
         } catch (\Throwable $th) {
             // Return error response
             return get_error_response($th->getMessage(), ['error' => $th->getMessage()], 400);

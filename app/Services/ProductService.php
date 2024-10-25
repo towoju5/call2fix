@@ -36,7 +36,7 @@ class ProductService
     {
         $query = Product::query();
         if ($category) {
-            $query->whenHas('category_id', function ($q) use ($category) {
+            $query->whereHas('category', function ($q) use ($category) {
                 $q->where('name', $category);
             });
         }
@@ -55,8 +55,7 @@ class ProductService
             }])->orderBy('orders_count', 'desc');
         }
 
-        return $query->get();
-    }
+        return $query->get();    }
 
     public function getProduct($id)
     {

@@ -47,4 +47,44 @@ class DojaWebhookController extends Controller
             return response()->json(['message' => 'Error processing webhook'], 400);
         }
     }
+    
+    public function sendSMS($recipient= "+2349039395114", $message = "Your OTP code 123456 is valid for 10 minutes")
+    {
+        try {
+            $dojahApiKey = env('DOJAH_API_KEY', 'test_sk_df6LCCYuIxF1GGcEP5xLyoFPD');
+            $dojahAppId = env('DOJAH_APP_ID', '6707c1476426a6e441469674');
+    
+            $client = new \GuzzleHttp\Client();
+            $response = $client->request('POST', 'https://sandbox.dojah.io/api/v1/messaging/sms', [
+                'headers' => [
+                    'Authorization' => $dojahApiKey,
+                    'AppId' => $dojahAppId,
+                    'Content-Type' => 'application/json',
+                ],
+                'json' => [
+                    'to' => $recipient,
+                    'message' => $message,
+                    'channel' => 'whatsapp',
+                    'sender_id' => env('DOJAH_SENDER_ID', 'Call2Fix'),
+                ],
+            ]);
+    
+            $statusCode = $response->getStatusCode();
+            $responseBody = json_decode($response->getBody(), true);
+    
+            if ($statusCode == 200 && isset($responseBody['status']) && $responseBody['status'] === "SMS sent successfully") {
+                Log::info('OTP SMS sent successfully', ['phone' => $recipient]);
+                // return true;
+            } else {
+                Log::error('Failed to send OTP SMS', ['response' => $responseBody]);
+                // return false;
+            }
+
+            return response()->json($response);
+        } catch (\Throwable $th) {
+            Log::error('Error sending OTP SMS', ['error' => $th->getMessage()]);
+            return false;
+        }
+    }
+    
 }

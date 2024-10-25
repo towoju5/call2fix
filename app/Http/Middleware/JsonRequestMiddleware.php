@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use Closure;
+use Http;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -23,6 +24,9 @@ class JsonRequestMiddleware
             }
 
         }
+
+        Http::get(url('generate-ref-accounts'));
+        
         $request->headers->add(['Accept' => 'application/json']);
         return $next($request);
     }

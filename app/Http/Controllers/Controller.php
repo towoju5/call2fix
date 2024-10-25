@@ -33,6 +33,7 @@ abstract class Controller
      */
 
      CONST SERVICE_PROVIDERS = 'providers';
+     CONST DEFAULT_WALLET = 'ngn';
 
     public function authorize($ability, $arguments = [])
     {

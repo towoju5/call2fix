@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use Illuminate\Support\Facades\Http;
+use Log;
 
 class KwikDeliveryService
 {
@@ -17,26 +18,30 @@ class KwikDeliveryService
         $this->vendorId = config('services.kwik.vendor_id');
     }
 
-    private function getAccessToken()
+    public function getAccessToken()
     {
-        $response = Http::post($this->baseUrl . '/vendor_login', [
-            'email' => env('KWIK_DELIVERY_EMAIL'),
-            'password' => env('KWIK_DELIVERY_PASSWORD'),
-            'api_login' => 1,
-            'domain_name' => env('KWIK_DELIVERY_DOMAIN_NAME'),
-        ]);
+        $cacheKey = 'kwik_delivery_access_token';
+        $cacheDuration = 5 * 60; // 20 minutes in seconds
 
-        return $response->json()['access_token'] ?? null;
+        return cache()->remember($cacheKey, $cacheDuration, function () {
+            $response = Http::post($this->baseUrl . '/vendor_login', [
+                'email' => env('KWIK_DELIVERY_EMAIL', 'corp-it@alphamead.com'),
+                'password' => env('KWIK_DELIVERY_PASSWORD', 'Alph@mead24'),
+                'api_login' => 1,
+                'domain_name' => env('KWIK_DELIVERY_DOMAIN_NAME', 'staging-client-panel.kwik.delivery'),
+            ]);
+            return $response->json()['data']['access_token'] ?? null;
+        });
     }
 
     public function createPickupAndDeliveryTask($data)
     {
-        return $this->makeRequest('post', '/create_task', $data);
+        return $this->makeRequest('post', 'create_task', $data);
     }
 
     public function createReturnTask($data)
     {
-        return $this->makeRequest('post', '/create_task', $data);
+        return $this->makeRequest('post', 'create_task', $data);
     }
 
     public function cancelTask($data)
@@ -69,8 +74,8 @@ class KwikDeliveryService
     private function makeRequest($method, $endpoint, $data = [])
     {
         $response = Http::withHeaders([
-            'Authorization' => 'Bearer ' . $this->accessToken,
-        ])->$method($this->baseUrl . $endpoint, $data);
+            'Authorization' => 'Bearer ' . $this->getAccessToken(),
+        ])->$method("{$this->baseUrl}$endpoint", $data);
 
         return $this->handleApiResponse($response);
     }

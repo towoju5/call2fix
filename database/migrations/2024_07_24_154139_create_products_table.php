@@ -11,7 +11,6 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::dropIfExists('products');
         Schema::create('products', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->string('name');
@@ -21,7 +20,7 @@ return new class extends Migration
             $table->string('seller_id')->constrained('users');
             $table->integer('stock')->default(0);
             $table->string('sku')->unique();
-            $table->string('product_currency')->unique();
+            $table->string('product_currency');
             $table->string('product_location')->nullable();
             $table->json('product_image')->nullable();
             $table->decimal('weight', 8, 2)->nullable();

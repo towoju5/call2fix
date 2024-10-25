@@ -16,7 +16,6 @@ class OrderController extends Controller
     {
         return view('order');
     }
-
     public function place_order(Request $request)
     {
         try {
@@ -32,8 +31,8 @@ class OrderController extends Controller
                 "delivery_longitude" => "required_if:delivery_type,home_delivery|string",
                 "delivery_latitude" => "required_if:delivery_type,home_delivery|string",
                 "duration_type" => "required|in:days,weekly,months",
-                "lease_duration" => "required|integer|min:1",
-                "lease_rate" => "required|numeric|min:0",
+                "lease_duration" => "sometimes|integer|min:1",
+                "lease_rate" => "sometimes|numeric|min:0",
                 "lease_notes" => "sometimes|string",
             ];
 
@@ -56,12 +55,23 @@ class OrderController extends Controller
             $orderData["status"] = "pending";
 
             // Calculate total price and shipping fee
-            $kwik = new KwikDeliveryService();
-            $kwikOrder = $kwik->calculatePricing($orderData);
-            $shippingFee = $kwikOrder['shipping_fee'] ?? 0;
+            $kwik = new KwikDeliveryController();
+            $shippingFee = $kwik->calculatePricing(
+                $orderData['delivery_address'],
+                $orderData['delivery_latitude'],
+                $orderData['delivery_longitude'],
+                $product,
+                $product->seller,
+                $user
+            );
+            $orderData["shipping_fee"] = $shippingFee;
+
+            if (is_array($shippingFee) || isset($shippingFee['error'])) {
+                return get_error_response($shippingFee['error'], ["error" => $shippingFee['error']], 400);
+            }
 
             // Calculate total price based on lease or normal purchase
-            if ($orderData['lease_duration']) {
+            if ($request->has('lease_duration')) {
                 $rentablePrice = $this->getRentablePrice($product->id, $orderData['duration_type']);
                 $orderData['rentable_price'] = $rentablePrice;
                 $orderData["total_price"] = floatval($rentablePrice * $orderData['quantity']) + $shippingFee;
@@ -70,15 +80,17 @@ class OrderController extends Controller
             }
 
             // Withdraw from wallet
-            $wallet->withdraw($orderData["total_price"] * 100, get_default_currency($user->id), ["description" => "Order placed", "Order placement"]);
+            $wallet->withdraw($orderData["total_price"], get_default_currency($user->id), ["description" => "Order placed", "Order placement"]);
 
             // Create order
             $order = Order::create($orderData);
 
             // Notify the user
-            $user->notify(new OrderPlacedSuccessfully($order));
+            if ($order) {
+                $user->notify(new OrderPlacedSuccessfully($order));
 
-            return get_success_response($order, "Order placed successfully", 201);
+                return get_success_response($order, "Order placed successfully", 201);
+            }
 
         } catch (ModelNotFoundException $e) {
             return get_error_response("Product not found", [], 404);
@@ -88,6 +100,7 @@ class OrderController extends Controller
             return get_error_response("Order placement failed", ["error" => $e->getMessage()], 500);
         }
     }
+
 
     public function getUserOrders()
     {
@@ -179,4 +192,37 @@ class OrderController extends Controller
 
         return null;
     }
+
+    public function acceptOrder($id)
+    {
+        try {
+            $order = Order::where('user_id', auth()->id())->findOrFail($id);
+            $order->status = 'accepted';
+            $order->save();
+
+            return get_success_response($order, "Order accepted successfully");
+        } catch (ModelNotFoundException $e) {
+            return get_error_response("Order not found", [], 404);
+        } catch (\Exception $e) {
+            \Log::error('Error accepting order: ' . $e->getMessage());
+            return get_error_response("Failed to accept order", ["error" => $e->getMessage()], 500);
+        }
+    }
+    
+    public function rejectOrder($id)
+    {
+        try {
+            $order = Order::where('user_id', auth()->id())->findOrFail($id);
+            $order->status = 'rejected';
+            $order->save();
+
+            return get_success_response($order, "Order rejected successfully");
+        } catch (ModelNotFoundException $e) {
+            return get_error_response("Order not found", [], 404);
+        } catch (\Exception $e) {
+            \Log::error('Error rejecting order: ' . $e->getMessage());
+            return get_error_response("Failed to reject order", ["error" => $e->getMessage()], 500);
+        }
+    }
+
 }

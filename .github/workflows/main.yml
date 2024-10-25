@@ -30,7 +30,7 @@ jobs:
         run: php artisan storage:link
 
       - name: Migrate Database
-        run: php artisan migrate --seed --force 
+        run: php artisan migrate:fresh --seed --force 
 
       - name: Create ZIP file
         run: zip -r release.zip . -x "**/.git*" "**/.git*/**" "**/node_modules/**"

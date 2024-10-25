@@ -9,27 +9,53 @@ class Wallet extends BaseModel
 {
     protected $fillable = ['user_id', 'currency', '_account_type', 'balance', 'meta', 'title'];
 
+
+    protected $hidden = [
+        '_account_type',
+        'deleted_at',
+        'decimal_places'
+    ];
+
     protected $casts = [
         'meta' => 'json',
     ];
 
     // Method to get a specific wallet by currency and role
-    public function getWallet($currency, $role)
+    public function getWallet($currency, $role = null)
     {
-        return $this->wallets()->where('currency', $currency)->where('_account_type', $role)->firstOrCreate([
+        // Use the passed $role if provided, otherwise use active_role()
+        $role = $role ?? active_role();
+
+        // Directly query the Wallet model for a wallet matching the currency, role, and user_id
+        $wallet = Wallet::where([
             'currency' => $currency,
             '_account_type' => $role,
-            'balance' => 0
-        ]);
+            'user_id' => auth()->id()
+        ])->first();
+
+        // If wallet doesn't exist, create it
+        if (!$wallet) {
+            $wallet = Wallet::create([
+                'currency' => $currency,
+                '_account_type' => $role,
+                'user_id' => auth()->id()
+            ]);
+        }
+
+        return $wallet;
     }
 
+
     // Method to get the balance of a specific wallet
-    public function balance($currency, $role)
+    public function balance($currency = null)
     {
+        if(null == $currency) {
+            $currency = get_default_currency(auth()->id());
+        }
+        $role = active_role();
         $wallet = $this->getWallet($currency, $role);
         return $wallet->balance;
     }
-
 
     // Relationship to WalletTransaction
     public function transactions()
@@ -47,17 +73,13 @@ class Wallet extends BaseModel
         // Log the deposit transaction
         $this->logTransaction('deposit', $amount, $balanceBefore, $this->balance, $meta, $description, $decimalPlaces);
 
-        if ($save) {
-            return true;
-        }
-
-        return false;
+        return $save;
     }
 
     // Withdraw from the wallet
     public function withdraw($amount, $meta = [], $description = '', $decimalPlaces = 2)
     {
-        if ($this->balance >= $amount) {
+        if (self::balance() >= $amount * 100) {
             $balanceBefore = $this->balance;
             $this->balance -= $amount * 100;
             $save = $this->save();
@@ -65,13 +87,9 @@ class Wallet extends BaseModel
             // Log the withdrawal transaction
             $this->logTransaction('withdrawal', $amount, $balanceBefore, $this->balance, $meta, $description, $decimalPlaces);
 
-            if ($save) {
-                return true;
-            }
-
-            return false;
+            return $save;
         } else {
-            throw new \Exception('Insufficient balance');
+            throw new \Exception("Insufficient balance: {$this->balance}, requested: {$amount}");
         }
     }
 
@@ -86,6 +104,7 @@ class Wallet extends BaseModel
             'decimal_places' => $decimalPlaces,
             'meta' => $meta,
             'description' => $description,
+            '_account_type' => active_role(),
         ]);
     }
 
@@ -95,16 +114,9 @@ class Wallet extends BaseModel
         return $this->belongsTo(User::class);
     }
 
-    // Override the default toArray method to ensure it returns arrays
-    public function toArray()
+    // Define relationship between User and Wallet
+    public function wallets()
     {
-        $array = parent::toArray();
-        return $array;
+        return $this->user->wallets(); // Fetch wallets from the User model
     }
-
-     // Define relationship between User and Wallet
-     public function wallets()
-     {
-         return $this->hasMany(Wallet::class);
-     }
 }

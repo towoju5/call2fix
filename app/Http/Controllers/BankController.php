@@ -30,7 +30,7 @@ class BankController extends Controller
         }
 
         $result = json_decode($response, true);
-        return get_success_response($result);
+        return get_success_response($result['data'], 'Banks retrieved successfully');
     }
 
     public function validateAccountNumber(Request $request)
@@ -62,6 +62,6 @@ class BankController extends Controller
         }
 
         $result = json_decode($response, true);
-        return get_success_response($result);
+        return get_success_response($result['data'], "Account number resolved");
     }
 }

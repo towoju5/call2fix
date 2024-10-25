@@ -48,6 +48,7 @@ class WebhookLogController extends Controller
             $eventType = $event['event'];
 
             Log::info("Processing Paystack webhook event: {$eventType}");
+            Log::info("Paystack webhook event content:", $event);
 
             switch ($eventType) {
                 case 'charge.success':

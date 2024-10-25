@@ -26,6 +26,7 @@ return new class extends Migration
             $table->json('problem_images');
             $table->boolean('use_featured_providers')->default(false);
             $table->json('featured_providers_id')->nullable();
+            $table->string('approved_providers_id')->nullable();
             $table->boolean('assesment_fee_paid')->default(false);
             $table->enum('request_status', ["Draft","Pending","Processing","Bidding In Progress","Quote Accepted","Awaiting Payment","Payment Confirmed","On Hold","Work In Progress","Cancelled","Completed","Overdue","Closed","Rejected", "Rework issued"])->default('Pending');
             $table->timestamps();

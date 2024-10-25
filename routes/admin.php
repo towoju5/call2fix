@@ -34,7 +34,6 @@ Route::domain(env('ADMIN_URL'))->group(function () {
             Route::post('admins/{admin}/assign-super-admin', [AdminController::class, 'assignSuperAdmin'])->name('assign-super-admin');
         });
 
-        
         Route::resource('service_areas', ServiceAreaController::class)->names('service_areas');
         Route::resource('categories', CategoryController::class)->names('categories');
         Route::resource('properties', PropertyController::class)->names('properties');
@@ -63,7 +62,6 @@ Route::domain(env('ADMIN_URL'))->group(function () {
             Route::post('order', [ProductController::class, 'order'])->name('products.order');
 
         });
-
 
         Route::prefix('users')->group(function () {
             Route::get('/', [UsersController::class, 'index'])->name('users.index');

@@ -16,6 +16,7 @@ return new class extends Migration
             $table->id();
             $table->string('user_id')->constrained()->onDelete('cascade');
             $table->string('department_id')->constrained()->onDelete('cascade');
+            $table->string('_account_type')->nullable();
             $table->timestamps();
             $table->softDeletes();
         });

@@ -5,6 +5,7 @@ use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ChatController;
 use App\Http\Controllers\CheckInOutController;
 use App\Http\Controllers\DepartmentController;
+use App\Http\Controllers\DojaWebhookController;
 use App\Http\Controllers\EventsController;
 use App\Http\Controllers\FaqsController;
 use App\Http\Controllers\Google2faController;
@@ -18,6 +19,7 @@ use App\Http\Controllers\PropertyController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\ServiceRequestRatingsController;
 use App\Http\Controllers\SubAccountsController;
+use App\Http\Controllers\TasksController;
 use App\Http\Controllers\WalletController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
@@ -36,6 +38,7 @@ Route::middleware(['api'])->domain(env('API_URL'))->prefix('v1')->group(function
         Route::post('validate-reset-code', [AuthController::class, 'validateResetCode']);
         Route::post('reset-password', [AuthController::class, 'resetPassword']);
         Route::post('social-login', [AuthController::class, 'socialLogin']);
+        Route::post('validate-referrer-code', [AuthController::class, 'validateReferrer']);
     });
 
     // Protected routes 
@@ -69,7 +72,7 @@ Route::middleware(['api'])->domain(env('API_URL'))->prefix('v1')->group(function
 
         Route::prefix('banks')->group(function () {
             Route::get("/", [BankController::class, 'getBanks']);
-            Route::get("validate-account", [BankController::class, 'validateAccountNumber']);
+            Route::post("validate-account", [BankController::class, 'validateAccountNumber']);
             Route::get('accounts', [WalletController::class, 'getBankAccount']);
             Route::get('accounts/{accountId}', [WalletController::class, 'getSingleBankAccount']);
             Route::post('accounts', [WalletController::class, 'addBankAccount']);
@@ -77,9 +80,9 @@ Route::middleware(['api'])->domain(env('API_URL'))->prefix('v1')->group(function
         });
 
 
-        Route::apiResource('products', ProductController::class);
-        Route::get('my-products', [ProductController::class, 'myProducts']);
         Route::get('top-products', [ProductController::class, 'topProducts']);
+        Route::get('my-products', [ProductController::class, 'myProducts']);
+        Route::apiResource('products', ProductController::class);
         Route::apiResource('property', PropertyController::class);
         Route::resource('categories', CategoryController::class);
         // Route::resource('departments', DepartmentController::class)->only(['store', 'orders', 'ServiceRequests']);
@@ -130,6 +133,7 @@ Route::middleware(['api'])->domain(env('API_URL'))->prefix('v1')->group(function
         Route::get('service-requests/{serviceRequest}/featured-providers', [ServiceRequestController::class, 'getFeaturedProviders']);
         Route::get('service-requests/service-providers/all-requests', [ServiceRequestController::class, 'serviceProviderRequest']);
         Route::put('service-requests/{requestId}/clock', [CheckInOutController::class, 'clock']);
+        Route::put('service-requests/{requestId}/issueRework', [ServiceRequestController::class, 'issueRework']);
 
         Route::prefix('orders')->group(function () {
             Route::post('/new', [OrderController::class, 'place_order']);
@@ -138,6 +142,8 @@ Route::middleware(['api'])->domain(env('API_URL'))->prefix('v1')->group(function
             Route::get('sorted', [OrderController::class, 'getSortedOrders']);
             Route::post('track', [OrderController::class, 'trackOrder']);
             Route::get('{id}', [OrderController::class, 'getOrderStatus']);
+            Route::get('{id}/accept-order', [OrderController::class, 'acceptOrder']);
+            Route::get('{id}/reject-order', [OrderController::class, 'rejectOrder']);
         });
 
         Route::prefix('artisans')->group(function () {
@@ -158,6 +164,7 @@ Route::middleware(['api'])->domain(env('API_URL'))->prefix('v1')->group(function
         Route::prefix('media/file/')->controller(MediaController::class)->group(function () {
             Route::get('{mediaPath}', 'fetch');
             Route::post('upload', 'upload');
+            Route::post('upload/bulk', 'bulkUpload');
             Route::delete('{mediaPath}', 'destroy');
         });
 
@@ -180,7 +187,6 @@ Route::middleware(['api'])->domain(env('API_URL'))->prefix('v1')->group(function
             Route::get('merchant-details', [MerchantController::class, 'getMerchantDetails']);
         });
 
-
         Route::prefix('accounts')->group(function () {
             Route::get('sub-accounts', [SubAccountsController::class, 'getSubAccounts'])->name('sub-accounts.index');
             Route::post('sub-accounts/add', [SubAccountsController::class, 'addSubAccount'])->name('sub-accounts.store');
@@ -192,14 +198,29 @@ Route::middleware(['api'])->domain(env('API_URL'))->prefix('v1')->group(function
             Route::get('sub-accounts/{subAccountId}/balance', [SubAccountsController::class, 'getSubAccountBalance'])->name('sub-accounts.balance');
         });
 
+        Route::prefix('tasks')->group(function () {
+            Route::get('/', [TasksController::class, 'index']);
+            Route::get('current-month-tasks', [TasksController::class, 'monthlyTasks']);
+            Route::get('all-refers', [TasksController::class, 'allReferal']);
+            Route::get('current-month-refers', [TasksController::class, 'monthlyReferrals']);
+            Route::post('create', [TasksController::class, 'createAffiliateTask']);
+            Route::get('affiliate/{affiliate}', [TasksController::class, 'getAffiliateTasks']);
+            Route::put('update/{task}', [TasksController::class, 'updateAffiliateTask']);
+            Route::get('check-status/{affiliate}', [TasksController::class, 'checkAffiliateStatus']);
+            Route::post('calculate-commission/{serviceProvider}', [TasksController::class, 'calculateAffiliateCommission']);
+            Route::put('update-activity/{affiliate}', [TasksController::class, 'updateAffiliateActivity']);
+            Route::post('withdraw/{affiliate}', [TasksController::class, 'processAffiliateWithdrawal']);
+        });
+
         Route::prefix('departments')->group(function () {
-            Route::post('/', [DepartmentController::class, 'store'])->name('departments.store');
+            Route::get('all', [DepartmentController::class, 'index'])->name('departments.list');
+            Route::post('create', [DepartmentController::class, 'store'])->name('departments.store');
             Route::get('/{departmentId}/orders', [DepartmentController::class, 'orders'])->name('departments.orders');
+            Route::get('/{departmentId}/wallet-history', [DepartmentController::class, 'walletHistory'])->name('departments.wallet-history');
             Route::get('/{departmentId}/service-requests', [DepartmentController::class, 'ServiceRequests'])->name('departments.serviceRequests');
         });
     });
 
     Route::apiResource('faqs', FaqsController::class);
     Route::post('support/email', [FaqsController::class, 'sendSupportEmail']);
-
 });

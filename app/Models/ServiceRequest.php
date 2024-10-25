@@ -69,4 +69,5 @@ class ServiceRequest extends BaseModel
     {
         return $this->hasMany(CheckIn::class);
     }
+    
 }

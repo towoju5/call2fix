@@ -9,7 +9,7 @@ use App\Models\Property;
 use App\Models\ServiceRequest;
 use App\Models\SubmittedQuotes;
 use App\Models\User;
-use DB;
+use DB, Str;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -102,6 +102,24 @@ class ServiceProviderController extends Controller
             $validateData['service_provider_id'] = auth()->id();
 
             if (Artisans::firstOrCreate($validateData)) {
+                // add Artisan to user DB
+                $artisanPassword = Str::random(8);
+                $userData = [
+                    'first_name' => $validateData['first_name'],
+                    'last_name' => $validateData['last_name'],
+                    'password' => bcrypt($artisanPassword),
+                    'username' => $validateData['first_name'].rand(23, 999),
+                    'is_social' => false,
+                    'account_type' => 'artisan',
+                    'device_id' => 'device_id',
+                    'current_role' => 'artisan',
+                    'main_account_role' => 'artisan',
+                ];
+
+                $newArtisan = User::create($userData);
+
+                // send a notification to the artisan also with default password
+                $newArtisan->notify(new NewArtisanAddedNotification($newArtisan, $artisanPassword))
                 return get_success_response($validateData, "Artisan created successfully", 200);
             }
 

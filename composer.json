@@ -6,9 +6,9 @@
     "license": "MIT",
     "require": {
         "php": "^8.2",
-        "bavix/laravel-wallet": "^11.1",
         "brian2694/laravel-toastr": "^5.59",
         "emargareten/two-factor-laravel": "^0.0.9",
+        "google/apiclient": "^2.18",
         "google/auth": "^1.42",
         "laravel-notification-channels/fcm": "^4.3",
         "laravel/framework": "^11.9",

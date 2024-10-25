@@ -12,4 +12,14 @@ class TransactionRecords extends BaseModel
 
 
     protected $guarded = [];
+    
+    protected $fillable = [
+        'user_id',
+        'wallet_id',
+        'transaction_reference',
+        'transaction_type',
+        'transaction_slug',
+        'transaction_status',
+        'transaction_amount'
+    ];
 }

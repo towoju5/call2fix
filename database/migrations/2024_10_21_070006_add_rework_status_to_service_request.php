@@ -11,9 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('tasks', function (Blueprint $table) {
-            $table->id();
-            $table->timestamps();
+        Schema::table('service_requests', function (Blueprint $table) {
+            $table->string('rework_status')->nullable();
         });
     }
 
@@ -22,6 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('tasks');
+        Schema::table('service_requests', function (Blueprint $table) {
+            $table->dropColumn('rework_status');
+        });
     }
 };

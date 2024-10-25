@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Notifications\DepartmentCreatedNotification;
 use App\Traits\HasWallets;
 use DB;
 use Emargareten\TwoFactor\TwoFactorAuthenticatable;
@@ -20,7 +21,7 @@ class User extends Authenticatable
 {
     use HasFactory, HasApiTokens, Notifiable, HasWallets, SoftDeletes, TwoFactorAuthenticatable;
     use Referrable, HasRoles, SoftDeletes, HasPlanSubscriptions;
-    
+
 
     /**use HasWallets;
 
@@ -29,7 +30,7 @@ class User extends Authenticatable
      * @var array<int, string>
      */
     protected $guarded = [];
-    
+
     // protected $fillable = [
     //     'first_name',
     //     'last_name',
@@ -59,6 +60,15 @@ class User extends Authenticatable
         'remember_token',
         'updated_at',
         'created_at',
+        'two_factor_secret',
+        'two_factor_recovery_codes',
+        'device_id',
+        'google2fa_secret',
+        'paystack_customer_id',
+        'password_reset_code',
+        'virtual_account_number',
+        'virtual_bank_name',
+        'parent_account_id',
         // 'deleted_at'
     ];
 
@@ -193,17 +203,19 @@ class User extends Authenticatable
     public function createDepartment(string $name): Department
     {
         return DB::transaction(function () use ($name) {
-            $department = Department::create(['name' => $name]);
+            $user = auth()->user();
+            $department = Department::create(['name' => $name, 'owner_id' => $user->id]);
             $this->departments()->attach($department->id);
-
-            // Optionally set the created department as the current department
             $this->current_department_id = $department->id;
             $this->save();
+
+            $user->notify(new DepartmentCreatedNotification($department));
+
+            $this->createDepartmentWallets($department);
 
             return $department;
         });
     }
-
     /**
      * Set the currently active department for the user.
      *

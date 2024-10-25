@@ -5,9 +5,11 @@ namespace App\Services;
 use App\Models\TransactionRecords;
 use App\Models\Transactions;
 use App\Models\BankAccounts;
+use App\Models\Wallet;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use App\Models\User;
+use Log;
 
 class PaystackServices
 {
@@ -21,46 +23,55 @@ class PaystackServices
 
     private function ensureCustomerId(User $user)
     {
-        if (!$user->paystack_customer_id) {
+        if (!$user->paystack_customer_id OR null == $user->paystack_customer_id) {
             $response = Http::withHeaders([
                 'Authorization' => 'Bearer ' . $this->paystackSecretKey,
                 'Content-Type' => 'application/json',
             ])->post($this->paystackBaseUrl . '/customer', [
-                'email' => $user->email,
-                'first_name' => $user->first_name,
-                'last_name' => $user->last_name,
-                'phone' => $user->phone,
-            ]);
+                        'email' => $user->email,
+                        'first_name' => $user->first_name,
+                        'last_name' => $user->last_name,
+                        'phone' => $user->phone,
+                    ]);
 
             if ($response->successful()) {
-                return $customerData = $response->json()['data'];
-                $user->update(['paystack_customer_id' => $customerData['customer_code']]);
-            } else {
-                throw new \Exception('Failed to create Paystack customer');
+                $customerData = $response->json()['data'];
+                $updated = $user->update(['paystack_customer_id' => $customerData['id']]);
+                if ($updated) {
+                    return true;
+                }
             }
+
+            return false;
         }
     }
 
     public function generateVirtualAccount()
     {
         $user = User::findOrFail(auth()->id());
-        if(!$this->ensureCustomerId($user)) {
-            throw new \Exception('Failed to create Paystack customer');
-        }
-
         $response = Http::withHeaders([
             'Authorization' => 'Bearer ' . $this->paystackSecretKey,
             'Content-Type' => 'application/json',
         ])->post($this->paystackBaseUrl . '/dedicated_account', [
-            'customer' => $user->paystack_customer_id,
-            'preferred_bank' => 'test-bank',
-        ]);
+                    "email" => "janedoe@test.com",
+                    "first_name" => "Jane",
+                    "middle_name" => "Karen",
+                    "last_name" => "Doe",
+                    "phone" => "+2348100000000",
+                    "preferred_bank" => "test-bank",
+                    "country" => "NG"
+                ]);
+
+        Log::info('Virtual account creation response:', ['response' => $response->json()]);
 
         if ($response->successful()) {
             $accountData = $response->json()['data'];
-            
+
             BankAccounts::updateOrCreate(
-                ['user_id' => $user->id],
+                [
+                    'user_id' => $user->id,
+                    'account_type' => 'deposit',
+                ],
                 [
                     'account_name' => $accountData['account_name'],
                     'bank_name' => $accountData['bank']['name'],
@@ -85,9 +96,9 @@ class PaystackServices
             'Authorization' => 'Bearer ' . $this->paystackSecretKey,
             'Content-Type' => 'application/json',
         ])->post($this->paystackBaseUrl . '/transaction/initialize', [
-            'email' => auth()->user()->email,
-            'amount' => $amount,
-        ]);
+                    'email' => auth()->user()->email,
+                    'amount' => $amount,
+                ]);
 
         if ($response->successful()) {
             $transaction = $response->json();
@@ -164,6 +175,31 @@ class PaystackServices
     public function handleSuccessfulCharge($data)
     {
         $user = User::where('email', $data['customer']['email'])->first();
+        Log::info('Paystack charge successful', ['data' => $data, 'user' => $user]);
+        $walletId = Wallet::where([
+                        'user_id' => $user->id,
+                        'currency' => get_default_currency($user->id)
+                    ])->first();
+        if ($user) {
+            TransactionRecords::create([
+                'user_id' => $user->id,
+                'wallet_id' => $walletId,
+                'transaction_reference' => $data['reference'],
+                'transaction_type' => 'credit',
+                'transaction_slug' => 'paystack_charge',
+                'transaction_status' => 'successful',
+                'transaction_amount' => $data['amount'] / 100, // Convert from kobo to naira
+            ]);
+            $user->deposit($data['amount'], $data['currency'], $data['metadata']['_account_type'], ['source' => 'Card payment via Paystack'], 'Card payment via Paystack');
+            $user->deposit($data['amount'] * get_settings_value('recharge_points'), 'bonus', $data['metadata']['_account_type'], ['source' => 'Bonus for wallet topup'], 'Bonus for wallet topup');
+            $user->wallet->deposit($data['amount']);
+        }
+    }
+
+    public function handleSuccessfulTransfer($data)
+    {
+        // Handle successful transfers (payouts)
+        $user = User::where('email', $data['customer']['email'])->first();
         if ($user) {
             TransactionRecords::create([
                 'user_id' => $user->id,
@@ -175,21 +211,20 @@ class PaystackServices
                 'transaction_amount' => $data['amount'] / 100, // Convert from kobo to naira
             ]);
             $user->deposit($data['amount'], $data['currency'], $data['metadata']['_account_type'], ['source' => 'Card payment via Paystack'], 'Card payment via Paystack');
+            $user->deposit(0.05, 'bonus', $data['metadata']['_account_type'], ['source' => 'Bonus for wallet topup'], 'Bonus for wallet topup');
             $user->wallet->deposit($data['amount']);
         }
     }
 
-    public function handleSuccessfulTransfer($data)
-    {
-        // Handle successful transfers (payouts)
-    }
-
     public function handleVirtualAccountCreation($data)
     {
-        $user = User::where('paystack_customer_id', $data['customer']['customer_code'])->first();
+        $user = User::where('paystack_customer_id', $data['customer']['id'])->first();
         if ($user) {
             BankAccounts::updateOrCreate(
-                ['user_id' => $user->id],
+                [
+                    'user_id' => $user->id,
+                    'account_type' => 'deposit'
+                ],
                 [
                     'account_name' => $data['account_name'],
                     'bank_name' => $data['bank']['name'],

@@ -18,6 +18,7 @@ return new class extends Migration
             $table->string('account_name');
             $table->string('bank_name');
             $table->string('bank_code');
+            $table->string('account_type')->comment('deposit or withdrawal')->default('deposit')->nullable();
             $table->json('provider_response')->nullable();
             $table->timestamps();
             $table->softDeletes();

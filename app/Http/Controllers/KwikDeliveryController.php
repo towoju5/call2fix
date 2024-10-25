@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Order;
+use App\Models\Product;
+use App\Models\User;
 use App\Services\KwikDeliveryService;
 use Illuminate\Http\Request;
 use Log;
@@ -17,37 +19,8 @@ class KwikDeliveryController extends Controller
         $this->kwikService = $kwikService;
     }
 
-    public function createPickupAndDeliveryTask($orderId)
+    public function createPickupAndDeliveryTask($deliveryAddress, $deliveryLatitude, $deliveryLongitude, Product $product, User $seller, User $user)
     {
-        $order = Order::with('user', 'seller', 'product')->whereId($orderId)->first();
-        $task = [
-            'auto_assignment' => true,
-            'pickup_custom_field_template' => 'default_pickup_template',
-            'is_schedule_task' => 0,
-            'pickups' => [
-                [
-                    'address' => $order->product->product_location,
-                    'email' => $order->seller->email,
-                    'phone' => $order->seller->phone,
-                    'latitude' => $order->product->latitude ?? '40.7128',
-                    'longitude' => $order->product->longitude ?? '-74.0060',
-                ]
-            ],
-            'deliveries' => [
-                [
-                    'address' => $order->delivery_address,
-                    'email' => $order->user->email,
-                    'phone' => $order->user->phone,
-                    'latitude' => $order->delivery_latitude,
-                    'longitude' => $order->delivery_longitude,
-                    'has_return_task' => false,
-                ]
-            ],
-            'is_loader_required' => 0,
-            'vehicle_id' => $this->fetchVehicleId($order->product->weight),
-            'is_cod_job' => 0,
-        ];
-
         $task = [
             "domain_name" => env("KWIK_DELIVERY_DOMAIN_NAME"),
             "access_token" => $this->kwikService->getAccessToken(),
@@ -65,30 +38,24 @@ class KwikDeliveryController extends Controller
             "team_id" => "",
             "pickups" => [
                 [
-                    "address" => "Sector 28, Chandigarh, India",
-                    "name" => "Ishita",
-                    "latitude" => 30.7172888,
-                    "longitude" => 76.8035087,
-                    "time" => "2023-08-22 15:25:23",
-                    "phone" => "+919898989898",
-                    "email" => ""
+                    'address' => $product->product_location,
+                    'latitude' => $product->product_latitude,
+                    'longitude' => $product->product_longitude,
+                    "name" => "{$seller->first_name} {$seller->last_name}",
+                    'email' => $seller->email,
+                    'phone' => $seller->phone,
                 ]
             ],
             "deliveries" => [
                 [
-                    "address" => "Sector 32, Chandigarh, India",
-                    "name" => "Ishita",
-                    "latitude" => 30.709472,
-                    "longitude" => 76.7743709,
-                    "time" => "2023-08-22T15:33:53.000Z",
-                    "phone" => "+919898989898",
-                    "email" => "",
-                    "has_return_task" => false,
-                    "is_package_insured" => 0,
-                    "hadVairablePayment" => 1,
-                    "hadFixedPayment" => 0,
-                    "is_task_otp_required" => 0
-                ]
+                    'address' => $deliveryAddress,
+                    'email' => $user->email,
+                    'phone' => $user->phone,
+                    'latitude' => $deliveryLatitude,
+                    'longitude' => $deliveryLongitude,
+                    "name" => "{$user->first_name} {$user->last_name}",
+                    'has_return_task' => false,
+                ],
             ],
             "insurance_amount" => 0,
             "total_no_of_tasks" => 1,
@@ -110,7 +77,7 @@ class KwikDeliveryController extends Controller
         $result = $this->kwikService->createPickupAndDeliveryTask($task);
 
         Log::error("Kwik Delivery response: ", ["response" => $result, "payload" => $task]);
-
+        // kwik_order_id
         return $result;
     }
 
@@ -160,22 +127,27 @@ class KwikDeliveryController extends Controller
 
     public function fetchVehicleId($weight)
     {
-        if ($weight < 100) {
-            $size = 1;
+        // all weights are in kg
+        if ($weight <= 20) {
+            $size = 0; // Bike
+        } elseif ($weight <= 200 ) {
+            $size = 1; // Small Vehicle
+        } elseif ($weight <= 5000 ) {
+            $size = 2; // Medium Vehicle
+        } else {
+            $size = 3; // Large Vehicle
         }
+
         $task = [
             'is_vendor' => 1,
-            'size' => 1, // 0 for bike, 1 for small, 2 for medium, 3 for large
+            'size' => $size, // 0 for bike, 1 for small, 2 for medium, 3 for large
         ];
 
-        return 1;
-
-        // return $this->kwikService->fetchVehicleId($task);
+        return $this->kwikService->fetchVehicleId($task);
     }
 
-    public function calculatePricing($orderId)
+    public function calculatePricing($deliveryAddress, $deliveryLatitude, $deliveryLongitude, Product $product, User $seller, User $user)
     {
-        $order = Order::with('user', 'seller', 'product')->whereId($orderId)->first();
         $task = [
             "custom_field_template" => "pricing-template",
             "access_token" => $this->kwikService->getAccessToken(),
@@ -187,11 +159,11 @@ class KwikDeliveryController extends Controller
             "pickup_custom_field_template" => "pricing-template",
             "deliveries" => [
                 [
-                    'address' => $order->delivery_address,
-                    'email' => $order->user->email,
-                    'phone' => $order->user->phone,
-                    'latitude' => $order->delivery_latitude,
-                    'longitude' => $order->delivery_longitude,
+                    'address' => $deliveryAddress,
+                    'email' => $user->email,
+                    'phone' => $user->phone,
+                    'latitude' => $deliveryLatitude,
+                    'longitude' => $deliveryLongitude,
                     'has_return_task' => false,
                 ]
             ],
@@ -201,30 +173,32 @@ class KwikDeliveryController extends Controller
             "user_id" => 1,
             "pickups" => [
                 [
-                    'address' => $order->product->product_location,
-                    'email' => $order->seller->email,
-                    'phone' => $order->seller->phone,
-                    'latitude' => $order->product->latitude ?? '40.7128',
-                    'longitude' => $order->product->longitude ?? '-74.0060',
+                    'address' => $product->product_location,
+                    'email' => $seller->email,
+                    'phone' => $seller->phone,
+                    'latitude' => $product->product_latitude,
+                    'longitude' => $product->product_longitude,
                 ]
             ],
             "payment_method" => 32,
             "form_id" => 2,
-            "vehicle_id" => $this->fetchVehicleId($order->weight),
-            "is_loader_required" => 1,
-            "loaders_amount" => 40,
-            "loaders_count" => 4,
-            "is_cod_job" => 1,
-            "parcel_amount" => 1000
+            "vehicle_id" => $this->fetchVehicleId($product->weight),
+            "is_loader_required" => 0,
+            "loaders_amount" => 0,
+            "loaders_count" => 0,
+            "is_cod_job" => 0,
+            "parcel_amount" => $product->price
         ];
 
         $response = $this->kwikService->calculatePricing($task);
-        if(isset($response['data']['per_task_cost'])) {
+        Log::info("Kwik Delivery response: ", ["response" => $response, "payload" => $task]);
+        if (isset($response['data']['per_task_cost'])) {
             return $response['data']['per_task_cost'];
         }
 
-        return 0;
+        return ['error' => $response['message']];
     }
+
 
     public function getEstimatedFare($orderId)
     {

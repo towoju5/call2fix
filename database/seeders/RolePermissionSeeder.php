@@ -21,6 +21,7 @@ class RolePermissionSeeder extends Seeder
             'private_accounts',
             'affiliates',
             'suppliers',
+            'department'
         ];
 
         $admin_roles = [

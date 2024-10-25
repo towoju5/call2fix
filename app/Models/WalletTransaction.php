@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class WalletTransaction extends Model
+class WalletTransaction extends BaseModel
 {
     use HasFactory, SoftDeletes;
 
@@ -24,6 +24,7 @@ class WalletTransaction extends Model
     // Cast the meta field as an array (not JSON)
     protected $casts = [
         'meta' => 'array',
+        'description' => 'array',
     ];
 
     // Override the default toArray method to ensure it returns arrays

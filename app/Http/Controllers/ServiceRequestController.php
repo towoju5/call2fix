@@ -10,6 +10,7 @@ use DB;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Validator;
+use App\Notifications\ReworkIssuedNotification;
 
 class ServiceRequestController extends Controller
 {
@@ -21,13 +22,13 @@ class ServiceRequestController extends Controller
 
     public function index()
     {
-        $serviceRequests = ServiceRequest::whereUserId(auth()->id())->get();
+        $serviceRequests = ServiceRequest::with('reworkMessages')->whereUserId(auth()->id())->get();
         return get_success_response($serviceRequests);
     }
 
     public function serviceProviderRequest()
     {
-        $serviceRequests = ServiceRequest::whereJsonContains('featured_providers_id', [auth()->id()])->get();
+        $serviceRequests = ServiceRequest::with('reworkMessages')->whereJsonContains('featured_providers_id', [auth()->id()])->get();
         return get_success_response($serviceRequests);
     }
 
@@ -96,7 +97,7 @@ class ServiceRequestController extends Controller
     public function show(ServiceRequest $serviceRequest)
     {
         try {
-            return get_success_response($serviceRequest);
+            return get_success_response($serviceRequest->with('reworkMessages'));
         } catch (\Throwable $th) {
             return get_error_response($th->getMessage());
         }
@@ -198,7 +199,20 @@ class ServiceRequestController extends Controller
                 'status' => ['required', Rule::in($validStatuses)],
             ]);
 
-            $serviceRequest->update(['status' => $validatedData['status']]);
+            $update = $serviceRequest->update(['status' => $validatedData['status']]);
+
+            if ($update && $validatedData['status'] == 'Completed') {
+                // get provider  and artisan
+                $provider = User::where('id', $serviceRequest->provider_id)->first();
+                $artisan = User::where('id', $serviceRequest->artisan_id)->first();
+                // get artisan percentage
+                $artisanPercentage = $artisan->artisan_percentage;
+
+                // credit the provider's and artisan's wallet
+                $provider->getWallet('ngn')->deposit($serviceRequest->amount, ["description" => $serviceRequest->problem_title]);
+                $artisan->getWallet('ngn')->deposit($serviceRequest->amount, ["description" => $serviceRequest->problem_title]);
+                return get_success_response($serviceRequest, "Service Request status updated successfully");
+            }
 
             return get_success_response($serviceRequest, "Service Request status updated successfully");
         } catch (\Illuminate\Validation\ValidationException $e) {
@@ -225,17 +239,29 @@ class ServiceRequestController extends Controller
     {
         try {
             $requests = SubmittedQuotes::whereRequestId($requestId)->get();
-            if ($requests->isEmpty()) {
+
+            if (!$requests OR $requests->isEmpty()) {
                 return get_error_response("Quote not found", ["error" => "Quote not found!"], 404);
             }
 
+            $service_request = ServiceRequest::whereId($requestId)->with('user')->first();
+            $service_requester = $service_request->user;
+
             $requests->each(function ($request) use ($quoteId) {
                 $request->status = ($request->id == $quoteId) ? "accepted" : "rejected";
+                $request->save();
             });
 
             $acceptedRequest = $requests->firstWhere('id', $quoteId);
-            if ($acceptedRequest && $acceptedRequest->save()) {
-                return get_success_response($acceptedRequest, "Request approved successfully");
+            if ($acceptedRequest) {
+                $service_request = ServiceRequest::whereId($requestId)->first();
+                if ($service_request) {
+                    $service_request->request_status = "Quote Accepted";
+                    $service_request->approved_providers_id = $acceptedRequest->provider_id;
+                    if ($service_requester->withdraw($acceptedRequest->total_charges) && $service_request->save()) {
+                        return get_success_response($acceptedRequest, "Request approved successfully");
+                    }
+                }
             }
 
             return get_error_response("Failed to save", ["error" => "Failed to save the accepted quote"], 500);
@@ -300,24 +326,32 @@ class ServiceRequestController extends Controller
     {
         try {
             $validate = Validator::make($request->all(), [
-                "media_file" => "required|file",
+                "media_files" => "required|array",
+                "media_files.*" => "url",
                 "message" => "required|string"
             ]);
-
+        
             if ($validate->fails()) {
                 return get_error_response("Validation failed", $validate->errors(), 422);
             }
-
-            $serviceRequest = ServiceRequest::whereId($requestId)->first();
-            if (!$serviceRequest) {
-                return get_error_response("Service Request not found", [], 404);
-            }
-
-            $serviceRequest->status = "rework";
+        
+            $serviceRequest = ServiceRequest::findOrFail($requestId);
+        
+            $serviceRequest->request_status = "Rework issued";
+            
             if ($serviceRequest->save()) {
-                $serviceRequest->addMedia($request->file('media_file'))->toMediaCollection('rework_files');
-                $serviceRequest->reworkMessages()->create(['message' => $request->message]);
-
+                // get service provider and notify him
+                $provider = User::find($serviceRequest->approved_providers_id);
+                if ($provider) {
+                    $provider->notify(new ReworkIssuedNotification($serviceRequest));
+                }
+        
+                $serviceRequest->reworkMessages()->create([
+                    'message' => $request->message, 
+                    'images' => $request->media_files,
+                    'user_id' => auth()->id()
+                ]);
+        
                 return get_success_response($serviceRequest, "Rework issued successfully");
             } else {
                 return get_error_response("Failed to save rework status", [], 500);
@@ -325,6 +359,7 @@ class ServiceRequestController extends Controller
         } catch (\Throwable $th) {
             return get_error_response($th->getMessage(), ["error" => $th->getMessage()], 500);
         }
+        
     }
 
     public function serviceProviders()

@@ -53,6 +53,7 @@ class AuthController extends Controller
                 'account_type' => $request->account_type,
                 'device_id' => $request->device_id,
                 'current_role' => $request->account_type,
+                'main_account_role' => $request->account_type,
             ];
 
             if ($request->has('email')) {
@@ -81,40 +82,12 @@ class AuthController extends Controller
                     if ($referrer) {
                         $wallet = $user->getWallet('bonus');
                         if ($wallet) {
-                            $wallet->deposit(get_settings_value('referal_commission', 0));
+                            $wallet->deposit(get_settings_value('referal_commission', 0), 'bonus', $request->account_type, ["description" => "Referral Bonus"], ["description" => "Referral Bonus"]);
                         }
                     }
                 }
 
                 $user->assignRole($request->account_type);
-
-                // create customer wallets
-                $mainWallet = $user->createWallet([
-                    'name' => 'Naira Wallet',
-                    'slug' => 'ngn',
-                    'meta' => [
-                        'symbol' => '₦',
-                        'code' => 'NGN',
-                    ],
-                ]);
-
-                if (!$mainWallet) {
-                    return get_error_response('Failed to create main wallet');
-                }
-
-                $bonusWallet = $user->createWallet([
-                    'name' => 'Bonus Wallet',
-                    'slug' => 'bonus',
-                    'meta' => [
-                        'symbol' => '₱',
-                        'code' => 'bonus',
-                    ]
-                ]);
-
-                if (!$bonusWallet) {
-                    return get_error_response('Failed to create bonus wallet');
-                }
-
                 // Create business info
                 if (in_array($request->account_type, ['suppliers', 'providers', 'corporate_account'])) {
                     $businessInfo = BusinessInfo::create([
@@ -126,9 +99,6 @@ class AuthController extends Controller
                         return get_error_response('Failed to create business info');
                     }
                 }
-
-                $referrer = Referral::userByReferralCode($request->referred_by);
-                $user->createReferralAccount($referrer->id);
 
                 return $user;
             });
@@ -193,10 +163,11 @@ class AuthController extends Controller
     public function profile()
     {
         try {
-            $user = Auth::user()->with("properties", "orders", "transactions", "products", "bankAccount", "wallets", "business_info", "roles")->first();
+            $user = User::with("properties", "orders", "transactions", "products", "bankAccount", "wallets", "business_info", "roles")->whereId(auth()->id())->first();
             if (!$user) {
                 return get_error_response('User not found', ['message' => 'User not found']);
             }
+            $user['active_plans'] = $user?->subscribedPlans();
             $user['ref_code'] = $user?->getReferralCode();
             $user['referrer'] = $user?->referralAccount?->referrer;
             return get_success_response($user);
@@ -230,7 +201,8 @@ class AuthController extends Controller
     public function socialLogin(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:255',
+            'first_name' => 'required|string|max:255',
+            'last_name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255',
             'provider' => 'required|string',
             'provider_id' => 'required|string',
@@ -240,18 +212,30 @@ class AuthController extends Controller
             return get_error_response($validator->errors());
         }
 
-        $user = User::where('email', $request->email)->first();
-        if (!$user) {
-            $user = User::create([
-                'name' => $request->name,
-                'email' => $request->email,
-                'is_social' => true,
-                'email_verified_at' => now(),
+        if (!isset($request->username)) {
+            $request->merge([
+                'username' => explode('@', $request->email ?? $request->phone)[0] . rand(1, 99)
             ]);
         }
 
-        $token = $user->createToken('auth_token')->plainTextToken;
-        return get_success_response(['user' => $user, 'token' => $token]);
+        $user = User::where('email', $request->email)->first();
+        if (!$user) {
+            $user = User::create([
+                'first_name' => $request->first_name,
+                'last_name' => $request->last_name,
+                'username' => $request->username,
+                'email' => $request->email,
+                'is_social' => true,
+                'email_verified_at' => now(),
+                'password' => Hash::make(\Str::random(10)),
+                'main_account_role' => 'private_accounts',
+                'account_type' => 'private_accounts',
+            ]);
+        }
+
+        $user->assignRole('private_accounts');
+        $token = explode('|', $user->createToken('auth_token')->plainTextToken);
+        return get_success_response(['user' => $user, 'token' => $token[1]], 'Login successful');
     }
 
     public function forgotPassword(Request $request)
@@ -280,15 +264,15 @@ class AuthController extends Controller
 
         if (filter_var($request->identifier, FILTER_VALIDATE_EMAIL)) {
             // Send email with reset code
+            $type = "Email";
             $user->notify(new PasswordResetNotification($resetCode));
-
-            // Mail::to($user->email)->send(new PasswordResetMail($resetCode));
         } else {
             // Send SMS with reset code
+            $type = "Phone Number";
             $this->sendSMS($user->phone, "Your password reset code is: " . $resetCode);
         }
 
-        return get_success_response(['message' => 'Password reset code sent to your email or phone']);
+        return get_success_response(['message' => "Password reset code sent to your {$type}"]);
     }
 
     public function validateResetCode(Request $request)
@@ -407,7 +391,9 @@ class AuthController extends Controller
 
     private function sendSMS($phone, $message)
     {
-        //
+        $dojah = new DojaWebhookController();
+        $send = $dojah->sendSMS($phone, $message);
+        return $send;
     }
 
     public function updatePassword(Request $request)
@@ -429,6 +415,20 @@ class AuthController extends Controller
             $user->save();
 
             return get_success_response(['message' => 'Password updated successfully']);
+        } catch (\Throwable $th) {
+            return get_error_response($th->getMessage(), ['error' => $th->getMessage()]);
+        }
+    }
+
+    public function validateReferrer(Request $request)
+    {
+        try {
+            $ref_code = $request->referred_by;
+            $referrer = User::where('referral_code', $ref_code)->first();
+            if (!$referrer) {
+                return get_error_response('Referrer not found', ['is_valid_referrer' => false]);
+            }
+            return get_success_response(['is_valid_referrer' => true], 'Referrer found');
         } catch (\Throwable $th) {
             return get_error_response($th->getMessage(), ['error' => $th->getMessage()]);
         }

@@ -38,7 +38,15 @@ class BaseModel extends Model
                 $model->_account_type = active_role();
             }
         });
+    }
 
-        static::where('_account_type', active_role());
+    // Override the newQuery method to automatically apply the _account_type filter
+    public function newQuery($excludeDeleted = true)
+    {
+        // Call the parent method to get the base query
+        $query = parent::newQuery($excludeDeleted);
+
+        // Automatically add the where clause for _account_type
+        return $query->where('_account_type', active_role());
     }
 }

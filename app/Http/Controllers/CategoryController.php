@@ -18,7 +18,7 @@ class CategoryController extends Controller
 
         try {
             $categories = Category::with('services')->get();
-            return get_success_response($categories, 'Categories fetched successfully.', );
+            return get_success_response($categories, 'Categories fetched successfully.');
         } catch (\Exception $e) {
             return get_error_response('An error occurred while fetching categories.', ['error' => $e->getMessage()], 500);
         }
@@ -37,7 +37,7 @@ class CategoryController extends Controller
         }
 
         try {
-            return get_success_response($category, 'Category fetched successfully.', );
+            return get_success_response($category, 'Category fetched successfully.');
         } catch (\Exception $e) {
             return get_error_response('An error occurred while showing the category', ['error', 'An error occurred while showing the category.']);
         }
@@ -55,7 +55,7 @@ class CategoryController extends Controller
             return get_error_response('Service not found', ['error' => 'Service not found'], 404);
         }
 
-        return get_success_response($service, 'Service fetched successfully.', );
+        return get_success_response($service, 'Service fetched successfully.');
     }
 
     public function service_areas()
