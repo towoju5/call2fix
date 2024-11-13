@@ -2,11 +2,13 @@
 
 use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\CategoryController;
+use App\Http\Controllers\Admin\PermissionsController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\PropertyController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\ServiceAreaController;
 use App\Http\Controllers\Admin\ServiceRequestController;
+use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\AdminController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\UsersController;
@@ -24,18 +26,21 @@ Route::domain(env('ADMIN_URL'))->group(function () {
     })->name('admin.login');
 
     Route::post('admin/login/process', [AdminController::class, 'login'])->name('admin.login.submit');
-
+    Route::get(env('TELESCOPE_PATH'))->name('admin.api.logs');
     Route::middleware('auth:admin')->prefix('cp')->as('admin.')->group(function () {
         Route::get('dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
 
         Route::group(['prefix' => 'manage-admin'], function () {
             Route::resource('roles', RoleController::class);
             Route::resource('admins', AdminController::class);
+            Route::resource('permissions', PermissionsController::class);
+            Route::resource('settings', SettingsController::class);
             Route::post('admins/{admin}/assign-super-admin', [AdminController::class, 'assignSuperAdmin'])->name('assign-super-admin');
         });
 
         Route::resource('service_areas', ServiceAreaController::class)->names('service_areas');
         Route::resource('categories', CategoryController::class)->names('categories');
+        Route::resource('users', UsersController::class)->names('users');
         Route::resource('properties', PropertyController::class)->names('properties');
 
         Route::group(['prefix' => 'service-requests', 'as' => 'service-requests.'], function () {

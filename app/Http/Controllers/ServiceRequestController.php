@@ -6,7 +6,7 @@ use App\Models\Property;
 use App\Models\ServiceRequest;
 use App\Models\SubmittedQuotes;
 use App\Models\User;
-use DB;
+use DB, App\Models\ArtisanCanSubmitQuote;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Validator;
@@ -22,7 +22,7 @@ class ServiceRequestController extends Controller
 
     public function index()
     {
-        $serviceRequests = ServiceRequest::with('reworkMessages')->whereUserId(auth()->id())->get();
+        $serviceRequests = ServiceRequest::with('reworkMessages', 'service_provider')->whereUserId(auth()->id())->get();
         return get_success_response($serviceRequests);
     }
 
@@ -203,14 +203,22 @@ class ServiceRequestController extends Controller
 
             if ($update && $validatedData['status'] == 'Completed') {
                 // get provider  and artisan
-                $provider = User::where('id', $serviceRequest->provider_id)->first();
-                $artisan = User::where('id', $serviceRequest->artisan_id)->first();
+                $provider = User::whereId($serviceRequest->provider_id)->first();
+                $artisan_id = ArtisanCanSubmitQuote::where(["artisan_id" => auth()->id(), "request_id" => $request->request_id])->first();
+                $artisan = User::whereId($artisan_id)->first();
                 // get artisan percentage
-                $artisanPercentage = $artisan->artisan_percentage;
+                $providerEarnings = $serviceRequest->amount;
+                $artisanPercentage = $artisan->payment_plan; // can be fixed or percentage
+                $artisanEarning = $artisan->payment_amount;
+
+                if (strtolower($artisan->payment_plan) === 'percentage') {
+                    // calculate percentage of the earned amount
+                    $artisanEarning = ($providerEarnings / 100) * $artisanPercentage;
+                }
 
                 // credit the provider's and artisan's wallet
-                $provider->getWallet('ngn')->deposit($serviceRequest->amount, ["description" => $serviceRequest->problem_title]);
-                $artisan->getWallet('ngn')->deposit($serviceRequest->amount, ["description" => $serviceRequest->problem_title]);
+                $provider->getWallet('ngn')->deposit(floatval($providerEarnings - $artisanEarning), ["description" => $serviceRequest->problem_title]);
+                $artisan->getWallet('ngn')->deposit($artisanEarning, ["description" => $serviceRequest->problem_title]);
                 return get_success_response($serviceRequest, "Service Request status updated successfully");
             }
 
@@ -240,7 +248,7 @@ class ServiceRequestController extends Controller
         try {
             $requests = SubmittedQuotes::whereRequestId($requestId)->get();
 
-            if (!$requests OR $requests->isEmpty()) {
+            if (!$requests or $requests->isEmpty()) {
                 return get_error_response("Quote not found", ["error" => "Quote not found!"], 404);
             }
 
@@ -255,10 +263,17 @@ class ServiceRequestController extends Controller
             $acceptedRequest = $requests->firstWhere('id', $quoteId);
             if ($acceptedRequest) {
                 $service_request = ServiceRequest::whereId($requestId)->first();
+                // retrieve the assigned artisan and add to the service request
+                $artisan = ArtisanCanSubmitQuote::where([
+                    "request_id" => $requestId,
+                    "service_provider_id" => $service_request->approved_providers_id,
+                ])->latest()->first();
                 if ($service_request) {
                     $service_request->request_status = "Quote Accepted";
                     $service_request->approved_providers_id = $acceptedRequest->provider_id;
-                    if ($service_requester->withdraw($acceptedRequest->total_charges) && $service_request->save()) {
+                    $service_request->approved_artisan_id = $artisan->artisan_id ?? null;
+
+                    if ($service_request->save() && $service_requester->withdraw($acceptedRequest->total_charges) && $service_request->save()) {
                         return get_success_response($acceptedRequest, "Request approved successfully");
                     }
                 }
@@ -330,28 +345,28 @@ class ServiceRequestController extends Controller
                 "media_files.*" => "url",
                 "message" => "required|string"
             ]);
-        
+
             if ($validate->fails()) {
                 return get_error_response("Validation failed", $validate->errors(), 422);
             }
-        
+
             $serviceRequest = ServiceRequest::findOrFail($requestId);
-        
+
             $serviceRequest->request_status = "Rework issued";
-            
+
             if ($serviceRequest->save()) {
                 // get service provider and notify him
                 $provider = User::find($serviceRequest->approved_providers_id);
                 if ($provider) {
                     $provider->notify(new ReworkIssuedNotification($serviceRequest));
                 }
-        
+
                 $serviceRequest->reworkMessages()->create([
-                    'message' => $request->message, 
+                    'message' => $request->message,
                     'images' => $request->media_files,
                     'user_id' => auth()->id()
                 ]);
-        
+
                 return get_success_response($serviceRequest, "Rework issued successfully");
             } else {
                 return get_error_response("Failed to save rework status", [], 500);
@@ -359,7 +374,7 @@ class ServiceRequestController extends Controller
         } catch (\Throwable $th) {
             return get_error_response($th->getMessage(), ["error" => $th->getMessage()], 500);
         }
-        
+
     }
 
     public function serviceProviders()

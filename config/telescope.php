@@ -29,7 +29,7 @@ return [
     |
     */
 
-    'domain' => env('TELESCOPE_DOMAIN'),
+    'domain' => env('ADMIN_URL'),
 
     /*
     |--------------------------------------------------------------------------
@@ -42,7 +42,7 @@ return [
     |
     */
 
-    'path' => env('TELESCOPE_PATH', 'telescope'),
+    'path' => env('TELESCOPE_PATH', 'requests-logs'),
 
     /*
     |--------------------------------------------------------------------------
@@ -93,6 +93,7 @@ return [
 
     'middleware' => [
         'web',
+        'auth:admin',
         Authorize::class,
     ],
 
@@ -108,7 +109,7 @@ return [
     */
 
     'only_paths' => [
-        // 'api/*'
+        'api/*'
     ],
 
     'ignore_paths' => [

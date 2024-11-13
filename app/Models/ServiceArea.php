@@ -6,12 +6,16 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class ServiceArea extends BaseModel
+class ServiceArea extends Model
 {
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
         'service_area_title',
+    ];
+
+    protected $hidden = [
+        '_account_type',
     ];
 
     // Override the primary key type
@@ -20,18 +24,13 @@ class ServiceArea extends BaseModel
     // Disable auto-incrementing for the primary key
     public $incrementing = false;
 
-    protected $hidden = [
-        '_account_type',
-    ];
-
-    // Automatically generate a UUID when creating a new model instance
     protected static function boot()
     {
         parent::boot();
 
         static::creating(function ($model) {
             if (!$model->getKey()) {
-                $model->{$model->getKeyName()} = (string) generate_uuid();
+                $model->{$model->getKeyName()} = generate_uuid();
             }
 
             if ($model->_account_type === null) {
@@ -39,4 +38,5 @@ class ServiceArea extends BaseModel
             }
         });
     }
+
 }

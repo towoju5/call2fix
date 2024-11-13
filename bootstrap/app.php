@@ -27,11 +27,13 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->api(
             prepend: [
                 JsonRequestMiddleware::class,
-                'google2fa' => Google2faMiddleware::class,
                 LogRequestResponse::class,
                 // 'check.plan.limits' => \App\Http\Middleware\CheckPlanLimits::class,
             ]
         );
+        $middleware->alias([
+            'google2fa' => Google2faMiddleware::class,            
+        ]);
         $middleware->statefulApi();
     })
     ->withExceptions(function (Exceptions $exceptions) {

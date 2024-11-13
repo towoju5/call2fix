@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->string('paystack_customer_id')->nullable();
+            // $table->string('paystack_customer_id')->nullable();
             $table->string('virtual_account_number')->nullable();
             $table->string('virtual_bank_name')->nullable();
         });

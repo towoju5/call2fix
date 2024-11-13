@@ -16,11 +16,13 @@ class OrderController extends Controller
     {
         return view('order');
     }
+    
+    
     public function place_order(Request $request)
     {
         try {
             $product = Product::findOrFail($request->product_id);
-
+    
             // Validation rules
             $validationRules = [
                 "delivery_type" => "required|in:home_delivery,pick_up",
@@ -35,25 +37,25 @@ class OrderController extends Controller
                 "lease_rate" => "sometimes|numeric|min:0",
                 "lease_notes" => "sometimes|string",
             ];
-
+    
             $validator = Validator::make($request->all(), $validationRules);
-
+    
             if ($validator->fails()) {
                 return get_error_response("Validation error", $validator->errors(), 422);
             }
-
+    
             $user = $request->user();
             $wallet = $user->getWallet("ngn");
-
+    
             if (!$wallet) {
                 return get_error_response("User wallet not found", ["error" => "User wallet not found"], 404);
             }
-
+    
             $orderData = $validator->validated();
             $orderData["user_id"] = $user->id;
             $orderData["seller_id"] = $product->seller_id;
             $orderData["status"] = "pending";
-
+    
             // Calculate total price and shipping fee
             $kwik = new KwikDeliveryController();
             $shippingFee = $kwik->calculatePricing(
@@ -64,12 +66,12 @@ class OrderController extends Controller
                 $product->seller,
                 $user
             );
-            $orderData["shipping_fee"] = $shippingFee;
+            $orderData["shipping_fee"] = $shippingFee; 
 
-            if (is_array($shippingFee) || isset($shippingFee['error'])) {
-                return get_error_response($shippingFee['error'], ["error" => $shippingFee['error']], 400);
+            if(is_array($shippingFee) || isset($shippingFee['error'])) {
+                return get_error_response( $shippingFee['error'], ["error" => $shippingFee['error']], 400);
             }
-
+    
             // Calculate total price based on lease or normal purchase
             if ($request->has('lease_duration')) {
                 $rentablePrice = $this->getRentablePrice($product->id, $orderData['duration_type']);
@@ -78,20 +80,20 @@ class OrderController extends Controller
             } else {
                 $orderData["total_price"] = floatval($product->price * $orderData['quantity']) + $shippingFee;
             }
-
+    
             // Withdraw from wallet
             $wallet->withdraw($orderData["total_price"], get_default_currency($user->id), ["description" => "Order placed", "Order placement"]);
-
+    
             // Create order
             $order = Order::create($orderData);
-
+    
             // Notify the user
             if ($order) {
-                $user->notify(new OrderPlacedSuccessfully($order));
-
+                // $user->notify(new OrderPlacedSuccessfully($order));
+    
                 return get_success_response($order, "Order placed successfully", 201);
             }
-
+    
         } catch (ModelNotFoundException $e) {
             return get_error_response("Product not found", [], 404);
         } catch (\Exception $e) {
@@ -100,18 +102,24 @@ class OrderController extends Controller
             return get_error_response("Order placement failed", ["error" => $e->getMessage()], 500);
         }
     }
-
+    
 
     public function getUserOrders()
     {
         try {
-            $orders = Order::with('product', 'seller', 'user')->where('user_id', auth()->id())->get();
+            $orders = Order::with('product', 'seller', 'user');
+            if(request()->user()->current_role == 'suppliers'){
+                $orders = $orders->where('seller_id', auth()->id())->paginate(get_settings_value('per_page') ?? 10);
+            } else {
+                $orders = $orders->where('user_id', auth()->id())->paginate(get_settings_value('per_page') ?? 10);
+            }
             return get_success_response($orders, "User orders retrieved successfully");
         } catch (\Exception $e) {
             \Log::error('Error retrieving user orders: ' . $e->getMessage());
             return get_error_response("Failed to retrieve user orders", ["error" => $e->getMessage()], 500);
         }
     }
+    
 
     public function getOrder($orderId)
     {
@@ -192,37 +200,4 @@ class OrderController extends Controller
 
         return null;
     }
-
-    public function acceptOrder($id)
-    {
-        try {
-            $order = Order::where('user_id', auth()->id())->findOrFail($id);
-            $order->status = 'accepted';
-            $order->save();
-
-            return get_success_response($order, "Order accepted successfully");
-        } catch (ModelNotFoundException $e) {
-            return get_error_response("Order not found", [], 404);
-        } catch (\Exception $e) {
-            \Log::error('Error accepting order: ' . $e->getMessage());
-            return get_error_response("Failed to accept order", ["error" => $e->getMessage()], 500);
-        }
-    }
-    
-    public function rejectOrder($id)
-    {
-        try {
-            $order = Order::where('user_id', auth()->id())->findOrFail($id);
-            $order->status = 'rejected';
-            $order->save();
-
-            return get_success_response($order, "Order rejected successfully");
-        } catch (ModelNotFoundException $e) {
-            return get_error_response("Order not found", [], 404);
-        } catch (\Exception $e) {
-            \Log::error('Error rejecting order: ' . $e->getMessage());
-            return get_error_response("Failed to reject order", ["error" => $e->getMessage()], 500);
-        }
-    }
-
 }

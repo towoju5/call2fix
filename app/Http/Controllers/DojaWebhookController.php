@@ -48,14 +48,14 @@ class DojaWebhookController extends Controller
         }
     }
     
-    public function sendSMS($recipient= "+2349039395114", $message = "Your OTP code 123456 is valid for 10 minutes")
+    public function sendSMS($recipient = "+2349039395114", $message = "Your OTP code 123456 is valid for 10 minutes")
     {
         try {
             $dojahApiKey = env('DOJAH_API_KEY', 'test_sk_df6LCCYuIxF1GGcEP5xLyoFPD');
             $dojahAppId = env('DOJAH_APP_ID', '6707c1476426a6e441469674');
-    
+
             $client = new \GuzzleHttp\Client();
-            $response = $client->request('POST', 'https://sandbox.dojah.io/api/v1/messaging/sms', [
+            $response = $client->request('POST', env("DOJA_BASE_URL", "https://sandbox.dojah.io/api/v1") . "/messaging/sms", [
                 'headers' => [
                     'Authorization' => $dojahApiKey,
                     'AppId' => $dojahAppId,
@@ -68,23 +68,25 @@ class DojaWebhookController extends Controller
                     'sender_id' => env('DOJAH_SENDER_ID', 'Call2Fix'),
                 ],
             ]);
-    
+
             $statusCode = $response->getStatusCode();
             $responseBody = json_decode($response->getBody(), true);
-    
+
             if ($statusCode == 200 && isset($responseBody['status']) && $responseBody['status'] === "SMS sent successfully") {
                 Log::info('OTP SMS sent successfully', ['phone' => $recipient]);
-                // return true;
+                return response()->json(['message' => 'SMS sent successfully'], 200);
             } else {
                 Log::error('Failed to send OTP SMS', ['response' => $responseBody]);
-                // return false;
+                return response()->json(['message' => 'Failed to send SMS'], 400);
             }
-
-            return response()->json($response);
         } catch (\Throwable $th) {
             Log::error('Error sending OTP SMS', ['error' => $th->getMessage()]);
-            return false;
+            return response()->json(['message' => 'Error sending SMS'], 500);
         }
     }
-    
+
+    public function generateDojaVerificationUrl()
+    {
+        // Implement URL generation logic here
+    }
 }

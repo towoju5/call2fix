@@ -44,10 +44,6 @@ class ServiceProviderActionNotification extends Notification
 
     public function toFcm($notifiable)
     {
-        return FcmMessage::create()
-            ->setData(['action' => $this->action, 'data' => json_encode($this->data)])
-            ->setNotification(\NotificationChannels\Fcm\Resources\Notification::create()
-                ->title('New Action: ' . $this->action)
-                ->body('You have a new notification'));
+        return send_fcm($notifiable, $this->action, $this->data);
     }
 }

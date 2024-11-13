@@ -2,6 +2,7 @@
 
 use App\Models\Settings;
 use App\Models\User;
+use Creatydev\Plans\Models\PlanModel;
 use Google\Auth\Credentials\ServiceAccountCredentials;
 // use Storage;
 
@@ -124,7 +125,7 @@ if (!function_exists('getGoogleAccessToken')) {
 
 
 if (!function_exists('fcm')) {
-    function fcm($title, $body, $deviceId = null)
+    function fcm($title, $body, $deviceId = null, $data = [])
     {
         if (null === $deviceId) {
             $firebaseToken = User::whereNotNull('device_token')->pluck('device_token')->all();
@@ -132,32 +133,8 @@ if (!function_exists('fcm')) {
             $firebaseToken = $deviceId;
         }
 
-        $SERVER_API_KEY = getGoogleAccessToken();
-
-        $data = [
-            "registration_ids" => $firebaseToken,
-            "notification" => [
-                "title" => $title,
-                "body" => $body,
-            ]
-        ];
-        $dataString = json_encode($data);
-
-        $headers = [
-            "Authorization: Bearer $SERVER_API_KEY",
-            'Content-Type: application/json',
-        ];
-
-        $ch = curl_init();
-
-        curl_setopt($ch, CURLOPT_URL, 'https://fcm.googleapis.com/v1/projects/call2fix-54a46/messages:send');
-        curl_setopt($ch, CURLOPT_POST, true);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, $dataString);
-
-        $response = curl_exec($ch);
+        $firebase = new FirebaseService();
+        $response = $firebase->sendNotification($title, $body, $firebaseToken);
 
         dd($response);
     }
@@ -200,5 +177,19 @@ if (!function_exists('save_media')) {
         }
 
         return false;
+    }
+}
+
+
+if (!function_exists('get_free_plan')) {
+    function get_free_plan()
+    {
+        $plan = PlanModel::wherePrice(0)->first();
+        if ($plan) {
+            // subscribe user to plan 
+            $user = auth()->user();
+            $user->subscribeTo($plan, 30, true);
+            return $user->activeSubscription();
+        }
     }
 }

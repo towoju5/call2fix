@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\BankController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\ChartController;
 use App\Http\Controllers\ChatController;
 use App\Http\Controllers\CheckInOutController;
 use App\Http\Controllers\DepartmentController;
@@ -33,6 +34,7 @@ Route::middleware(['api'])->domain(env('API_URL'))->prefix('v1')->group(function
     // Public routes
     Route::prefix('auth')->group(function () {
         Route::post('register', [AuthController::class, 'register']);
+        Route::post('register-business', [AuthController::class, 'registerBis']);
         Route::post('login', [AuthController::class, 'login'])->name('login');
         Route::post('forgot-password', [AuthController::class, 'forgotPassword']);
         Route::post('validate-reset-code', [AuthController::class, 'validateResetCode']);
@@ -141,7 +143,7 @@ Route::middleware(['api'])->domain(env('API_URL'))->prefix('v1')->group(function
             Route::get('status/{status}', [OrderController::class, 'getOrdersByStatus']);
             Route::get('sorted', [OrderController::class, 'getSortedOrders']);
             Route::post('track', [OrderController::class, 'trackOrder']);
-            Route::get('{id}', [OrderController::class, 'getOrderStatus']);
+            Route::get('{id}', [OrderController::class, 'getOrder']);
             Route::get('{id}/accept-order', [OrderController::class, 'acceptOrder']);
             Route::get('{id}/reject-order', [OrderController::class, 'rejectOrder']);
         });
@@ -154,7 +156,7 @@ Route::middleware(['api'])->domain(env('API_URL'))->prefix('v1')->group(function
             Route::get('quotes', [ArtisanController::class, 'quotes']);
         });
 
-        Route::group(['middleware' => 'google2fa'], function () {
+        Route::group(['middleware' => 'google2fa', 'prefix' => '2fa'], function () {
             Route::post('generate-2fa-secret', [Google2faController::class, 'generateSecret']);
             Route::post('enable-2fa', [Google2faController::class, 'enable2fa']);
             Route::post('verify-2fa', [Google2faController::class, 'verify2fa']);
@@ -218,6 +220,15 @@ Route::middleware(['api'])->domain(env('API_URL'))->prefix('v1')->group(function
             Route::get('/{departmentId}/orders', [DepartmentController::class, 'orders'])->name('departments.orders');
             Route::get('/{departmentId}/wallet-history', [DepartmentController::class, 'walletHistory'])->name('departments.wallet-history');
             Route::get('/{departmentId}/service-requests', [DepartmentController::class, 'ServiceRequests'])->name('departments.serviceRequests');
+        });
+
+        Route::prefix('charts')->group(function () {
+            Route::get('orders', [ChartController::class, 'orders'])->name('chart.orders');
+            Route::get('service-requests', [ChartController::class, 'service_requests'])->name('chart.service_requests');
+            Route::get('suppliers-items-sold', [ChartController::class, 'suppliers_items_sold'])->name('chart.suppliers_items_sold');
+            Route::get('products-count', [ChartController::class, 'products_count'])->name('chart.products_count');
+            Route::get('wallets', [ChartController::class, 'wallets'])->name('chart.wallets');
+            Route::get('wallet-transactions', [ChartController::class, 'wallet_transactions'])->name('chart.wallet_transactions');
         });
     });
 

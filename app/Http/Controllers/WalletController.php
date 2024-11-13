@@ -4,11 +4,14 @@ namespace App\Http\Controllers;
 
 use App\Models\BankAccounts;
 use App\Models\Department;
+use App\Services\PaystackServices;
 use Illuminate\Http\Request;
 use App\Models\User;
 use Bavix\Wallet\Models\Wallet;
 use Illuminate\Support\Facades\Validator;
+use Towoju5\Wallet\Services\WalletService;
 use Unicodeveloper\Paystack\Facades\Paystack;
+use Towoju5\LaravelWallet\Services\CurrencyExchangeService;
 
 class WalletController extends Controller
 {
@@ -91,7 +94,8 @@ class WalletController extends Controller
     {
         $validate = Validator::make($request->all(), [
             'amount' => 'required|min:100|numeric',
-            'bank_id' => 'required|exists:bank_accounts,id'
+            'bank_id' => 'required|string',
+            'narration' => 'sometimes|string'
         ]);
 
         if ($validate->fails()) {
@@ -99,20 +103,35 @@ class WalletController extends Controller
         }
 
         $user = $request->user();
+        $_where = [
+            "id" => $request->bank_id,
+            'user_id' => $user->id,
+            '_account_type' => $user->current_role
+        ];
+        if (!BankAccounts::where($_where)->exists()) {
+            return get_error_response("Invalid bank account ID provided");
+        }
         $wallet = $user->getWallet($walletType);
         $amount = $request->amount;
         $withdrawal_fee = get_settings_value('withdrawal_fee', 0);
-
-        if ($wallet->balance < $amount + $withdrawal_fee()) {
+        $finalAmountDue = $amount + $withdrawal_fee;
+        if ($wallet->balance < $finalAmountDue) {
             return get_error_response('Insufficient funds', ['error' => 'Insufficient funds']);
         }
 
         try {
-            $transaction = $wallet->withdraw($amount, 'ngn', $request->toArray());
-            $transaction = $wallet->withdraw($amount, 'ngn', ['message', "Withdrawal fee for {$transaction->id}"]);
+            // $transaction = $wallet->withdraw($amount, 'ngn', $request->toArray());
+            $transaction = $wallet->withdraw($amount, 'ngn', ['description', "Withdrawal to bank account - {$request->bank_id}", "narration" => $request->narration ?? null]);
+            $transaction = $wallet->withdraw($withdrawal_fee, 'ngn', ['description', "Withdrawal Fee - {$request->bank_id}", "narration" => "Charges for withdrawal to bank account - {$request->bank_id}"]);
 
             // send request to paystack for withdrawal
-            //
+            $paystack = new PaystackServices();
+            $payoutObject = [
+                "amount" => $amount,
+                "recipient" => $amount,
+                "narration" => $amount,
+            ];
+            $processWithdrawal = $paystack->initiateTransfer($payoutObject);
             return get_success_response($transaction, 'Withdrawal successful');
         } catch (\Exception $e) {
             return get_error_response($e->getMessage());
@@ -124,13 +143,7 @@ class WalletController extends Controller
         $user = auth()->user();
         $wallet = $user->getWallet($walletType);
 
-        return get_success_response($wallet->only([
-            "name",
-            "slug",
-            "meta",
-            "balance",
-            "decimal_places",
-        ]), 'Balance retrieved successfully');
+        return get_success_response($wallet, 'Balance retrieved successfully');
     }
 
     public function transfer(Request $request)
@@ -150,16 +163,12 @@ class WalletController extends Controller
         $toWalletType = $request->to_wallet;
         $amount = $request->amount;
 
-        $fromWallet = $user->getWallet($fromWalletType);
-        $toWallet = $user->getWallet($toWalletType);
-
         try {
-            $arr = array_merge($validate->validated(), [
-                "action" => "Transfer between wallets",
-            ]);
+            $currencyExchangeService = new CurrencyExchangeService;
+            $wallet = new WalletService($currencyExchangeService);
+            $txn = $wallet->transferBetweenCurrencies($fromWalletType, $toWalletType, $amount);
 
-            $fromWallet->transfer($toWallet, $amount, $arr);
-            return get_success_response($fromWallet->only(['name', 'slug', 'meta', 'balance', 'decimal_places']), 'Transfer successful');
+            return get_success_response(['wallet' => $txn], 'Transfer successful');
         } catch (\Exception $e) {
             return get_error_response($e->getMessage());
         }
@@ -169,7 +178,7 @@ class WalletController extends Controller
     {
         $user = auth()->user();
         $wallet = $user->getWallet($walletType);
-        $transactions = $wallet->transactions()->select('*')->where('_account_type', active_role())->orderBy('created_at', 'desc')->paginate(20); //->makeHidden();
+        $transactions = $wallet->transactions()->select('*')->where('_account_type', $user->current_role)->latest()->paginate(20); //->makeHidden();
 
         return get_success_response($transactions, 'Transactions retrieved successfully');
     }
@@ -178,7 +187,7 @@ class WalletController extends Controller
     {
         $user = auth()->user();
         $wallets = $user->my_wallets();
-        if ($wallets->isEmpty()) {
+        if ($wallets->isEmpty() || count($wallets) < 1) {
             // generate wallet for user
             $mainWallet = $user->createWallet([
                 'name' => 'Naira Wallet',
@@ -218,7 +227,7 @@ class WalletController extends Controller
             if ($request->has('department_id')) {
                 $user = Department::whereId($request->department_id)->where('owner_id', auth()->id())->first();
             }
-            
+
             if (!$user) {
                 return get_error_response('Department not found', ['error' => 'Department not found']);
             }
@@ -260,7 +269,15 @@ class WalletController extends Controller
             $validate['user_id'] = auth()->id();
             $validate['account_type'] = 'withdrawal';
 
-            if ($account = BankAccounts::create($validate)) {
+            if (
+                $account = BankAccounts::updateOrCreate(
+                    [
+                        "account_number" => $validate["account_number"],
+                        "bank_code" => $validate["bank_code"]
+                    ],
+                    $validate
+                )
+            ) {
                 return get_success_response($account, "Bank account processed successfully", 200);
             }
         } catch (\Throwable $th) {

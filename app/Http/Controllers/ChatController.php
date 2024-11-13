@@ -31,6 +31,24 @@ class ChatController extends Controller
         return get_success_response($chat->load('participants'), 'Chat created successfully');
     }
 
+    public function sendMessage(Request $request, Chat $chat)
+    {
+        $validated = $request->validate([
+            'content' => 'required|string'
+        ]);
+
+        // Create message
+        $message = $chat->messages()->create([
+            'user_id' => Auth::id(),
+            'content' => $validated['content']
+        ]);
+
+        // Broadcast the message to the Ably channel
+        broadcast(new NewMessage($message))->toOthers();  
+        return get_success_response($message->load('user'));
+    }
+
+
     public function show(Chat $chat)
     {
         return get_success_response($chat->load('participants', 'messages.user'));
@@ -41,19 +59,19 @@ class ChatController extends Controller
         // $validated = Validator::make($request->all(), [
     }
 
-    public function sendMessage(Request $request, Chat $chat)
-    {
-        $validated = $request->validate([
-            'content' => 'required|string'
-        ]);
+    // public function sendMessage(Request $request, Chat $chat)
+    // {
+    //     $validated = $request->validate([
+    //         'content' => 'required|string'
+    //     ]);
 
-        $message = $chat->messages()->create([
-            'user_id' => Auth::id(),
-            'content' => $validated['content']
-        ]);
+    //     $message = $chat->messages()->create([
+    //         'user_id' => Auth::id(),
+    //         'content' => $validated['content']
+    //     ]);
 
-        broadcast(new NewMessage($message))->toOthers();
+    //     broadcast(new NewMessage($message))->toOthers();
 
-        return get_success_response($message->load('user'));
-    }
+    //     return get_success_response($message->load('user'));
+    // }
 }

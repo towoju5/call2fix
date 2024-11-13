@@ -6,11 +6,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Auth;
-use Bavix\Wallet\Traits\HasWallet;
+use App\Traits\HasWallets;
 
-class SubAccounts extends BaseModel
+class SubAccounts extends Model
 {
-    use HasFactory, SoftDeletes, HasWallet; // Use Bavix HasWallet for wallet management
+    use HasFactory, SoftDeletes, HasWallets; // Use Bavix HasWallet for wallet management
 
     protected $table = "users"; // assuming users table holds account data
 

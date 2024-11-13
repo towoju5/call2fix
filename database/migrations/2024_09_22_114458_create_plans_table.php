@@ -10,7 +10,7 @@ use Laravelcm\Subscriptions\Interval;
 return new class () extends Migration {
     public function up(): void
     {
-        Schema::create(config('laravel-subscriptions.tables.plans'), function (Blueprint $table): void {
+        Schema::create('old_'.config('laravel-subscriptions.tables.plans'), function (Blueprint $table): void {
             $table->id();
 
             $table->json('name');

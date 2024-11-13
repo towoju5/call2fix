@@ -66,6 +66,16 @@ class ArtisanController extends Controller
                     return get_error_response("You have already submitted a quote for this request", ["error" => "You have already submitted a quote for this request"]);
                 }
 
+                $service_vat = ($request->workmanship + get_settings_value('administrative_fee')) * 0.075;
+                $items_total = 0;
+                if($request->has('items') && !empty($request->items)) {
+                    $items = $request->items;
+                    foreach ($items as $item) {
+                        $items_total += $item['quantity'] * $item['price'];
+                    }
+                    $service_vat += $items_total * 0.075;
+                }
+                
                 // Process quote submission 
                 $createQuote = ArtisanQuotes::updateOrCreate(
                     [
@@ -83,11 +93,13 @@ class ArtisanController extends Controller
                         "attachments" => $request->attachments,
                         "summary_note" => $request->summary_note,
                         "administrative_fee" => get_settings_value('administrative_fee'),
-                        "service_vat" => ($request->workmanship + get_settings_value('administrative_fee')) * 0.075
+                        "service_vat" => $service_vat,
+                        "items" => $request->items,
+                        "total_charges" => $request->workmanship + $items_total + get_settings_value('administrative_fee') + $service_vat,
                     ]
                 );
 
-                $createQuote->items()->save($request->items);
+                // $createQuote->items()->save($request->items);
 
                 return get_success_response($createQuote, "Quote submitted successfully");
             } else {

@@ -7,7 +7,7 @@
                 <script>
                     document.write(new Date().getFullYear())
                 </script>, made with ❤️ by <a href="https://luxconsole.com/" target="_blank"
-                    class="footer-link">LuxConsole</a>
+                    class="footer-link">LuxConsole Nigeria Limited</a>
             </div>
             <div class="d-none d-lg-inline-block">
 
@@ -16,7 +16,7 @@
 
                 <a href="https://demos.pixinvent.com/vuexy-html-admin-template/documentation/" target="_blank" class="footer-link me-4">Properties</a>
 
-                <a href="https://pixinvent.ticksy.com/" target="_blank" class="footer-link d-none d-sm-inline-block">Products</a>
+                <a href="{{ route('admin.api.logs') }}" target="_blank" class="footer-link d-none d-sm-inline-block">Request Logs</a>
 
             </div>
         </div>

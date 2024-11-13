@@ -12,18 +12,19 @@ use App\Models\Deposit;
 use App\Models\Order;
 use App\Models\Property;
 use App\Models\User;
+use Creatydev\Plans\Models\PlanModel;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Support\Facades\Route;
 use Laravel\Telescope\Telescope;
 use LaravelDaily\LaravelCharts\Classes\LaravelChart;
+use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 use function Pest\Laravel\withoutMiddleware;
 
 
 
-Route::get('g', function () {
-	// $order = Order::with('customer', 'seller', 'product')->first();
-	// return response()->json($order);
+Route::get('/', function () {
+	// return $permissions = Permission::all();
 });
 
 Route::any('send-sms', [DojaWebhookController::class, 'sendSMS']);

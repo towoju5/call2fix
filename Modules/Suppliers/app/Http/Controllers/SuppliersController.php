@@ -24,7 +24,7 @@ class SuppliersController extends Controller
                 return get_error_response("validation errors", $validate->errors(), 422);
             }
 
-            $order = Order::with('product', 'seller', 'user')->where('seller_id', auth()->id())->where("order_id", $request->order_id)->first();
+            $order = Order::with('product', 'seller', 'user')->where('seller_id', auth()->id())->whereId($request->order_id)->first();
             if (empty($order)) {
                 return get_error_response("Order not found!", ['error' => "Selected order not found"], 404);
             }

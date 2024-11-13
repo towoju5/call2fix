@@ -6,6 +6,7 @@
     "license": "MIT",
     "require": {
         "php": "^8.2",
+        "ably/ably-php": "^1.1",
         "brian2694/laravel-toastr": "^5.59",
         "emargareten/two-factor-laravel": "^0.0.9",
         "google/apiclient": "^2.18",
@@ -24,6 +25,8 @@
         "pusher/pusher-php-server": "^7.2",
         "spatie/laravel-permission": "^6.9",
         "towoju5/laravel-referral": "^1.1",
+        "towoju5/laravel-wallet": "^1.0",
+        "towoju5/plans": "^1.1",
         "tymon/jwt-auth": "^2.1",
         "unicodeveloper/laravel-paystack": "^1.2",
         "yajra/laravel-datatables-oracle": "^11.1"

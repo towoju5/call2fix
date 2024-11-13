@@ -21,7 +21,13 @@ class UsersController extends Controller
 {
     public function index()
     {
-        $users = User::with('roles')->paginate(15);
+        $users = User::with('roles')
+            ->when(request('roles'), function ($query) {
+                $query->whereHas('roles', function ($q) {
+                    $q->whereIn('name', is_array(request('roles')) ? request('roles') : [request('roles')]);
+                });
+            })
+            ->paginate(15);
         return view('admin.users.index', compact('users'));
     }
 
@@ -31,9 +37,27 @@ class UsersController extends Controller
         $serviceRequests = $user->serviceRequests()->latest()->take(10)->get();
         $products = $user->products()->latest()->take(10)->get();
         $orders = $user->orders()->latest()->take(10)->get();
-        $wallets = $user->wallets;
+        $wallets = $user->my_wallets();
+        $properties = $user->properties()->latest()->take(10)->get();
+        // $artisans = $user->artisans()->latest()->take(10)->get();
+        $bankAccount = $user->bankAccount()->latest()->take(10)->get();
+        $business_info = $user->business_info()->latest()->take(10)->get();
+        
 
-        return view('admin.users.show', compact('user', 'transactions', 'serviceRequests', 'products', 'orders', 'wallets'));
+        // return [
+        //     "transactions" => $transactions,
+        //     "serviceRequests" => $serviceRequests,
+        //     "products" => $products,
+        //     "orders" => $orders,
+        //     "wallets" => $wallets,
+        //     "properties" => $properties,
+        //     "artisans" => $artisans,
+        //     "bankAccount" => $bankAccount,
+        //     "business_info" => $business_info,
+        //     "user" => $user
+        // ];
+
+        return view('admin.users.show', compact('user', 'transactions', 'serviceRequests', 'products', 'orders', 'wallets', 'properties', 'bankAccount', 'business_info'));
     }
 
 
@@ -138,7 +162,7 @@ class UsersController extends Controller
 
     public function update(Request $request, User $user)
     {
-        
+
         $validator = Validator::make($request->all(), [
             'first_name' => 'required|string|max:255',
             'lastt_name' => 'required|string|max:255',

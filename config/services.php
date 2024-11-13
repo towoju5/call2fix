@@ -35,4 +35,7 @@ return [
         ],
     ],
 
+    'ably' => [
+        'key' => env('ABLY_API_KEY'),
+    ],
 ];

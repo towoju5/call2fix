@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use Creatydev\Plans\Models\PlanModel;
 use Illuminate\Http\Request;
 use Laravelcm\Subscriptions\Models\Plan;
 
@@ -11,12 +12,12 @@ class PlanController extends Controller
     public function index()
     {
         try {
-            $plans = Plan::all();
+            $plans = PlanModel::all();
             if (!$plans) {
                 return get_error_response("No Plan Found!", ['error' => "Plans not found"], 404);
             }
 
-            return get_success_response($plans);
+            return get_success_response(['plans' => $plans, 'current_plan' => auth()->user()->activeSubscription()]);
         } catch (\Throwable $th) {
             return get_error_response($th->getMessage(), ["error" => $th->getMessage()], 400);
         }
@@ -58,7 +59,19 @@ class PlanController extends Controller
                 return get_error_response('Insufficient wallet balance', ['error' => 'Insufficient wallet balance'], 402);
             }
 
-            if ($user->newPlanSubscription($plan->name, $plan)) {
+            $currentSubscription = $user->activeSubscription();
+
+            if ($currentSubscription) {
+                $user->upgradeCurrentPlanTo($plan);
+                return get_success_response(['message' => 'Subscription upgraded successfully']);
+            }
+
+            
+            $duration = $request->duration ?? 30;
+            $renewal = $request->auto_renew ?? true;
+            $subscription = $user->subscribeTo($plan, $duration, $renewal);
+            // if ($user->newPlanSubscription($plan->name, $plan)) {
+            if ($subscription) {
                 return get_success_response([], "Plan subscription was successful");
             }
         } catch (\Throwable $th) {

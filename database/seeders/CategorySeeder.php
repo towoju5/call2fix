@@ -25,174 +25,173 @@ class CategorySeeder extends Seeder
             ServiceArea::firstOrCreate($area);
         }
 
-
         $categories = [
             [
                 'parent_category' => 'Maintenance & Repairs', // replace with the ID of the service_area
                 'category_name' => 'Electrical & Power Systems',
                 'category_slug' => 'electrical-power-systems',
-                'category_image' => 'aswby1587325294067.png',
+                'category_image' => url('asset/img/categories/aswby1587325294067.png'),
                 'category_description' => 'Maintenance and repairs related to electrical and power systems.'
             ],
             [
                 'parent_category' => 'Maintenance & Repairs', // replace with the ID of the service_area
                 'category_name' => 'Plumbing, Water & Sewage',
                 'category_slug' => 'plumbing-water-sewage',
-                'category_image' => 'i82fb1587325327961.png',
+                'category_image' => url('asset/img/categories/i82fb1587325327961.png'),
                 'category_description' => 'Plumbing services including water and sewage systems maintenance.'
             ],
             [
                 'parent_category' => 'Maintenance & Repairs', // replace with the ID of the service_area
                 'category_name' => 'Civil Works & Painting',
                 'category_slug' => 'civil-works-painting',
-                'category_image' => 'bvadyd1587325381041.png',
+                'category_image' => url('asset/img/categories/bvadyd1587325381041.png'),
                 'category_description' => 'Civil engineering services and painting works.'
             ],
             [
                 'parent_category' => 'Maintenance & Repairs', // replace with the ID of the service_area
                 'category_name' => 'Locksmith',
                 'category_slug' => 'locksmith',
-                'category_image' => 'snrnig1612180838707.png',
+                'category_image' => url('asset/img/categories/snrnig1612180838707.png'),
                 'category_description' => 'Locksmith services for residential and commercial properties.'
             ],
             [
                 'parent_category' => 'Maintenance & Repairs', // replace with the ID of the service_area
                 'category_name' => 'Air Conditioning / HVAC Systems',
                 'category_slug' => 'air-conditioning-hvac-systems',
-                'category_image' => 'my3b31587325429674.png',
+                'category_image' => url('asset/img/categories/my3b31587325429674.png'),
                 'category_description' => 'Air conditioning and HVAC system services.'
             ],
             [
                 'parent_category' => 'Maintenance & Repairs', // replace with the ID of the service_area
                 'category_name' => 'Swimming Pool Maintenance',
                 'category_slug' => 'swimming-pool-maintenance',
-                'category_image' => '6lq0w1575037821799.png',
+                'category_image' => url('asset/img/categories/6lq0w1575037821799.png'),
                 'category_description' => 'Maintenance services for swimming pools.'
             ],
             [
                 'parent_category' => 'Maintenance & Repairs', // replace with the ID of the service_area
                 'category_name' => 'Carpentry & Furniture Repairs',
                 'category_slug' => 'carpentry-furniture-repairs',
-                'category_image' => 'carpentry.png',
+                'category_image' => url('asset/img/categories/carpentry.png'),
                 'category_description' => 'Carpentry services and furniture repair.'
             ],
             [
                 'parent_category' => 'Maintenance & Repairs', // replace with the ID of the service_area
                 'category_name' => 'Interior Decorations',
                 'category_slug' => 'interior-decorations',
-                'category_image' => 'bg8opa1588009591000.png',
+                'category_image' => url('asset/img/categories/bg8opa1588009591000.png'),
                 'category_description' => 'Interior decoration services for homes and offices.'
             ],
             [
                 'parent_category' => 'Maintenance & Repairs', // replace with the ID of the service_area
                 'category_name' => 'Cleaning & Fumigation Services',
                 'category_slug' => 'cleaning-fumigation-services',
-                'category_image' => 'cleaning.png',
+                'category_image' => url('asset/img/categories/cleaning.png'),
                 'category_description' => 'Cleaning and fumigation services for residential and commercial spaces.'
             ],
             [
                 'parent_category' => 'Maintenance & Repairs', // replace with the ID of the service_area
                 'category_name' => 'Gardening & Landscaping',
                 'category_slug' => 'gardening-landscaping',
-                'category_image' => 'flowers.png',
+                'category_image' => url('asset/img/categories/flowers.png'),
                 'category_description' => 'Gardening and landscaping services for home and business properties.'
             ],
             [
                 'parent_category' => 'Furniture & Appliances', // replace with the ID of the service_area
                 'category_name' => 'Home Electronics',
                 'category_slug' => 'home-electronics',
-                'category_image' => 'domestic.png',
+                'category_image' => url('asset/img/categories/domestic.png'),
                 'category_description' => 'Home electronic appliances installation and repair.'
             ],
             [
                 'parent_category' => 'Furniture & Appliances', // replace with the ID of the service_area
                 'category_name' => 'Office Equipment',
                 'category_slug' => 'office-equipment',
-                'category_image' => 'office-equipment.png',
+                'category_image' => url('asset/img/categories/office-equipment.png'),
                 'category_description' => 'Installation and maintenance of office equipment.'
             ],
             [
                 'parent_category' => 'Maintenance & Repairs', // replace with the ID of the service_area
                 'category_name' => 'Safety & Security Systems',
                 'category_slug' => 'safety-security-systems',
-                'category_image' => 'fire-detection.png',
+                'category_image' => url('asset/img/categories/fire-detection.png'),
                 'category_description' => 'Safety and security system installation and repair services.'
             ],
             [
                 'parent_category' => 'Maintenance & Repairs', // replace with the ID of the service_area
                 'category_name' => 'ICT/Internet Services',
                 'category_slug' => 'ict-internet-services',
-                'category_image' => 'ppzlor1587367221435.png',
+                'category_image' => url('asset/img/categories/ppzlor1587367221435.png'),
                 'category_description' => 'Information and communication technology services, including internet services.'
             ],
             [
                 'parent_category' => 'Logistics & Events', // replace with the ID of the service_area
                 'category_name' => 'Catering & Event Management Services',
                 'category_slug' => 'catering-event-management-services',
-                'category_image' => 'chandelier.png',
+                'category_image' => url('asset/img/categories/chandelier.png'),
                 'category_description' => 'Catering and event management services.'
             ],
             [
                 'parent_category' => 'Furniture & Appliances', // replace with the ID of the service_area
                 'category_name' => 'Kitchen Appliances',
                 'category_slug' => 'kitchen-appliances',
-                'category_image' => 'ygljz91587366015122.png',
+                'category_image' => url('asset/img/categories/ygljz91587366015122.png'),
                 'category_description' => 'Kitchen appliance installation and maintenance.'
             ],
             [
                 'parent_category' => 'Maintenance & Repairs', // replace with the ID of the service_area
                 'category_name' => 'Waste Management & Environmental Services',
                 'category_slug' => 'waste-management-environmental-services',
-                'category_image' => 'sewage.png',
+                'category_image' => url('asset/img/categories/sewage.png'),
                 'category_description' => 'Waste management and environmental services.'
             ],
             [
                 'parent_category' => 'Logistics & Events', // replace with the ID of the service_area
                 'category_name' => 'Warehousing Logistics and Relocation Services',
                 'category_slug' => 'warehousing-logistics-relocation-services',
-                'category_image' => 'warehouse.png',
+                'category_image' => url('asset/img/categories/warehouse.png'),
                 'category_description' => 'Logistics and relocation services, including warehousing.'
             ],
             [
                 'parent_category' => 'Furniture & Appliances', // replace with the ID of the service_area
                 'category_name' => 'Home Furniture',
                 'category_slug' => 'home-furniture',
-                'category_image' => '1pe9uo1588009179310.png',
+                'category_image' => url('asset/img/categories/1pe9uo1588009179310.png'),
                 'category_description' => 'Installation and maintenance of home furniture.'
             ],
             [
                 'parent_category' => 'Maintenance & Repairs', // replace with the ID of the service_area
                 'category_name' => 'Housekeeping / Domestic Supports',
                 'category_slug' => 'housekeeping-domestic-supports',
-                'category_image' => 'vgb6b1606120894443.png',
+                'category_image' => url('asset/img/categories/vgb6b1606120894443.png'),
                 'category_description' => 'Housekeeping and domestic support services.'
             ],
             [
                 'parent_category' => 'Logistics & Events', // replace with the ID of the service_area
                 'category_name' => 'Serviced Offices and Apartments',
                 'category_slug' => 'serviced-offices-apartments',
-                'category_image' => '6fvxkn1588939913405.png',
+                'category_image' => url('asset/img/categories/6fvxkn1588939913405.png'),
                 'category_description' => 'Serviced offices and apartments management services.'
             ],
             [
                 'parent_category' => 'Maintenance & Repairs', // replace with the ID of the service_area
                 'category_name' => 'Renewable Energy Solutions',
                 'category_slug' => 'renewable-energy-solutions',
-                'category_image' => 'ipt8q1600059586337.png',
+                'category_image' => url('asset/img/categories/ipt8q1600059586337.png'),
                 'category_description' => 'Renewable energy solutions and services.'
             ],
             [
                 'parent_category' => 'Logistics & Events', // replace with the ID of the service_area
                 'category_name' => 'Pickup & Delivery',
                 'category_slug' => 'pickup-delivery',
-                'category_image' => 'q6wcfq1606121332084.png',
+                'category_image' => url('asset/img/categories/q6wcfq1606121332084.png'),
                 'category_description' => 'Pickup and delivery services.'
             ],
             [
                 'parent_category' => 'Maintenance & Repairs', // replace with the ID of the service_area
                 'category_name' => 'Facility Inspection Service',
                 'category_slug' => 'facility-inspection-service',
-                'category_image' => '2ono61644407950594.PNG',
+                'category_image' => url('asset/img/categories/2ono61644407950594.PNG'),
                 'category_description' => 'Inspection services for facilities and buildings.'
             ]
         ];
@@ -204,6 +203,7 @@ class CategorySeeder extends Seeder
                 Category::firstOrCreate(
                     ['category_slug' => $category['category_slug']],
                     [
+                        'id' => generate_uuid(),
                         'parent_category' => $service_area->id,
                         'category_name' => $category['category_name'],
                         'category_image' => $category['category_image'],
@@ -215,7 +215,6 @@ class CategorySeeder extends Seeder
 
 
         // services 
-
         $services = json_decode('[
             {
               "scat_category": "Electrical & Power Systems",
@@ -1241,6 +1240,7 @@ class CategorySeeder extends Seeder
                 Service::firstOrCreate(
                     ['service_slug' => $service['service_slug']],
                     [
+                        "id" => generate_uuid(),
                         "category_id" => $service_category->id ?? generate_uuid(),
                         "service_name" => $service['service_name'],
                         "service_slug" => $service['service_slug']

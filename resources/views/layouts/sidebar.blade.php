@@ -45,11 +45,36 @@
                         <div data-i18n="List">List</div>
                     </a>
                 </li>
-                {{-- <li class="menu-item">
-                    <a href="{{ route('admin.users.create') }}" class="menu-link">
-                        <div data-i18n="Create">Create</div>
+                <li class="menu-item">
+                    <a href="{{ route('admin.users.index') }}?roles=private_accounts" class="menu-link">
+                        <div data-i18n="Private Customers">Private Customers</div>
                     </a>
-                </li> --}}
+                </li>
+                <li class="menu-item">
+                    <a href="{{ route('admin.users.index') }}?roles=co-operate_accounts" class="menu-link">
+                        <div data-i18n="Co-operate Customers">Co-operate Customers</div>
+                    </a>
+                </li>
+                <li class="menu-item">
+                    <a href="{{ route('admin.users.index') }}?roles=artisan" class="menu-link">
+                        <div data-i18n="Artisans">Artisans</div>
+                    </a>
+                </li>
+                <li class="menu-item">
+                    <a href="{{ route('admin.users.index') }}?roles=providers" class="menu-link">
+                        <div data-i18n="Service Providers">Service Providers</div>
+                    </a>
+                </li>
+                <li class="menu-item">
+                    <a href="{{ route('admin.users.index') }}?roles=suppliers" class="menu-link">
+                        <div data-i18n="Suppliers">Suppliers</div>
+                    </a>
+                </li>
+                <li class="menu-item">
+                    <a href="{{ route('admin.users.index') }}?roles=affiliates" class="menu-link">
+                        <div data-i18n="Affiliates">Affiliates</div>
+                    </a>
+                </li>
             </ul>
         </li>
 
@@ -65,11 +90,11 @@
                         <div data-i18n="Roles">Roles</div>
                     </a>
                 </li>
-                {{-- <li class="menu-item">
+                <li class="menu-item">
                     <a href="{{ route('admin.permissions.index') }}" class="menu-link">
                         <div data-i18n="Permissions">Permissions</div>
                     </a>
-                </li> --}}
+                </li>
             </ul>
         </li>
 
@@ -105,13 +130,28 @@
             </a>
         </li>
 
-        <!-- Settings -->
-        {{-- <li class="menu-item">
+        <!-- Orders -->
+        <li class="menu-item">
+            <a href="{{ route('admin.settings.index') }}" class="menu-link">
+                <i class="menu-icon tf-icons ti ti-settings"></i>
+                <div data-i18n="Orders">Orders</div>
+            </a>
+        </li>
+
+        <!-- Kwik Deliveries -->
+        <li class="menu-item">
+            <a href="{{ route('admin.settings.index') }}" class="menu-link">
+                <i class="menu-icon tf-icons ti ti-settings"></i>
+                <div data-i18n="Kwik Deliveries">Kwik Deliveries</div>
+            </a>
+        </li>
+
+        <li class="menu-item">
             <a href="{{ route('admin.settings.index') }}" class="menu-link">
                 <i class="menu-icon tf-icons ti ti-settings"></i>
                 <div data-i18n="Settings">Settings</div>
             </a>
-        </li> --}}
+        </li>
     </ul>
 
 </aside>

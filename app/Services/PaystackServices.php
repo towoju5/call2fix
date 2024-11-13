@@ -153,12 +153,12 @@ class PaystackServices
     public function initiateTransfer($data)
     {
         $url = $this->paystackBaseUrl . '/transfer';
-
+        $request = request();
         $payload = [
-            'source' => $data['source'],
+            'source' => "balance",
             'amount' => $data['amount'],
             'recipient' => $data['recipient'],
-            'reason' => $data['reason'],
+            'reason' => $data['narration'] ?? $request->narration,
         ];
 
         $response = Http::withHeaders([

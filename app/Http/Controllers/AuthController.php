@@ -5,14 +5,14 @@ namespace App\Http\Controllers;
 use App\Models\BusinessInfo;
 use App\Notifications\PasswordResetComplete;
 use App\Notifications\PasswordResetNotification;
-use DB;
+use DB, Http, Mail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use App\Models\User;
 use Illuminate\Support\Facades\Validator;
 use Jijunair\LaravelReferral\Models\Referral;
-use Mail;
+use Towoju5\Wallet\Models\Wallet;
 
 
 class AuthController extends Controller
@@ -31,7 +31,7 @@ class AuthController extends Controller
                 'last_name' => 'required|string|max:255',
                 'email' => 'required_without:phone|string|email|max:255|unique:users',
                 'phone' => 'required_without:email|string|regex:/^\+[1-9]\d{1,14}$/|max:20|unique:users',
-                'account_type' => 'required|string|in:providers,co-operate_accounts,private_accounts,affiliates,suppliers',
+                'account_type' => 'required|string|in:co-operate_accounts,private_accounts,affiliates',
                 'device_id' => 'required|string|max:255',
                 'password' => 'required|string|min:8',
                 'username' => 'required|string|max:255|unique:users',
@@ -87,6 +87,10 @@ class AuthController extends Controller
                     }
                 }
 
+                // generate wallet balance
+                $user->getWallet('ngn');
+                $user->getWallet('bonus');
+
                 $user->assignRole($request->account_type);
                 // Create business info
                 if (in_array($request->account_type, ['suppliers', 'providers', 'corporate_account'])) {
@@ -109,6 +113,139 @@ class AuthController extends Controller
             return get_error_response($e->getMessage(), ['error' => $e->getMessage()]);
         }
     }
+
+    public function registerBis(Request $request)
+    {
+        try {
+            if (!isset($request->username)) {
+                $request->merge([
+                    'username' => explode('@', $request->email ?? $request->phone)[0] . rand(1, 99)
+                ]);
+            }
+
+            $validator = Validator::make($request->all(), [
+                'first_name' => 'required|string|max:255',
+                'last_name' => 'required|string|max:255',
+                'email' => 'required_without:phone|string|email|max:255|unique:users',
+                'phone' => 'required_without:email|string|regex:/^\+[1-9]\d{1,14}$/|max:20|unique:users',
+                'account_type' => 'required|string|in:providers,suppliers',
+                'device_id' => 'required|string|max:255',
+                'password' => 'required|string|min:8',
+                'username' => 'required|string|max:255|unique:users',
+                'profile_picture' => 'nullable|string',
+                'referred_by' => 'sometimes|string',
+                "businessName" => "required|string",
+                "cacNumber" => "required|string",
+                "officeAddress" => "required|string",
+                "businessCategory" => "required|string",
+                "businessDescription" => "required|string",
+                "businessIdType" => "required|string",
+                "businessIdNumber" => "required|string",
+                "businessIdImage" => "required|string",
+                "businessBankInfo" => "required|string",
+            ]);
+
+            if ($validator->fails()) {
+                return get_error_response("Validation error", $validator->errors());
+            }
+
+            $userData = [
+                'first_name' => $request->first_name,
+                'last_name' => $request->last_name,
+                'password' => Hash::make($request->password),
+                'username' => $request->username,
+                'profile_picture' => $request->profile_picture,
+                'is_social' => false,
+                'account_type' => $request->account_type,
+                'device_id' => $request->device_id,
+                'current_role' => $request->account_type,
+                'main_account_role' => $request->account_type,
+            ];
+
+            if ($request->has('email')) {
+                $userData['email'] = $request->email;
+            }
+
+            if ($request->has('phone')) {
+                $userData['phone'] = str_replace(" ", "", $request->phone);
+            }
+
+            // Start a database transaction to ensure atomicity
+            $user = DB::transaction(function () use ($userData, $request) {
+                // Create the user
+                $user = User::create($userData);
+
+                if (!$user) {
+                    return get_error_response('Failed to create user');
+                }
+
+                // Create or update the user's business info
+                $business = $user->business_info()->updateOrCreate([
+                    'user_id' => $user->id,
+                ], $request->only([
+                                'businessName',
+                                'cacNumber',
+                                'officeAddress',
+                                'businessCategory',
+                                'businessDescription',
+                                'businessIdType',
+                                'businessIdNumber',
+                                'businessIdImage',
+                                'businessBankInfo'
+                            ]));
+
+                // Check if business creation failed
+                if (!$business) {
+                    throw new \Exception('Failed to create or update business info');
+                }
+
+                // Implement referral system if referred_by exists
+                if ($request->has('referred_by')) {
+                    $referral = Referral::create([
+                        'user_id' => $user->id,
+                        'referred_by' => $request->referred_by,
+                    ]);
+
+                    $referrer = Referral::userByReferralCode($request->referred_by);
+                    if ($referrer) {
+                        $wallet = $user->getWallet('bonus');
+                        if ($wallet) {
+                            $wallet->deposit(get_settings_value('referal_commission', 0), 'bonus', $request->account_type, ["description" => "Referral Bonus"], ["description" => "Referral Bonus"]);
+                        }
+                    }
+                }
+
+                // Generate wallet balance for NGN and bonus
+                $user->getWallet('ngn');
+                $user->getWallet('bonus');
+
+                // Assign role to the user based on account type
+                $user->assignRole($request->account_type);
+
+                // If the account is a 'supplier', 'provider', or 'corporate_account', create business info
+                if (in_array($request->account_type, ['suppliers', 'providers', 'corporate_account'])) {
+                    $businessInfo = BusinessInfo::create([
+                        'user_id' => $user->id,
+                        'account_type' => $request->account_type,
+                    ]);
+
+                    if (!$businessInfo) {
+                        throw new \Exception('Failed to create business info for the account');
+                    }
+                }
+
+                return $user;
+            });
+
+            // Return the success response with user data and wallets
+            return get_success_response(array_merge($user->toArray(), ['wallets' => $user->my_wallets()]), 'User registered successfully');
+        } catch (\Exception $e) {
+            // If any exception occurs, roll back the transaction and return error response
+            DB::rollBack();
+            return get_error_response($e->getMessage(), ['error' => $e->getMessage()]);
+        }
+    }
+
 
     public function login(Request $request)
     {
@@ -163,12 +300,13 @@ class AuthController extends Controller
     public function profile()
     {
         try {
-            $user = User::with("properties", "orders", "transactions", "products", "bankAccount", "wallets", "business_info", "roles")->whereId(auth()->id())->first();
+            $user = User::with("properties", "orders", "transactions", "products", "bankAccount", "business_info", "roles")->whereId(auth()->id())->first();
             if (!$user) {
                 return get_error_response('User not found', ['message' => 'User not found']);
             }
-            $user['active_plans'] = $user?->subscribedPlans();
+            $user['current_plan'] = $user->activeSubscription() ?? get_free_plan();
             $user['ref_code'] = $user?->getReferralCode();
+            $user['wallets'] = Wallet::where('user_id', $user->id)->where('role', active_role())->get();
             $user['referrer'] = $user?->referralAccount?->referrer;
             return get_success_response($user);
         } catch (\Throwable $th) {
@@ -198,44 +336,111 @@ class AuthController extends Controller
         return get_error_response('Email already verified', ['message' => 'Email already verified']);
     }
 
-    public function socialLogin(Request $request)
+    // public function socialLogin(Request $request)
+    // {
+    //     $validator = Validator::make($request->all(), [
+    //         'first_name' => 'required|string|max:255',
+    //         'last_name' => 'required|string|max:255',
+    //         'email' => 'required|string|email|max:255',
+    //         'provider' => 'required|string',
+    //         'provider_id' => 'required|string',
+    //         'account_type' => 'required|string',
+    //     ]);
+
+    //     if ($validator->fails()) {
+    //         return get_error_response($validator->errors());
+    //     }
+
+    //     if (!isset($request->username)) {
+    //         $request->merge([
+    //             'username' => explode('@', $request->email ?? $request->phone)[0] . rand(1, 99)
+    //         ]);
+    //     }
+
+    //     $user = User::where('email', $request->email)->first();
+    //     if (!$user) {
+    //         $user = User::create([
+    //             'first_name' => $request->first_name,
+    //             'last_name' => $request->last_name,
+    //             'username' => $request->username,
+    //             'email' => $request->email,
+    //             'is_social' => true,
+    //             'email_verified_at' => now(),
+    //             'password' => Hash::make(\Str::random(10)),
+    //             'main_account_role' => $request->account_type,
+    //             'account_type' => $request->account_type,
+    //         ]);
+    //     }
+
+    //     $user->assignRole($request->account_type);
+    //     $token = explode('|', $user->createToken('auth_token')->plainTextToken);
+    //     return get_success_response(['user' => $user, 'token' => $token[1]], 'Login successful');
+    // }
+
+    public function socialLogin(Request $request, $social = null)
     {
-        $validator = Validator::make($request->all(), [
-            'first_name' => 'required|string|max:255',
-            'last_name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255',
-            'provider' => 'required|string',
-            'provider_id' => 'required|string',
-        ]);
+        try {
+            $validate = Validator::make($request->all(), [
+                'email' => 'required',
+                'access_token' => 'required',
+            ]);
 
-        if ($validator->fails()) {
-            return get_error_response($validator->errors());
-        }
+            if ($validate->fails()) {
+                return get_error_response(['error' => $validate->errors()->toArray()]);
+            }
 
-        if (!isset($request->username)) {
-            $request->merge([
-                'username' => explode('@', $request->email ?? $request->phone)[0] . rand(1, 99)
+
+            $is_registered = false;
+            $social_url = "https://www.googleapis.com/oauth2/v1/userinfo?access_token={$request->access_token}";
+            $google = Http::get($social_url)->json();
+            $curl = (object) $google;
+
+            if ($curl->email and password_verify($curl->email, $request->email)) {
+                $user = User::where('email', $curl->email)->first();
+                if ($user) {
+                    $is_registered = true;
+                }
+                $user = User::updateOrCreate([
+                    'email' => $curl->email,
+                ], [
+                    'name' => $curl->name,
+                    'email' => $curl->email,
+                    'profile_photo_path' => $curl->picture,
+                    'firstName' => $curl->given_name,
+                    'lastName' => $curl->family_name,
+                    'raw_data' => $curl
+                ]);
+
+                if(Auth::login($user)) {
+                    $user = auth()->user();
+
+                    if ($user === false) {
+                        return get_error_response(['error' => 'Unauthorized'], 401);
+                    }
+    
+                    if ($user->device_id !== $request->device_id) {
+                        // Logout all other devices
+                        Auth::logoutOtherDevices($request->password);
+    
+                        // Remove all old tokens
+                        $user->tokens()->delete();
+    
+                        // Update device_id
+                        $user->update(['device_id' => $request->device_id]);
+                    }
+    
+                    $token = $user->createToken('auth_token')->plainTextToken;
+                    $token = explode('|', $token);
+    
+                    return get_success_response(['user' => $user, 'token' => $token[1]], "User logged in successfully");
+                }
+            }
+            return get_error_response(['error' => 'Invalid social login'], 422);
+        } catch (\Throwable $th) {
+            return get_error_response([
+                'error' => $th->getMessage()
             ]);
         }
-
-        $user = User::where('email', $request->email)->first();
-        if (!$user) {
-            $user = User::create([
-                'first_name' => $request->first_name,
-                'last_name' => $request->last_name,
-                'username' => $request->username,
-                'email' => $request->email,
-                'is_social' => true,
-                'email_verified_at' => now(),
-                'password' => Hash::make(\Str::random(10)),
-                'main_account_role' => 'private_accounts',
-                'account_type' => 'private_accounts',
-            ]);
-        }
-
-        $user->assignRole('private_accounts');
-        $token = explode('|', $user->createToken('auth_token')->plainTextToken);
-        return get_success_response(['user' => $user, 'token' => $token[1]], 'Login successful');
     }
 
     public function forgotPassword(Request $request)

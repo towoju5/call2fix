@@ -16,6 +16,7 @@ use Illuminate\Http\Response;
 use Modules\Artisan\Models\ArtisanQuotes;
 use Modules\ServiceProvider\Models\ServiceLocations;
 use Validator;
+use App\Notifications\NewArtisanAddedNotification;
 
 class ServiceProviderController extends Controller
 {
@@ -27,11 +28,8 @@ class ServiceProviderController extends Controller
 
     public function artisans()
     {
-        $artisans = User::role('artisan')->where('service_provider_id', auth()->id())
-            // ->whereHas('artisan', function ($query) {
-            //     $query->where('service_provider_id', auth()->id());
-            // })
-            ->with('artisan_quotes')
+        $artisans = Artisans::where('service_provider_id', auth()->id())
+            ->with('user')
             ->latest()
             ->get();
         return get_success_response($artisans, "All artisans retrieved successfully");
@@ -97,37 +95,53 @@ class ServiceProviderController extends Controller
             if ($validator->fails()) {
                 return get_error_response("Validation error", $validator->errors()->toArray(), 422);
             }
+
             $validateData = $validator->validated();
-            $validateData['account_type'] = "artisan";
             $validateData['service_provider_id'] = auth()->id();
 
-            if (Artisans::firstOrCreate($validateData)) {
-                // add Artisan to user DB
-                $artisanPassword = Str::random(8);
-                $userData = [
-                    'first_name' => $validateData['first_name'],
-                    'last_name' => $validateData['last_name'],
-                    'password' => bcrypt($artisanPassword),
-                    'username' => $validateData['first_name'].rand(23, 999),
-                    'is_social' => false,
-                    'account_type' => 'artisan',
-                    'device_id' => 'device_id',
-                    'current_role' => 'artisan',
-                    'main_account_role' => 'artisan',
-                ];
+            DB::beginTransaction(); // Start transaction
 
-                $newArtisan = User::create($userData);
+            // Add Artisan to user DB
+            $artisanPassword = Str::random(8);
+            $userData = [
+                'first_name' => $validateData['first_name'],
+                'last_name' => $validateData['last_name'],
+                'email' => $validateData['email'],
+                'phone' => $validateData['phone'],
+                'password' => bcrypt($artisanPassword),
+                'username' => $validateData['first_name'] . rand(23, 999),
+                'is_social' => false,
+                'account_type' => 'artisan',
+                'device_id' => 'device_id',
+                'current_role' => 'artisan',
+                'main_account_role' => 'artisan',
+            ];
 
-                // send a notification to the artisan also with default password
-                $newArtisan->notify(new NewArtisanAddedNotification($newArtisan, $artisanPassword))
+            $newArtisan = User::updateOrCreate([
+                'email' => $validateData['email'],
+                'phone' => $validateData['phone']
+            ], $userData);
+            if ($newArtisan) {
+                $newArtisan->assignRole('artisan');
+                $validateData['artisan_id'] = $newArtisan->id;
+                Artisans::updateOrCreate($validateData);
+
+                // Send a notification to the artisan with the default password
+                $newArtisan->notify(new NewArtisanAddedNotification($newArtisan, $artisanPassword));
+
+                DB::commit(); // Commit transaction if everything is successful
                 return get_success_response($validateData, "Artisan created successfully", 200);
             }
 
+            DB::rollBack(); // Roll back if the new artisan could not be created
             return get_error_response("Unable to complete request", ["error" => "Unable to complete request, please contact support if error persists"], 400);
+
         } catch (\Throwable $th) {
-            return get_error_response($th->getMessage(), [], $th->getCode());
+            DB::rollBack(); // Roll back on any exception
+            return get_error_response($th->getMessage(), ['error' => $th->getMessage()]);
         }
     }
+
 
     public function artisanQuotes()
     {
@@ -162,8 +176,18 @@ class ServiceProviderController extends Controller
             }
 
             // Check if quote already submitted
-            if (SubmittedQuotes::where(["provider_id" => auth()->id(), "request_id" => $request->request_id])->exists()) {
-                return get_error_response("You have already submitted a quote for this request", ["error" => "You have already submitted a quote for this request"]);
+            // if (SubmittedQuotes::where(["provider_id" => auth()->id(), "request_id" => $request->request_id])->exists()) {
+            //     return get_error_response("You have already submitted a quote for this request", ["error" => "You have already submitted a quote for this request"]);
+            // }
+            $service_vat = ($request->workmanship + get_settings_value('administrative_fee')) * 0.075;
+
+            $items_total = 0;
+            if ($request->has('items') && !empty($request->items)) {
+                $items = $request->items;
+                foreach ($items as $item) {
+                    $items_total += $item['quantity'] * $item['price'];
+                }
+                $service_vat += $items_total * 0.075;
             }
 
             // Process quote submission 
@@ -181,8 +205,9 @@ class ServiceProviderController extends Controller
                     "attachments" => $request->attachments,
                     "summary_note" => $request->summary_note,
                     "administrative_fee" => get_settings_value('administrative_fee', 500),
-                    "service_vat" => ($request->workmanship + get_settings_value('administrative_fee')) * 0.075,
-                    "items" => $request->items
+                    "service_vat" => $service_vat,
+                    "items" => $request->items,
+                    "total_charges" => $request->workmanship + $items_total + get_settings_value('administrative_fee') + $service_vat,
                 ]
             );
 
@@ -276,7 +301,9 @@ class ServiceProviderController extends Controller
     public function getRequests()
     {
         try {
-            $requests = ServiceRequest::whereJsonContains('featured_providers_id', [auth()->id()])->get();
+            $requests = ServiceRequest::whereJsonContains('featured_providers_id', [auth()->id()])
+                        ->orWhere('approved_providers_id', auth()->id())
+                        ->paginate(get_settings_value('per_page', 10));
             return get_success_response($requests, "Service provider requests retrieved successfully");
         } catch (\Throwable $th) {
             return get_error_response($th->getMessage(), ["error" => $th->getMessage()]);
@@ -330,7 +357,7 @@ class ServiceProviderController extends Controller
             $validate = Validator::make($request->all(), [
                 "request_id" => "required|exists:service_requests,id",
                 "artisan_id" => "required|exists:users,id",
-                "provider_id" => "required|exists:users,id"
+                "service_provider_id" => "required|exists:users,id"
             ]);
 
 

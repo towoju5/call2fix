@@ -17,21 +17,27 @@ class AdminDashboardController extends Controller
     public function index(Request $request)
     {
         try {
-            $data = [
-                'top_spending_customers' => $this->getTopSpendingUsers(role : 'customer', limit: 5),
-                'top_earning_providers' => $this->getTopSpendingUsers(role : 'providers', limit: 5),
-                // customers 
-                'new_customers' => User::role('customer')->where('created_at', '>=', Carbon::now()->subDays(7))->latest()->limit(8)->get(),
-                'total_customers' => User::role('customer')->count(),
-                // providers
-                'new_providers' => User::role('provider')->where('created_at', '>=', Carbon::now()->subDays(7))->latest()->limit(8)->get(),
-                'total_providers' => User::role('provider')->count(),
-                // artisans
+            // available roles are: artisan, providers, co-operate_accounts, private_accounts, affiliates, suppliers, department,
+            return $data = [
+                'top_spending_customers' => $this->getTopSpendingUsers(role: 'customer', limit: 5),
+                'top_earning_providers' => $this->getTopSpendingUsers(role: 'providers', limit: 5),
+
                 'new_artisans' => User::role('artisan')->where('created_at', '>=', Carbon::now()->subDays(7))->latest()->limit(8)->get(),
-                'total_artisans' => User::role('artisan')->count(), 
-        
+                'total_artisans' => User::role('artisan')->count(),
+                'new_providers' => User::role('providers')->where('created_at', '>=', Carbon::now()->subDays(7))->latest()->limit(8)->get(),
+                'total_providers' => User::role('providers')->count(),
+                'new_cooperate_accounts' => User::role('co-operate_accounts')->where('created_at', '>=', Carbon::now()->subDays(7))->latest()->limit(8)->get(),
+                'total_cooperate_accounts' => User::role('co-operate_accounts')->count(),
+                'new_private_accounts' => User::role('private_accounts')->where('created_at', '>=', Carbon::now()->subDays(7))->latest()->limit(8)->get(),
+                'total_private_accounts' => User::role('private_accounts')->count(),
+                'new_affiliates' => User::role('affiliates')->where('created_at', '>=', Carbon::now()->subDays(7))->latest()->limit(8)->get(),
+                'total_affiliates' => User::role('affiliates')->count(),
+                'new_suppliers' => User::role('suppliers')->where('created_at', '>=', Carbon::now()->subDays(7))->latest()->limit(8)->get(),
+                'total_suppliers' => User::role('suppliers')->count(),
+                'new_department' => User::role('department')->where('created_at', '>=', Carbon::now()->subDays(7))->latest()->limit(8)->get(),
+                'total_department' => User::role('department')->count(),
                 'pending_service_resquests' => ServiceRequest::where('request_status', 'pending')->count(),
-        
+
                 'category_count' => Category::count(),
                 'service_count' => Service::count(),
                 'profits' => $this->getProfits(),
@@ -43,8 +49,6 @@ class AdminDashboardController extends Controller
 
             return view('admin.dashboard', $data);
         } catch (\Exception $e) {
-            // Handle the exception here
-            // For example, you could log the error and return an error view
             \Log::error('Error in AdminDashboardController index method: ' . $e->getMessage());
             return view('admin.error', ['message' => 'An error occurred while loading the dashboard.']);
         }
@@ -75,7 +79,7 @@ class AdminDashboardController extends Controller
     private function getOrderTypesChartData()
     {
         return Order::select(DB::raw('count(*) as count'))
-            ->groupBy('type')
+            // ->groupBy('type')
             ->get()
             ->pluck('count')
             ->toArray();
@@ -94,15 +98,34 @@ class AdminDashboardController extends Controller
             ->toArray();
     }
 
+    // private function getTopSellingServices($limit = 5)
+    // {
+    //     return Category::with('services')->withCount('orders')
+    //         ->take($limit)
+    //         ->get();
+    // }
+
     private function getTopSellingServices($limit = 5)
     {
-        return Category::with('services')->withCount('orders')
-            ->take($limit)
-            ->get();
+        return [];
+        //  Category::with(['services'])
+        //     ->withCount([
+        //         'services as orders_count' => function ($query) {
+        //             $query->whereHas('orders', function ($q) {
+        //                 $q->whereNull('deleted_at');
+        //             });
+        //         }
+        //     ])
+        //     ->whereNull('deleted_at')
+        //     ->orderBy('orders_count', 'desc')
+        //     ->take($limit)
+        //     ->get();
     }
 
 
-    private function getTopSpendingUsers($role = 'customer', $limit = 5)
+
+
+    private function getTopSpendingUsers($role = 'co-operate_accounts', $limit = 5)
     {
         $result = DB::table('transaction_records')
             ->join('model_has_roles', 'transaction_records.user_id', '=', 'model_has_roles.model_id')

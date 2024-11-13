@@ -8,19 +8,21 @@ return new class extends Migration {
     /**
      * Run the migrations.
      */
-    public function up(): void
+    public function up()
     {
+        Schema::dropIfExists('wallets');
         Schema::create('wallets', function (Blueprint $table) {
-            $table->uuid('id')->primary();
-            $table->string('user_id')->constrained()->onDelete('cascade');
+            $table->id();
+            $table->string('user_id')->nullable();
             $table->string('currency')->nullable();
-            $table->string('_account_type')->nullable();
             $table->string('balance')->default(0);
             $table->json('meta')->nullable();
-            $table->string('title')->nullable(); // Add the wallet title field
+            $table->string('title')->nullable();
+            $table->boolean('is_department')->default(0);
+            $table->string('department_id')->nullable();
+            $table->string('role')->default('general');
             $table->timestamps();
-
-            $table->unique(['user_id', 'currency', '_account_type']);
+            $table->softDeletes();
         });
     }
 

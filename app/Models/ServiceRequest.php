@@ -25,6 +25,8 @@ class ServiceRequest extends BaseModel
         'featured_providers_id',
         'request_status',
         'department_id',
+        'approved_providers_id',
+        'approved_artisan_id'
     ];
 
     protected $casts = [
@@ -38,6 +40,16 @@ class ServiceRequest extends BaseModel
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function service_provider()
+    {
+        return $this->belongsTo(User::class, 'approved_providers_id');
+    }
+
+    public function artisan()
+    {
+        return $this->belongsTo(User::class, 'approved_artisan_id');
     }
 
     public function property()

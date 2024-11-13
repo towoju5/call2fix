@@ -3,37 +3,42 @@
 namespace App\Events;
 
 use App\Models\Message;
-use App\Notifications\NewMessageNotification;
 use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\InteractsWithSockets;
-use Illuminate\Broadcasting\PresenceChannel;
+use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Support\Facades\Notification;
-use Log;
+use Ably\AblyRest;
 
 class NewMessage implements ShouldBroadcast
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
     public $message;
+    private $ably;
 
+    // Constructor
     public function __construct(Message $message)
     {
         $this->message = $message;
-        $this->sendNotificationToCustomer();
+        $this->ably = new AblyRest(config('services.ably.key'));
     }
 
+    // Broadcast on the channel
     public function broadcastOn()
     {
-        return new PresenceChannel('chat.' . $this->message->chat_id);
+        // Channel can be dynamic based on the chat ID or a static name
+        return new Channel('chat.' . $this->message->chat_id);
     }
 
-    private function sendNotificationToCustomer()
+    // Broadcast message data
+    public function broadcastWith()
     {
-        Log::info(json_encode($this->message->chat));
-        // $customer = $this->message->chat->customer;
-        // Notification::send($customer, new NewMessageNotification($this->message));
+        return [
+            'message' => $this->message->content,
+            'sender' => $this->message->user->name,
+            'timestamp' => $this->message->created_at->toDateTimeString(),
+        ];
     }
 }

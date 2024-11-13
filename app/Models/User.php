@@ -3,7 +3,8 @@
 namespace App\Models;
 
 use App\Notifications\DepartmentCreatedNotification;
-use App\Traits\HasWallets;
+// use App\Traits\HasWallets;
+use Creatydev\Plans\Traits\HasPlans;
 use DB;
 use Emargareten\TwoFactor\TwoFactorAuthenticatable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -14,13 +15,13 @@ use Illuminate\Support\Facades\Cookie;
 use Jijunair\LaravelReferral\Models\Referral;
 use Jijunair\LaravelReferral\Traits\Referrable;
 use Laravel\Sanctum\HasApiTokens;
-use Laravelcm\Subscriptions\Traits\HasPlanSubscriptions;
 use Spatie\Permission\Traits\HasRoles;
+use Towoju5\Wallet\Traits\HasWallets;
 
 class User extends Authenticatable
 {
     use HasFactory, HasApiTokens, Notifiable, HasWallets, SoftDeletes, TwoFactorAuthenticatable;
-    use Referrable, HasRoles, SoftDeletes, HasPlanSubscriptions;
+    use Referrable, HasRoles, SoftDeletes, HasPlans;
 
 
     /**use HasWallets;
@@ -142,7 +143,7 @@ class User extends Authenticatable
 
     public function artisan()
     {
-        return $this->hasMany(Artisans::class, 'artisans_id', 'id');
+        return $this->belongsTo(Artisans::class);
     }
 
     public function artisans()

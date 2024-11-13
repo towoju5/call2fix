@@ -47,6 +47,8 @@ class BaseModel extends Model
         $query = parent::newQuery($excludeDeleted);
 
         // Automatically add the where clause for _account_type
-        return $query->where('_account_type', active_role());
+        if (auth()->guard()->check()) {
+            return $query->where('_account_type', active_role());
+        }
     }
 }

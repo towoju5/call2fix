@@ -4,8 +4,61 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "6b1c4aa1290ee62f87fcaa8a4e291ce7",
+    "content-hash": "731a8629e6a4f119022494cbe320106d",
     "packages": [
+        {
+            "name": "ably/ably-php",
+            "version": "1.1.10",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/ably/ably-php.git",
+                "reference": "2a54c9e3395d5b8a480f02d670f6f3c3f5464411"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/ably/ably-php/zipball/2a54c9e3395d5b8a480f02d670f6f3c3f5464411",
+                "reference": "2a54c9e3395d5b8a480f02d670f6f3c3f5464411",
+                "shasum": ""
+            },
+            "require": {
+                "ext-curl": "*",
+                "ext-json": "*",
+                "ext-openssl": "*",
+                "php": "^7.2 || ^8.0",
+                "rybakit/msgpack": ">=0.9.1"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "^8.5 || ^9.5"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Ably\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "Apache-2.0"
+            ],
+            "authors": [
+                {
+                    "name": "Ably",
+                    "email": "support@ably.com"
+                }
+            ],
+            "description": "Ably REST client library for PHP.",
+            "homepage": "https://www.ably.com/",
+            "keywords": [
+                "ably",
+                "messages",
+                "messaging"
+            ],
+            "support": {
+                "issues": "https://github.com/ably/ably-php/issues",
+                "source": "https://github.com/ably/ably-php/tree/1.1.10"
+            },
+            "time": "2024-03-22T09:17:09+00:00"
+        },
         {
             "name": "aws/aws-crt-php",
             "version": "v1.2.6",
@@ -7257,6 +7310,68 @@
             "time": "2024-03-10T08:07:49+00:00"
         },
         {
+            "name": "rybakit/msgpack",
+            "version": "v0.9.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/rybakit/msgpack.php.git",
+                "reference": "fc6bc45e92274e78c32d0a86f2e2cc1f8b5e017b"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/rybakit/msgpack.php/zipball/fc6bc45e92274e78c32d0a86f2e2cc1f8b5e017b",
+                "reference": "fc6bc45e92274e78c32d0a86f2e2cc1f8b5e017b",
+                "shasum": ""
+            },
+            "require": {
+                "php": "^7.1.1|^8"
+            },
+            "require-dev": {
+                "ext-gmp": "*",
+                "friendsofphp/php-cs-fixer": "^2.14",
+                "phpunit/phpunit": "^7.1|^8|^9",
+                "vimeo/psalm": "^3.9|^4"
+            },
+            "suggest": {
+                "ext-decimal": "For converting overflowed integers to Decimal objects",
+                "ext-gmp": "For converting overflowed integers to GMP objects"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "MessagePack\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Eugene Leonovich",
+                    "email": "gen.work@gmail.com"
+                }
+            ],
+            "description": "A pure PHP implementation of the MessagePack serialization format.",
+            "keywords": [
+                "messagepack",
+                "msgpack",
+                "pure",
+                "streaming"
+            ],
+            "support": {
+                "issues": "https://github.com/rybakit/msgpack.php/issues",
+                "source": "https://github.com/rybakit/msgpack.php/tree/v0.9.1"
+            },
+            "funding": [
+                {
+                    "url": "https://github.com/rybakit",
+                    "type": "github"
+                }
+            ],
+            "time": "2022-02-16T00:48:07+00:00"
+        },
+        {
             "name": "spatie/eloquent-sortable",
             "version": "4.4.0",
             "source": {
@@ -7612,6 +7727,65 @@
                 }
             ],
             "time": "2024-07-24T14:26:27+00:00"
+        },
+        {
+            "name": "stripe/stripe-php",
+            "version": "v16.2.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/stripe/stripe-php.git",
+                "reference": "813ae4961755af28a13bda451689f7a6ed6498cb"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/stripe/stripe-php/zipball/813ae4961755af28a13bda451689f7a6ed6498cb",
+                "reference": "813ae4961755af28a13bda451689f7a6ed6498cb",
+                "shasum": ""
+            },
+            "require": {
+                "ext-curl": "*",
+                "ext-json": "*",
+                "ext-mbstring": "*",
+                "php": ">=5.6.0"
+            },
+            "require-dev": {
+                "friendsofphp/php-cs-fixer": "3.5.0",
+                "phpstan/phpstan": "^1.2",
+                "phpunit/phpunit": "^5.7 || ^9.0"
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "2.0-dev"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Stripe\\": "lib/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Stripe and contributors",
+                    "homepage": "https://github.com/stripe/stripe-php/contributors"
+                }
+            ],
+            "description": "Stripe PHP Library",
+            "homepage": "https://stripe.com/",
+            "keywords": [
+                "api",
+                "payment processing",
+                "stripe"
+            ],
+            "support": {
+                "issues": "https://github.com/stripe/stripe-php/issues",
+                "source": "https://github.com/stripe/stripe-php/tree/v16.2.0"
+            },
+            "time": "2024-10-29T21:15:53+00:00"
         },
         {
             "name": "symfony/cache",
@@ -10277,6 +10451,114 @@
                 "source": "https://github.com/towoju5/laravel-referral/tree/v1.1"
             },
             "time": "2024-07-09T16:48:28+00:00"
+        },
+        {
+            "name": "towoju5/laravel-wallet",
+            "version": "v1.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/towoju5/adv_laravel_wallet.git",
+                "reference": "c97ba9d63d04c06a9f3b389aa906e6fae25ac288"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/towoju5/adv_laravel_wallet/zipball/c97ba9d63d04c06a9f3b389aa906e6fae25ac288",
+                "reference": "c97ba9d63d04c06a9f3b389aa906e6fae25ac288",
+                "shasum": ""
+            },
+            "require": {
+                "php": "^7.4|^8.0"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Towoju5\\Wallet\\Providers\\WalletServiceProvider"
+                    ],
+                    "aliases": {
+                        "Wallet": "Towoju5\\Wallet\\Facades\\WalletFacade"
+                    }
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Towoju5\\Wallet\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "A multi-wallet package for Laravel with support for user roles.",
+            "support": {
+                "issues": "https://github.com/towoju5/adv_laravel_wallet/issues",
+                "source": "https://github.com/towoju5/adv_laravel_wallet/tree/v1.0"
+            },
+            "time": "2024-10-31T15:23:24+00:00"
+        },
+        {
+            "name": "towoju5/plans",
+            "version": "v1.1.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/towoju5/plans.git",
+                "reference": "a592ec48d8c46c2e56201446a8a4282c77b488a4"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/towoju5/plans/zipball/a592ec48d8c46c2e56201446a8a4282c77b488a4",
+                "reference": "a592ec48d8c46c2e56201446a8a4282c77b488a4",
+                "shasum": ""
+            },
+            "require": {
+                "laravel/framework": ">=11.0",
+                "stripe/stripe-php": ">=12.1"
+            },
+            "require-dev": {
+                "orchestra/database": "~3.7.0|~3.8.0|~4.0.0",
+                "orchestra/testbench": "^7.0",
+                "phpunit/phpunit": "^9.5|^10.0"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Creatydev\\Plans\\PlansServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Creatydev\\Plans\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Dukens Thelemaque",
+                    "email": "dukensdev@gmail.com",
+                    "homepage": "https://thelemaque-dukens.com",
+                    "role": "Developer"
+                }
+            ],
+            "description": "Laravel Plans is a package for SaaS apps that need management over plans, features, subscriptions, events for plans or limited, countable features.",
+            "homepage": "https://github.com/creatydev/plans",
+            "keywords": [
+                "eloquent",
+                "laravel",
+                "model",
+                "plan",
+                "plans",
+                "saas",
+                "subscription"
+            ],
+            "support": {
+                "source": "https://github.com/towoju5/plans/tree/v1.1.0"
+            },
+            "time": "2024-10-30T19:53:56+00:00"
         },
         {
             "name": "tymon/jwt-auth",
