@@ -26,13 +26,6 @@ jobs:
       - name: Install Composer Dependencies
         run: composer update -q --no-ansi --no-interaction --no-scripts --no-progress --prefer-dist
 
-      - name: Setup Project
-        run: |
-          php artisan migrate:fresh --force --seed
-          php artisan config:clear
-          php artisan cache:clear
-          php artisan key:generate
-
       - name: Deploy to Server
         if: ${{ success() }}
         uses: appleboy/ssh-action@master
