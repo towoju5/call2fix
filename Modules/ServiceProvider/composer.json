@@ -1,0 +1,30 @@
+{
+    "name": "towoju5/serviceprovider",
+    "description": "",
+    "authors": [
+        {
+            "name": "Emmanuel A Towoju",
+            "email": "emmanuel.towoju@luxconsole.com"
+        }
+    ],
+    "extra": {
+        "laravel": {
+            "providers": [],
+            "aliases": {
+
+            }
+        }
+    },
+    "autoload": {
+        "psr-4": {
+            "Modules\\ServiceProvider\\": "app/",
+            "Modules\\ServiceProvider\\Database\\Factories\\": "database/factories/",
+            "Modules\\ServiceProvider\\Database\\Seeders\\": "database/seeders/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Modules\\ServiceProvider\\Tests\\": "tests/"
+        }
+    }
+}

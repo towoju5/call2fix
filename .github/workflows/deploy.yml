@@ -1,0 +1,74 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+    
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+
+      - uses: actions/checkout@v2
+
+      - uses: actions/setup-node@v3
+        with: 
+          node-version: 16
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    
+      - name: Copy .env
+        run: cp .env.example .env
+
+      - name: Install Composer Dependencies
+        run: composer update -q --no-ansi --no-interaction --no-scripts --no-progress --prefer-dist
+
+      - name: Ensure SQLite Database Exists
+        run: |
+          if [ ! -f "database/database.sqlite" ]; then
+            echo "SQLite database does not exist. Creating..."
+            touch database/database.sqlite
+            chmod 644 database/database.sqlite
+            echo "SQLite database created at database/database.sqlite"
+          else
+            echo "SQLite database already exists."
+          fi
+
+      - name: Setup Project
+        run: |
+          touch database/database.sqlite
+          php artisan migrate:fresh --force --seed
+          php artisan config:clear
+          php artisan cache:clear
+          php artisan key:generate
+
+      - name: Deploy to Server
+        if: ${{ success() }}
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_KEY }}
+          script: |
+            cd /var/www/call2fix-app.alphamead.com
+            # Fetch and reset to remote main branch
+            git fetch origin
+            git reset --hard origin/master
+
+            # Ensure proper permissions for logs directory and its files (append mode)
+            sudo chown -R www-data:www-data storage
+            sudo chmod -R 775 storage
+            sudo chmod -R g+s storage/logs
+
+            # Ensure proper permissions for database directory and its files (overwrite mode)
+            sudo chown -R www-data:www-data database
+            sudo chmod -R 644 database
+            sudo chmod -R g+s database/database.sqlite
+
+            # Verify the logs directory is writable
+            touch database/database.sqlite
+            touch storage/logs/laravel.log
+            echo "Log file is ready and writable" >> storage/logs/laravel.log

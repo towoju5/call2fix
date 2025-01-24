@@ -1,0 +1,30 @@
+{
+    "name": "towoju5/referrer",
+    "description": "",
+    "authors": [
+        {
+            "name": "Emmanuel A Towoju",
+            "email": "emmanuel.towoju@luxconsole.com"
+        }
+    ],
+    "extra": {
+        "laravel": {
+            "providers": [],
+            "aliases": {
+
+            }
+        }
+    },
+    "autoload": {
+        "psr-4": {
+            "Modules\\Referrer\\": "app/",
+            "Modules\\Referrer\\Database\\Factories\\": "database/factories/",
+            "Modules\\Referrer\\Database\\Seeders\\": "database/seeders/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Modules\\Referrer\\Tests\\": "tests/"
+        }
+    }
+}
