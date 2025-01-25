@@ -55,6 +55,7 @@ class AuthController extends Controller
                 'device_id' => $request->device_id,
                 'current_role' => $request->account_type,
                 'main_account_role' => $request->account_type,
+                'country_dialing_code' => $request->country_code,
             ];
 
             if ($request->has('email')) {
@@ -95,7 +96,7 @@ class AuthController extends Controller
                 $user->assignRole($request->account_type);
                 // Create business info
                 if (in_array($request->account_type, ['suppliers', 'providers', 'corporate_account', 'co-operate_accounts', 'private_accounts', 'affiliates'])) {
-                    $businessInfo = BusinessInfo::create([
+                    $businessInfo = BusinessInfo::updateOrCreate([
                         'user_id' => $user->id,
                         'account_type' => $request->account_type,
                     ]);
@@ -162,6 +163,7 @@ class AuthController extends Controller
                 'device_id' => $request->device_id,
                 'current_role' => $request->account_type,
                 'main_account_role' => $request->account_type,
+                'country_dialing_code' => $request->country_code,
             ];
 
             if ($request->has('email')) {
