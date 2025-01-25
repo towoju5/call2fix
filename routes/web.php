@@ -21,7 +21,8 @@ use Laravel\Telescope\Telescope;
 use LaravelDaily\LaravelCharts\Classes\LaravelChart;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
-use function Pest\Laravel\withoutMiddleware;
+
+
 
 
 
@@ -31,16 +32,8 @@ Route::get('/', function () {
 
 Route::get('/fb', function () {
 	// Read the SQL file content
-	$sql = File::get(storage_path('app/fb.sql'));
-
-	// Execute the SQL commands
-	try {
-		DB::unprepared($sql);
-		return response()->json(['message' => 'Database restore completed successfully!'], 200);
-	} catch (\Exception $e) {
-		return response()->json(['error' => 'Error while restoring the database: ' . $e->getMessage()], 500);
-	}
-})->middleware(['auth'])->name('dashboard');
+	
+});
 
 
 Route::get('clear', function () {
@@ -51,7 +44,7 @@ Route::get('clear', function () {
 
 Route::post('logout', function () {
 	auth('admin')->logout();
-	return redirect()->to('https://call2fix.com.ng');
+	return redirect()->to('https://alphamead.com');
 })->name('logout');
 
 

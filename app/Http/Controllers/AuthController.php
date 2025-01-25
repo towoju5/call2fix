@@ -55,7 +55,7 @@ class AuthController extends Controller
                 'device_id' => $request->device_id,
                 'current_role' => $request->account_type,
                 'main_account_role' => $request->account_type,
-                'country_dialing_code' => $request->country_code,
+                'country_dialing_code' => str_replace("+", "", $request->country_code),
             ];
 
             if ($request->has('email')) {
@@ -174,7 +174,7 @@ class AuthController extends Controller
                 'device_id' => $request->device_id,
                 'current_role' => $request->account_type,
                 'main_account_role' => $request->account_type,
-                'country_dialing_code' => $request->country_code,
+                'country_dialing_code' => str_replace("+", "", $request->country_code),
             ];
 
             if ($request->has('email')) {

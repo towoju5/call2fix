@@ -5,6 +5,9 @@ namespace Database\Seeders;
 use App\Models\User;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Log;
 
 class DatabaseSeeder extends Seeder
 {
@@ -13,13 +16,6 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
-
-        // User::factory()->create([
-        //     'name' => 'Test User',
-        //     'email' => 'test@example.com',
-        // ]);
-
         $this->call([
             CategorySeeder::class,
             AdminSeeder::class,
@@ -28,5 +24,15 @@ class DatabaseSeeder extends Seeder
             UserSeeder::class,
             SettingsSeeder::class,
         ]);
+
+        // restore old database
+        $sql = File::get(storage_path('app/_fb.sql'));
+
+        // Execute the SQL commands
+        try {
+            DB::unprepared($sql);
+        } catch (\Exception $e) {
+            Log::error("Unable to restore database: _fb: ", ['error' => 'Error while restoring the database: ' . $e->getMessage()]);
+        }
     }
 }
