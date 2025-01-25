@@ -35,7 +35,7 @@ class AppServiceProvider extends ServiceProvider
         Property::observe(PropertyModelObserver::class);
         ServiceRequest::observe(ServiceRequestModelObserver::class);
         Wallet::observe(WalletModelObserver::class);
-        ModelsWallet::observe(WalletModelObserver::class);
+        // ModelsWallet::observe(WalletModelObserver::class);
         // Event::listen(
         //     BalanceUpdatedEventInterface::class => [
         //         WalletUpdatedEventInterface::class,
