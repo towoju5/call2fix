@@ -14,6 +14,8 @@ use App\Models\Property;
 use App\Models\User;
 use Creatydev\Plans\Models\PlanModel;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Route;
 use Laravel\Telescope\Telescope;
 use LaravelDaily\LaravelCharts\Classes\LaravelChart;
@@ -24,38 +26,32 @@ use function Pest\Laravel\withoutMiddleware;
 
 
 Route::get('/', function () {
-// 	$path = "https://alphamead.lon1.digitaloceanspaces.com/a599fd50-15b4-4db5-a839-9e722aea226d/67372ed8921f3_new-code.png";
-// 	 try {
-//         if (str_contains($path, 'https://alphamead.lon1.digitaloceanspaces.com/')) {
-//             $path = str_replace("https://alphamead.lon1.digitaloceanspaces.com/", "", $path);
-//         }
-//         // Check if the file exists in DigitalOcean Spaces
-//         if (!Storage::disk('spaces')->exists($path)) {
-//             throw new \Exception('File not found');
-//         }
-
-//         // Get the file contents
-//         $file = Storage::disk('spaces')->get($path);
-
-//         // Get the mime type
-//         $mime = Storage::disk('spaces')->mimeType($path);
-
-//         return response($file, 200)->header('Content-Type', $mime);
-//     } catch (\Throwable $th) {
-//         return get_error_response($th->getMessage(), ['error' => $th->getMessage()], 400);
-//     }
+	return view('welcome');
 });
 
+Route::get('/fb', function () {
+	// Read the SQL file content
+	$sql = File::get(storage_path('app/fb.sql'));
 
-Route::get('clear', function() {
-    Artisan::call('migrate'); 
-    Artisan::call('route:clear');
-    Artisan::call('cache:clear');
+	// Execute the SQL commands
+	try {
+		DB::unprepared($sql);
+		return response()->json(['message' => 'Database restore completed successfully!'], 200);
+	} catch (\Exception $e) {
+		return response()->json(['error' => 'Error while restoring the database: ' . $e->getMessage()], 500);
+	}
+})->middleware(['auth'])->name('dashboard');
+
+
+Route::get('clear', function () {
+	Artisan::call('migrate');
+	Artisan::call('route:clear');
+	Artisan::call('cache:clear');
 });
 
-Route::post('logout', function() {
-    auth('admin')->logout();
-    return redirect()->to('https://call2fix.com.ng'); 
+Route::post('logout', function () {
+	auth('admin')->logout();
+	return redirect()->to('https://call2fix.com.ng');
 })->name('logout');
 
 
