@@ -20,9 +20,9 @@ class AuthController extends Controller
     public function register(Request $request)
     {
         try {
-            if (!isset($request->username)) {
+            if (!$request->username) {
                 $request->merge([
-                    'username' => explode('@', $request->email ?? $request->phone)[0] . rand(1, 99)
+                    'username' => explode('@', $request->email ?? $request->phone)[0] . rand(1, 99),
                 ]);
             }
 
@@ -70,12 +70,11 @@ class AuthController extends Controller
                 $user = User::create($userData);
 
                 if (!$user) {
-                    return get_error_response('Failed to create user');
+                    throw new \Exception('Failed to create user');
                 }
 
-                // implement referal system
                 if ($request->has('referred_by')) {
-                    $referral = Referral::create([
+                    Referral::create([
                         'user_id' => $user->id,
                         'referred_by' => $request->referred_by,
                     ]);
@@ -84,34 +83,46 @@ class AuthController extends Controller
                     if ($referrer) {
                         $wallet = $user->getWallet('bonus');
                         if ($wallet) {
-                            $wallet->deposit(get_settings_value('referal_commission', 0), 'bonus', $request->account_type, ["description" => "Referral Bonus"], ["description" => "Referral Bonus"]);
+                            $wallet->deposit(
+                                get_settings_value('referal_commission', 0),
+                                'bonus',
+                                $request->account_type,
+                                ["description" => "Referral Bonus"],
+                                ["description" => "Referral Bonus"]
+                            );
                         }
                     }
                 }
 
-                // generate wallet balance
                 $user->getWallet('ngn');
                 $user->getWallet('bonus');
-
                 $user->assignRole($request->account_type);
-                // Create business info
+
                 if (in_array($request->account_type, ['suppliers', 'providers', 'corporate_account', 'co-operate_accounts', 'private_accounts', 'affiliates'])) {
-                    $businessInfo = BusinessInfo::updateOrCreate([
-                        'user_id' => $user->id,
-                        'account_type' => $request->account_type,
-                    ]);
+                    $businessInfo = BusinessInfo::updateOrCreate(
+                        [
+                            'user_id' => $user->id,
+                            'account_type' => $request->account_type,
+                        ],
+                        [
+                            'created_at' => now(),
+                            'updated_at' => now(),
+                        ]
+                    );
 
                     if (!$businessInfo) {
-                        return get_error_response('Failed to create business info');
+                        throw new \Exception('Failed to create business info');
                     }
                 }
 
                 return $user;
             });
 
-            return get_success_response(array_merge($user->toArray(), ['wallets' => $user->my_wallets()]), 'User registered successfully');
+            return get_success_response(
+                array_merge($user->toArray(), ['wallets' => $user->my_wallets()]),
+                'User registered successfully'
+            );
         } catch (\Exception $e) {
-            DB::rollBack();
             return get_error_response($e->getMessage(), ['error' => $e->getMessage()]);
         }
     }
@@ -187,16 +198,16 @@ class AuthController extends Controller
                 $business = $user->business_info()->updateOrCreate([
                     'user_id' => $user->id,
                 ], $request->only([
-                                'businessName',
-                                'cacNumber',
-                                'officeAddress',
-                                'businessCategory',
-                                'businessDescription',
-                                'businessIdType',
-                                'businessIdNumber',
-                                'businessIdImage',
-                                'businessBankInfo'
-                            ]));
+                    'businessName',
+                    'cacNumber',
+                    'officeAddress',
+                    'businessCategory',
+                    'businessDescription',
+                    'businessIdType',
+                    'businessIdNumber',
+                    'businessIdImage',
+                    'businessBankInfo'
+                ]));
 
                 // Check if business creation failed
                 if (!$business) {
@@ -300,7 +311,7 @@ class AuthController extends Controller
         $request->user()->currentAccessToken()->delete();
         return get_success_response(['message' => 'Logged out successfully']);
     }
-    
+
     public function profile()
     {
         try {
@@ -315,11 +326,11 @@ class AuthController extends Controller
                 "roles",
                 "task_referrals"
             ])->whereId(auth()->id())->first();
-    
+
             if (!$user) {
                 return get_error_response('User not found', ['message' => 'User not found']);
             }
-    
+
             // Add additional attributes to the response without modifying the model directly
             $response = $user->toArray(); // Convert model and relations to an array
             $response['current_plan'] = $user->activeSubscription() ?? get_free_plan();
@@ -327,7 +338,7 @@ class AuthController extends Controller
             $response['wallets'] = Wallet::where('user_id', $user->id)->where('role', active_role())->get();
             $response['referrer'] = $user->referralAccount?->referrer;
             $response['business_info']['officeAddress'] = $user->business_office_address; // Fetch related addresses
-    
+
             return get_success_response($response);
         } catch (\Throwable $th) {
             return get_error_response($th->getMessage(), ['error' => $th->getMessage()]);
@@ -595,7 +606,7 @@ class AuthController extends Controller
     {
         try {
             $user = Auth::user();
-    
+
             // Validate the input
             $validatedData = $request->validate([
                 'businessName' => 'required|string|max:255',
@@ -610,12 +621,12 @@ class AuthController extends Controller
                 'businessBankInfo.bank_code' => 'required|string|max:10',
                 'businessBankInfo.account_number' => 'required|string|max:20',
                 'businessBankInfo.account_name' => 'required|string|max:255',
-                'officeAddress' => 'array', 
+                'officeAddress' => 'array',
                 'officeAddress.*.address' => 'required|string|max:255',
                 'officeAddress.*.latitude' => 'required|string|max:50',
                 'officeAddress.*.longitude' => 'required|string|max:50',
             ]);
-    
+
             // Step 1: Handle business info update or create
             $businessInfoData = [
                 'businessName' => $validatedData['businessName'],
@@ -627,12 +638,12 @@ class AuthController extends Controller
                 'businessIdImage' => $validatedData['businessIdImage'] ?? null,
                 'businessBankInfo' => $validatedData['businessBankInfo'],
             ];
-    
+
             $businessInfo = $user->business_info()->updateOrCreate(
                 ['user_id' => $user->id],
                 $businessInfoData
             );
-    
+
             // Step 2: Handle multiple office addresses
             $officeAddresses = $validatedData['officeAddress'] ?? [];
             foreach ($officeAddresses as $addressData) {
@@ -644,7 +655,7 @@ class AuthController extends Controller
                     ]
                 );
             }
-    
+
             return get_success_response([
                 'message' => 'Business profile and addresses updated successfully',
                 'businessInfo' => $businessInfo,
