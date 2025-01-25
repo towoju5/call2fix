@@ -16,6 +16,7 @@ use Jijunair\LaravelReferral\Models\Referral;
 use Jijunair\LaravelReferral\Traits\Referrable;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
+use Towoju5\Wallet\Models\Wallet;
 use Towoju5\Wallet\Traits\HasWallets;
 
 class User extends Authenticatable
@@ -148,9 +149,10 @@ class User extends Authenticatable
 
     public function wallets()
     {
-        return DB::where('user_id', $this->id)->where('role', $this->current_role)->get();
+        return Wallet::where('user_id', $this->id)
+            ->where('role', $this->current_role);
     }
-
+    
     public function my_wallets()
     {
         return $this->wallets()->get()->makeHidden(['id', 'holder_type', 'holder_id', 'uuid', 'description', 'created_at', 'updated_at', 'deleted_at']);
