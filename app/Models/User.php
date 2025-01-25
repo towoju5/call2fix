@@ -5,13 +5,13 @@ namespace App\Models;
 use App\Notifications\DepartmentCreatedNotification;
 use App\Models\Referral as eReferral;
 use Creatydev\Plans\Traits\HasPlans;
-use DB;
 use Emargareten\TwoFactor\TwoFactorAuthenticatable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Cookie;
+use Illuminate\Support\Facades\DB;
 use Jijunair\LaravelReferral\Models\Referral;
 use Jijunair\LaravelReferral\Traits\Referrable;
 use Laravel\Sanctum\HasApiTokens;
@@ -144,6 +144,11 @@ class User extends Authenticatable
     public function products()
     {
         return $this->hasMany(Product::class, 'seller_id');
+    }
+
+    public function wallets()
+    {
+        return DB::where('user_id', $this->id)->where('role', $this->current_role)->get();
     }
 
     public function my_wallets()
