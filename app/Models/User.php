@@ -24,7 +24,6 @@ class User extends Authenticatable
     use Referrable, HasRoles, SoftDeletes, HasPlans;
 
 
-    /**use HasWallets;
 
      * The attributes that are mass assignable.
      *

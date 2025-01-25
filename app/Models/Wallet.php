@@ -21,7 +21,7 @@ class Wallet extends BaseModel
     ];
 
     // Method to get a specific wallet by currency and role
-    public function getWallet($currency, $role = null)
+    public function getWallet($currency = 'ngn', $role = null)
     {
         // Use the passed $role if provided, otherwise use active_role()
         $role = $role ?? active_role();

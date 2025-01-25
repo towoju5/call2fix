@@ -24,6 +24,7 @@ return new class extends Migration
             $table->string('businessIdNumber')->nullable();
             $table->string('businessIdImage')->nullable();
             $table->json('businessBankInfo')->nullable();
+            $table->string('account_type')->default('private_account');
             $table->timestamps();
             $table->softDeletes();
         });

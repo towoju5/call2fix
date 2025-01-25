@@ -24,6 +24,7 @@ class CreateCountriesTable extends Migration
             $table->string('currency_symbol')->nullable();
             $table->json('supported_payment_methods')->nullable();
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

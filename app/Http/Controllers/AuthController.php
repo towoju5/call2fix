@@ -51,7 +51,7 @@ class AuthController extends Controller
                 'username' => $request->username,
                 'profile_picture' => $request->profile_picture,
                 'is_social' => false,
-                'account_type' => $request->account_type,
+                '_account_type' => $request->account_type,
                 'device_id' => $request->device_id,
                 'current_role' => $request->account_type,
                 'main_account_role' => $request->account_type,
@@ -102,7 +102,7 @@ class AuthController extends Controller
                     $businessInfo = BusinessInfo::updateOrCreate(
                         [
                             'user_id' => $user->id,
-                            'account_type' => $request->account_type,
+                            '_account_type' => $request->account_type,
                         ],
                         [
                             'created_at' => now(),
