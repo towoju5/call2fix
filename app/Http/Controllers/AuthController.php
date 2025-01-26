@@ -696,17 +696,18 @@ class AuthController extends Controller
         // Implement referral system if referred_by exists
         $referrer = Referral::userByReferralCode($referred_by);
         
-        // Check if the referrer exists and and credit for referring user
-        if ($referrer) {
-            $wallet = $user->getWallet('bonus');
-            if ($wallet) {
-                $wallet->deposit(get_settings_value('referal_commission', 0), 'bonus', $account_type, ["description" => "Referral Bonus"], ["description" => "Referral Bonus"]);
-            }
-        }
         // Create a referral record for the user
         $referral = $user->createReferralAccount([
             'user_id' => $user->id,
             'referred_by' => $referred_by,
         ]);
+
+        // Check if the referrer exists and and credit for referring user
+        if ($referrer) {
+            $wallet = $user->getWallet('bonus');
+            if ($wallet) {
+                $wallet->deposit(get_settings_value('referal_commission', 0), $account_type, ["description" => "Referral Bonus"], ["description" => "Referral Bonus"]);
+            }
+        }
     }
 }
