@@ -2,19 +2,20 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\BusinessOfficeAddress;
 use App\Models\Property;
 use App\Models\Negotiation;
 use App\Models\ServiceRequest;
 use App\Models\ServiceRequestModel;
 use App\Models\SubmittedQuotes;
 use App\Models\User;
-use DB, App\Models\ArtisanCanSubmitQuote;
+use App\Models\ArtisanCanSubmitQuote;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
-use Validator;
 use App\Notifications\ReworkIssuedNotification;
 use App\Notifications\PaymentStatusUpdated;
-
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 
 class ServiceRequestController extends Controller
 {
@@ -74,25 +75,32 @@ class ServiceRequestController extends Controller
             $property = Property::findOrFail($propertyId);
             // Get the radius limit in kilometers from settings and convert to meters
             $radiusLimitMeters = $this->radiusLimitKm * 1000; // Convert km to meters
-            
+
             $latitude = $property->latitude;
             $longitude = $property->longitude;
-            
-            $providers = User::whereHas('roles', function ($query) {
-                    $query->where('name', 'providers'); // Assuming 'providers' is the role name
+
+            $providers = BusinessOfficeAddress::select(
+                'user_id',
+                DB::raw("
+                    ST_Distance_Sphere(
+                        point(longitude, latitude),
+                        point(?, ?)
+                    ) as distance
+                ")
+            )
+                ->setBindings([$longitude, $latitude]) // Bind longitude and latitude values
+                ->having('distance', '<=', $radiusLimitMeters) // Filter within radius
+                ->orderBy('distance') // Closest first
+                ->groupBy('user_id') // Ensure distinct user_id
+                ->take(5) // Limit to 5 records
+                ->pluck('user_id'); // Retrieve only the user IDs
+
+            // If you also need the provider details:
+            $distinctProviders = User::whereIn('id', $providers->toArray())
+                ->whereHas('roles', function ($query) {
+                    $query->where('name', 'providers'); // Filter only providers
                 })
-                ->whereNot('id', auth()->id())
-                // ->select('id', DB::raw("
-                //     ST_Distance_Sphere(
-                //         point(longitude, latitude), 
-                //         point(?, ?)
-                //     ) as distance
-                // "))
-                // ->setBindings([$longitude, $latitude]) // Bind longitude and latitude values
-                // ->having('distance', '<=', $radiusLimitMeters) // Filter providers within the radius
-                ->inRandomOrder()
-                // ->limit(5) // Take a limited number of results
-                ->pluck('id');
+                ->get();
 
 
             if (empty($providers) || count($providers) < 1) {
@@ -195,16 +203,16 @@ class ServiceRequestController extends Controller
             //           ->orWhereIn('featured_providers_id', $authId)
             //           ->orWhere('approved_artisan_id', $authId);
             // })->
-    
+
             if (!$serviceRequest) {
                 return get_error_response("Service request not found", ["error" => "Service request not found"]);
             }
-    
+
             // Fetch enum values directly from the database schema
             $table = $serviceRequest->getTable();
             $column = 'request_status';
             $validStatuses = $this->getEnumValues($table, $column);
-    
+
             // Validate the status input
             $validatedData = $request->validate([
                 'status' => ['required', function ($attribute, $value, $fail) use ($validStatuses) {
@@ -214,46 +222,46 @@ class ServiceRequestController extends Controller
                     }
                 }],
             ]);
-    
+
             // Convert to the correct case as stored in the enum
             $inputStatus = strtolower($validatedData['status']);
             $finalStatus = $validStatuses[array_search($inputStatus, array_map('strtolower', $validStatuses))];
-    
+
             // Update the status in the database
             $update = $serviceRequest->update(['request_status' => $finalStatus]);
-    
+
             if ($update && $finalStatus === 'Close Request') {
                 // Get provider and artisan details
                 $provider = User::find($serviceRequest->approved_providers_id);
                 $artisan = User::find($serviceRequest->approved_artisan_id);
-    
+
                 if (!$provider || !$artisan) {
                     return get_error_response("Provider or artisan not found", ["error" => "Provider or artisan missing"]);
                 }
-    
+
                 // Calculate artisan earnings
                 $providerEarnings = floatval($serviceRequest->amount);
                 $artisanPercentage = floatval($artisan->payment_plan); // Fixed or percentage
                 $artisanEarning = floatval($artisan->payment_amount);
-    
+
                 if (strtolower($artisan->payment_plan) === 'percentage') {
                     $artisanEarning = ($providerEarnings / 100) * $artisanPercentage;
                 }
-    
+
                 // Credit wallets
                 $provider->getWallet('ngn')->deposit(
                     $providerEarnings - $artisanEarning,
                     ["description" => $serviceRequest->problem_title]
                 );
-    
+
                 $artisan->getWallet('ngn')->deposit(
                     $artisanEarning,
                     ["description" => $serviceRequest->problem_title]
                 );
-    
+
                 return get_success_response($serviceRequest, "Service Request status updated successfully");
             }
-    
+
             return get_success_response($serviceRequest, "Service Request status updated successfully");
         } catch (\Illuminate\Validation\ValidationException $e) {
             return get_error_response("Invalid status provided", $e->errors(), 422);
@@ -359,7 +367,7 @@ class ServiceRequestController extends Controller
             return get_error_response($th->getMessage(), ["error" => $th->getMessage()]);
         }
     }
-    
+
     public function negotiateQuote(Request $request, $requestId, $quoteId)
     {
         try {
@@ -375,9 +383,9 @@ class ServiceRequestController extends Controller
             if (!$quote) {
                 return get_error_response("Quote not found", ["error" => "Quote not found!"], 404);
             }
-            
+
             // $negotiation = [];
-            
+
             $negotiation = Negotiation::create([
                 'submitted_quote_id' => $quoteId,
                 'request_id' => $requestId,
@@ -391,7 +399,7 @@ class ServiceRequestController extends Controller
             return get_error_response($th->getMessage(), ["error" => $th->getMessage()]);
         }
     }
-    
+
     public function getNegotiation($requestId)
     {
         try {
@@ -409,35 +417,35 @@ class ServiceRequestController extends Controller
     public function acceptNegotiatedPrice(Request $request, $negotiationId)
     {
         DB::beginTransaction();
-    
+
         try {
             // Validate the status field
             $validator = Validator::make($request->all(), [
                 'status' => 'required|in:accepted,rejected'
             ]);
-    
+
             if ($validator->fails()) {
                 return get_error_response("Validation failed", $validator->errors()->toArray(), 422);
             }
-    
+
             // Fetch the negotiation by ID
             $negotiation = Negotiation::find($negotiationId);
-    
+
             if (!$negotiation) {
                 return get_error_response("Negotiation not found", ["error" => "Negotiation not found"], 404);
             }
-    
+
             // Update the negotiation status
             $negotiation->status = $request->status;
             $negotiation->save();
-    
+
             // Retrieve the corresponding quote
             $quote = SubmittedQuotes::where([
                 'request_id' => $negotiation->request_id,
                 'provider_id' => $negotiation->provider_id,
                 'id' => $negotiation->submitted_quote_id
             ])->first();
-    
+
             if ($quote) {
                 // Update quote price
                 DB::table('submitted_quotes')->where('id', $quote->id)
@@ -445,17 +453,17 @@ class ServiceRequestController extends Controller
                         'old_price' => $quote->total_charges,
                         'total_charges' => number_format($negotiation->price, 4, '.', '')
                     ]);
-    
+
                 // Retrieve both provider and customer in one query
                 $users = User::whereIn('id', [$negotiation->provider_id, $quote->serviceRequest->user->id])->get()->keyBy('id');
                 $provider = $users->get($negotiation->provider_id);
                 $customer = $users->get($quote->serviceRequest->user->id);
-    
+
                 if (!$provider || !$customer) {
                     DB::rollBack();
                     return get_error_response("Provider or Customer not found", ["error" => "User not found"], 404);
                 }
-    
+
                 // Process the customer's wallet
                 // $customer_wallet = $customer->getWallet('ngn');
                 // if ($customer_wallet) {
@@ -466,29 +474,28 @@ class ServiceRequestController extends Controller
                 //         return get_error_response($th->getMessage(), ["error" => $th->getMessage()]);
                 //     }
                 // }
-    
+
                 // Retrieve the service request
                 $serviceRequest = ServiceRequestModel::findOrFail($negotiation->request_id);
-    
+
                 if ($serviceRequest->request_status == "Payment Confirmed") {
                     DB::rollBack();
                     return get_error_response("Payment already processed", ["error" => "Payment already processed"], 409);
                 }
-    
+
                 // Update request status to "Payment Confirmed"
                 $serviceRequest->request_status = "Payment Confirmed";
                 $customer->notify(new PaymentStatusUpdated('Payment Confirmed', $negotiation));
-    
+
                 if (!$serviceRequest->save()) {
                     DB::rollBack();
                     return get_error_response("Unable to complete request, please contact support", ["error" => "Unable to complete request"], 400);
                 }
             }
-    
+
             DB::commit();
-    
+
             return get_success_response($negotiation, "Negotiated price accepted successfully");
-    
         } catch (\Throwable $th) {
             DB::rollBack();
             return get_error_response($th->getMessage(), ["error" => $th->getMessage()]);
@@ -540,7 +547,6 @@ class ServiceRequestController extends Controller
         } catch (\Throwable $th) {
             return get_error_response($th->getMessage(), ["error" => $th->getMessage()], 500);
         }
-
     }
 
     public function serviceProviders()
@@ -557,7 +563,7 @@ class ServiceRequestController extends Controller
     {
         //
     }
-    
+
     /**
      * Retrieve ENUM values for a column from the database schema.
      */
@@ -565,24 +571,24 @@ class ServiceRequestController extends Controller
     {
         $query = "SHOW COLUMNS FROM `$table` WHERE Field = ?";
         $result = \DB::select($query, [$column]);
-    
+
         // Check if the result is empty
         if (empty($result)) {
             throw new \Exception("Column '$column' does not exist in table '$table' or is not an ENUM type.");
         }
-    
+
         $type = $result[0]->Type; // Safely access the first result
-    
+
         preg_match('/enum\((.*)\)/', $type, $matches);
-    
+
         if (!isset($matches[1])) {
             throw new \Exception("The column '$column' is not of ENUM type.");
         }
-    
+
         $enumValues = array_map(function ($value) {
             return trim($value, "'");
         }, explode(',', $matches[1]));
-    
+
         return $enumValues;
     }
 
@@ -591,11 +597,11 @@ class ServiceRequestController extends Controller
         try {
             // retrieved the service request firstly
             $serviceRequest = ServiceRequestModel::whereId($requestId)->first();
-            if(!$serviceRequest) {
+            if (!$serviceRequest) {
                 return get_error_response("Service request not found", ["error" => "Service request not found"], 404);
             }
             // check if the service request is already paid for
-            if($serviceRequest->request_status == "Payment Confirmed") {
+            if ($serviceRequest->request_status == "Payment Confirmed") {
                 return get_error_response("Service request already paid for", ["error" => "Service request already paid for"], 400);
             }
 
@@ -609,14 +615,13 @@ class ServiceRequestController extends Controller
             $wallet = $customer->getWallet($walletType);
             $transaction[] = $wallet->withdrawal($total_cost,  ['description' => "Service request payment - {$serviceRequest->id}", "narration" => $request->narration ?? null]);
 
-            if($transaction && $wallet) {
+            if ($transaction && $wallet) {
                 // return success data with the transaction and service request data
                 return get_success_response([
                     'transaction' => $transaction,
                     'service_request' => $serviceRequest
                 ], 'Payment successful');
             }
-
         } catch (\Throwable $th) {
             return ['error' => $th->getMessage()];
         }

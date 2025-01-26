@@ -5,11 +5,12 @@ namespace App\Http\Controllers;
 use App\Models\BusinessInfo;
 use App\Notifications\PasswordResetComplete;
 use App\Notifications\PasswordResetNotification;
-use DB, Http, Mail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use App\Models\User;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Validator;
 use Jijunair\LaravelReferral\Models\Referral;
 use Towoju5\Wallet\Models\Wallet;
@@ -73,24 +74,10 @@ class AuthController extends Controller
                     throw new \Exception('Failed to create user');
                 }
 
+                // Implement referral system if referred_by exists
                 if ($request->has('referred_by')) {
-                    Referral::create([
-                        'user_id' => $user->id,
-                        'referred_by' => $request->referred_by,
-                    ]);
-
-                    $referrer = Referral::userByReferralCode($request->referred_by);
-                    if ($referrer) {
-                        $wallet = $user->getWallet('bonus');
-                        if ($wallet) {
-                            $wallet->deposit(
-                                get_settings_value('referal_commission', 0),
-                                'bonus',
-                                $request->account_type,
-                                ["description" => "Referral Bonus"],
-                                ["description" => "Referral Bonus"]
-                            );
-                        }
+                    if ($request->has('referred_by')) {
+                        $this->process_referral($user, $request->referred_by, $request->account_type);
                     }
                 }
 
@@ -216,17 +203,8 @@ class AuthController extends Controller
 
                 // Implement referral system if referred_by exists
                 if ($request->has('referred_by')) {
-                    $referral = Referral::create([
-                        'user_id' => $user->id,
-                        'referred_by' => $request->referred_by,
-                    ]);
-
-                    $referrer = Referral::userByReferralCode($request->referred_by);
-                    if ($referrer) {
-                        $wallet = $user->getWallet('bonus');
-                        if ($wallet) {
-                            $wallet->deposit(get_settings_value('referal_commission', 0), 'bonus', $request->account_type, ["description" => "Referral Bonus"], ["description" => "Referral Bonus"]);
-                        }
+                    if ($request->has('referred_by')) {
+                        $this->process_referral($user, $request->referred_by, $request->account_type);
                     }
                 }
 
@@ -368,47 +346,6 @@ class AuthController extends Controller
         return get_error_response('Email already verified', ['message' => 'Email already verified']);
     }
 
-    // public function socialLogin(Request $request)
-    // {
-    //     $validator = Validator::make($request->all(), [
-    //         'first_name' => 'required|string|max:255',
-    //         'last_name' => 'required|string|max:255',
-    //         'email' => 'required|string|email|max:255',
-    //         'provider' => 'required|string',
-    //         'provider_id' => 'required|string',
-    //         'account_type' => 'required|string',
-    //     ]);
-
-    //     if ($validator->fails()) {
-    //         return get_error_response($validator->errors());
-    //     }
-
-    //     if (!isset($request->username)) {
-    //         $request->merge([
-    //             'username' => explode('@', $request->email ?? $request->phone)[0] . rand(1, 99)
-    //         ]);
-    //     }
-
-    //     $user = User::where('email', $request->email)->first();
-    //     if (!$user) {
-    //         $user = User::create([
-    //             'first_name' => $request->first_name,
-    //             'last_name' => $request->last_name,
-    //             'username' => $request->username,
-    //             'email' => $request->email,
-    //             'is_social' => true,
-    //             'email_verified_at' => now(),
-    //             'password' => Hash::make(\Str::random(10)),
-    //             'main_account_role' => $request->account_type,
-    //             'account_type' => $request->account_type,
-    //         ]);
-    //     }
-
-    //     $user->assignRole($request->account_type);
-    //     $token = explode('|', $user->createToken('auth_token')->plainTextToken);
-    //     return get_success_response(['user' => $user, 'token' => $token[1]], 'Login successful');
-    // }
-
     public function socialLogin(Request $request, $social = null)
     {
         try {
@@ -419,24 +356,26 @@ class AuthController extends Controller
                 'provider' => 'required|string|in:google,apple',
                 'device_id' => 'required|string|max:255',
                 'account_type' => 'required|string|in:co-operate_accounts,private_accounts,affiliates,providers,suppliers',
+                'country_code' => 'required|string|max:255',
+                'referred_by' => 'sometimes|string|max:255',
             ]);
 
-            // if (in_array($request->account_type, ["providers", "suppliers"])) {
-            //     $businessValidation = Validator::make($request->all(), [
-            //         "businessName" => "required|string",
-            //         "cacNumber" => "required|string",
-            //         "officeAddress" => "required|string",
-            //         "businessCategory" => "required|string",
-            //         "businessDescription" => "required|string",
-            //         "businessIdType" => "required|string",
-            //         "businessIdNumber" => "required|string",
-            //         "businessIdImage" => "required|string",
-            //         "businessBankInfo" => "required|string",
-            //     ]);
-            //     if ($businessValidation->fails()) {
-            //         return get_error_response(['error' => $businessValidation->errors()->toArray()]);
-            //     }
-            // }
+            if (in_array($request->account_type, ["providers", "suppliers"])) {
+                $businessValidation = Validator::make($request->all(), [
+                    "businessName" => "required|string",
+                    "cacNumber" => "required|string",
+                    "officeAddress" => "required|string",
+                    "businessCategory" => "required|string",
+                    "businessDescription" => "required|string",
+                    "businessIdType" => "required|string",
+                    "businessIdNumber" => "required|string",
+                    "businessIdImage" => "required|string",
+                    "businessBankInfo" => "required|string",
+                ]);
+                if ($businessValidation->fails()) {
+                    return get_error_response(['error' => $businessValidation->errors()->toArray()]);
+                }
+            }
 
             if ($validate->fails()) {
                 return get_error_response(['error' => $validate->errors()->toArray()]);
@@ -476,6 +415,7 @@ class AuthController extends Controller
                     'first_name' => $socialData['first_name'] ?? 'Unknown',
                     'last_name' => $socialData['last_name'] ?? 'User',
                     'is_social' => true,
+                    'country_dialing_code' => str_replace("+", "", $request->country_code),
                 ]);
 
                 $is_registered = !$user->wasRecentlyCreated;
@@ -488,6 +428,13 @@ class AuthController extends Controller
                 if ($user->device_id !== $request->device_id) {
                     $user->tokens()->delete(); // Remove old tokens
                     $user->update(['device_id' => $request->device_id]); // Update device ID
+                }
+
+                // Implement referral system if referred_by exists
+                if ($request->has('referred_by')) {
+                    if ($request->has('referred_by')) {
+                        $this->process_referral($user, $request->referred_by, $request->account_type);
+                    }
                 }
 
                 return get_success_response([
@@ -742,5 +689,24 @@ class AuthController extends Controller
         } catch (\Throwable $th) {
             return get_error_response($th->getMessage(), ['error' => $th->getMessage()]);
         }
+    }
+
+    private function process_referral($user, $referred_by, $account_type)
+    {
+        // Implement referral system if referred_by exists
+        $referrer = Referral::userByReferralCode($referred_by);
+        
+        // Check if the referrer exists and and credit for referring user
+        if ($referrer) {
+            $wallet = $user->getWallet('bonus');
+            if ($wallet) {
+                $wallet->deposit(get_settings_value('referal_commission', 0), 'bonus', $account_type, ["description" => "Referral Bonus"], ["description" => "Referral Bonus"]);
+            }
+        }
+        // Create a referral record for the user
+        $referral = $user->createReferralAccount([
+            'user_id' => $user->id,
+            'referred_by' => $referred_by,
+        ]);
     }
 }

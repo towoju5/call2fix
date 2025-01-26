@@ -22,7 +22,13 @@ class SettingsSeeder extends Seeder
             ['key' => 'website_name', 'value' => 'Your Website Name'],
             ['key' => 'alphamaed_service_account_id', 'value' => 'your_service_account_id'],
             ['key' => 'recharge_points', 'value' => '0.05'],
-            ['key' => 'referal_commission', 'value' => '50'],
+            // ['key' => 'referal_commission', 'value' => '50'],
+            ['key' => 'private_referal_commission', 'value' => '50'],
+            ['key' => 'supplier_referal_commission', 'value' => '50'], // co-operate_accounts,,
+            ['key' => 'providers_referal_commission', 'value' => '50'],
+            ['key' => 'affiliates_referal_commission', 'value' => '50'],
+            ['key' => 'private_accounts_referal_commission', 'value' => '50'],
+            ['key' => 'co-operate_accounts_referal_commission', 'value' => '50'],
         ];
 
         foreach ($settings as $setting) {
