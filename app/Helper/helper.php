@@ -2,6 +2,7 @@
 
 use App\Models\Settings;
 use App\Models\User;
+use App\Services\FirebaseService;
 use Creatydev\Plans\Models\PlanModel;
 use Google\Auth\Credentials\ServiceAccountCredentials;
 // use Storage;
