@@ -2,6 +2,7 @@
 
 namespace  App\Services;
 
+use Illuminate\Support\Facades\Log;
 use Kreait\Firebase\Factory;
 use Kreait\Firebase\Messaging\CloudMessage;
 
@@ -19,13 +20,22 @@ class FirebaseService {
 
     public function sendNotification($title, $body, $token, $data = [])
     {
+        $cloudMessage = CloudMessage::fromArray([
+            'token' => $token,
+            'notification' => [
+                'title' => $title,
+                'body' => $body
+            ],
+            'data' => $data
+        ]);
+
         $message = CloudMessage::withTarget('token', $token)
                     // ->withNotification(Notification::create($title, $body)) 
                     ->withNotification(['title' => $title, 'body' => $body])
                     ->withData($data);
 
         $send = $this->messaging->send($message);
-
+        Log::info("cloud message update", ['result' => $send, 'cloudMessage' => $cloudMessage]);
         return $send;
     }
 }
