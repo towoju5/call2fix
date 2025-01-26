@@ -703,7 +703,7 @@ class AuthController extends Controller
         if ($referrer) {
             $wallet = $user->getWallet('bonus');
             if ($wallet) {
-                $wallet->deposit(get_settings_value($account_type.'_referal_commission', 0), ["description" => "Referral Bonus"], ["description" => "Referral Bonus"]);
+                $wallet->deposit(get_settings_value($account_type.'_referal_commission', 0.1), ["description" => "Referral Bonus"], ["description" => "Referral Bonus"]);
             }
         }
     }
