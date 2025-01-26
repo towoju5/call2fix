@@ -697,10 +697,7 @@ class AuthController extends Controller
         $referrer = Referral::userByReferralCode($referred_by);
         
         // Create a referral record for the user
-        $referral = $user->createReferralAccount([
-            'user_id' => $user->id,
-            'referred_by' => $referred_by,
-        ]);
+        $referral = $user->createReferralAccount($referred_by);
 
         // Check if the referrer exists and and credit for referring user
         if ($referrer) {
