@@ -19,25 +19,28 @@ class FirebaseService
     }
 
 
-    public function sendNotification($title, $body, $token, $data = [])
+    public function sendNotification($title, $body, $deviceToken, $data = [])
     {
-        $deviceToken = $token;
-        $notification = ['title' => $title, 'body' => $body];
-        
-        $message = CloudMessage::new()
-            ->withNotification($notification)
-            ->withData($data) 
-            ->toToken($deviceToken);
+        try {
+            $notification = ['title' => $title, 'body' => $body];
 
-        $message = CloudMessage::fromArray([
-            'token' => $deviceToken,
-            'notification' => $notification,
-            'data' => $data, 
-        ]);
+            $message = CloudMessage::new()
+                ->withNotification($notification)
+                ->withData($data)
+                ->toToken($deviceToken);
 
-        $result = $this->messaging->send($message);
+            $message = CloudMessage::fromArray([
+                'token' => $deviceToken,
+                'notification' => $notification,
+                'data' => $data,
+            ]);
 
-        return ['result' => $result, 'message' => $message];
+            $result = $this->messaging->send($message);
+
+            return ['result' => $result, 'message' => $message];
+        } catch (\Kreait\Firebase\Exception\Messaging\InvalidMessage $e) {
+            return ['error' => 'Firebase Messaging Error: ' . $e->getMessage()];
+        }
     }
 }
 
