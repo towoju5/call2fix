@@ -35,7 +35,7 @@ class FirebaseService {
                     ->withData($data);
 
         $send = $this->messaging->send($message);
-        Log::info("cloud message update", ['result' => $send, 'cloudMessage' => $cloudMessage]);
+        Log::info("cloud message update", ['result' => $send]);
         return $send;
     }
 }
