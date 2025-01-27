@@ -45,8 +45,8 @@ class ChatController extends Controller
 
         // Broadcast the message to the Ably channel
         broadcast(new NewMessage($message))->toOthers();
-        
-        $deviceId = [];
+
+        $deviceId = auth()->user()->device_id;
 
         fcm("New chat Message", $request->content, $deviceId);
         return get_success_response($message->load('user'));

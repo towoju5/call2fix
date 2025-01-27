@@ -1,16 +1,20 @@
 import './bootstrap';
+import Alpine from 'alpinejs';
+import Echo from 'laravel-echo';
 
-import Ably from 'ably';
+import Echo from 'laravel-echo';
 
-const client = new Ably.Realtime('your-ably-api-key');
+import Pusher from 'pusher-js';
+window.Pusher = Pusher;
 
-// Subscribe to a channel
-const channel = client.channels.get('test-channel');
-
-// Subscribe to messages
-channel.subscribe('message', (message) => {
-  console.log('New message received:', message.data);
+window.Echo = new Echo({
+    broadcaster: 'reverb',
+    key: import.meta.env.VITE_REVERB_APP_KEY,
+    wsHost: import.meta.env.VITE_REVERB_HOST,
+    wsPort: import.meta.env.VITE_REVERB_PORT ?? 80,
+    wssPort: import.meta.env.VITE_REVERB_PORT ?? 443,
+    forceTLS: (import.meta.env.VITE_REVERB_SCHEME ?? 'https') === 'https',
+    enabledTransports: ['ws', 'wss'],
 });
 
-// Send a message to the channel
-channel.publish('message', 'Hello from Laravel!');
+

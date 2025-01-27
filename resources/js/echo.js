@@ -1,3 +1,4 @@
+
 import Echo from 'laravel-echo';
 
 import Pusher from 'pusher-js';
@@ -10,14 +11,7 @@ window.Echo = new Echo({
     wsPort: import.meta.env.VITE_REVERB_PORT ?? 80,
     wssPort: import.meta.env.VITE_REVERB_PORT ?? 443,
     forceTLS: (import.meta.env.VITE_REVERB_SCHEME ?? 'https') === 'https',
-    enabledTransports: ['ws'],
+    enabledTransports: ['ws', 'wss'],
 });
 
-console.log(window.Echo.options)
 
-/** 
- * Testing Channels & Events & Connections
- */
-window.Echo.channel("delivery").listen("PackageSent", (event) => {
-    console.log(event);
-});

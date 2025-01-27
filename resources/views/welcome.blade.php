@@ -11,6 +11,7 @@
         }
     }`
 	</script>
+	@vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 
 <body class="bg-gray-100 dark:bg-gray-800">
@@ -23,6 +24,14 @@
 			<a href="#" class="border-2 border-gray-800 text-black font-bold py-3 px-6 rounded dark:text-white dark:border-white">Reload</a>
 		</div>
 	</div>
+	<script>
+		window.Echo.channel('chat')
+			.listen('.message.sent', (event) => {
+				console.log('New message:', event.message);
+				document.getElementById('messages').innerHTML += `<p>${event.message}</p>`;
+			});
+	</script>
+
 </body>
 
 </html>

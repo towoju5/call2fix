@@ -10,6 +10,7 @@ use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 use Ably\AblyRest;
+use Illuminate\Contracts\Queue\ShouldQueue;
 
 class NewMessage implements ShouldBroadcast
 {
@@ -22,7 +23,7 @@ class NewMessage implements ShouldBroadcast
     public function __construct(Message $message)
     {
         $this->message = $message;
-        $this->ably = new AblyRest(config('services.ably.key'));
+        // $this->ably = new AblyRest(config('services.ably.key'));
     }
 
     // Broadcast on the channel
