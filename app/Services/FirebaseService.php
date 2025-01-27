@@ -7,7 +7,8 @@ use Kreait\Firebase\Factory;
 use Kreait\Firebase\Messaging\CloudMessage;
 
 
-class FirebaseService {
+class FirebaseService
+{
     protected $messaging;
 
     public function __construct()
@@ -20,23 +21,23 @@ class FirebaseService {
 
     public function sendNotification($title, $body, $token, $data = [])
     {
-        // $cloudMessage = CloudMessage::fromArray([
-        //     'token' => $token,
-        //     'notification' => [
-        //         'title' => $title,
-        //         'body' => $body
-        //     ],
-        //     'data' => $data
-        // ]);
+        $deviceToken = $token;
+        $notification = ['title' => $title, 'body' => $body];
+        
+        $message = CloudMessage::new()
+            ->withNotification($notification)
+            ->withData($data) 
+            ->toToken($deviceToken);
 
-        $message = CloudMessage::withTarget('token', $token)
-                    // ->withNotification(Notification::create($title, $body)) 
-                    ->withNotification(['title' => $title, 'body' => $body])
-                    ->withData($data);
+        $message = CloudMessage::fromArray([
+            'token' => $deviceToken,
+            'notification' => $notification,
+            'data' => $data, 
+        ]);
 
-        $send = $this->messaging->send($message);
-        Log::info("cloud message update", ['result' => $send]);
-        return $send;
+        $result = $this->messaging->send($message);
+
+        return ['result' => $result, 'message' => $message];
     }
 }
 
