@@ -132,7 +132,7 @@ if (!function_exists('getGoogleAccessToken')) {
         $firebase = new FirebaseService();
         $response = $firebase->sendNotification($title, $body, $firebaseToken, $data);
         \Log::info("FCM response", ['response' => $response]);
-        // dd($response);
+        return $response;
       }
   }
 
