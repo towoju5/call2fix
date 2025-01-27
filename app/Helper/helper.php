@@ -127,10 +127,8 @@ if (!function_exists('getGoogleAccessToken')) {
   if (!function_exists('fcm')) {
       function fcm($title, $body, string $deviceId = null, $data = [])
       {
-        $firebaseToken = (null === $deviceId) ? User::whereNotNull('device_token')->pluck('device_token')->all() : [$deviceId];
-
         $firebase = new FirebaseService();
-        $response = $firebase->sendNotification($title, $body, $firebaseToken, $data);
+        $response = $firebase->sendNotification($title, $body, $deviceId, $data);
         \Log::info("FCM response", ['response' => $response]);
         return $response;
       }
