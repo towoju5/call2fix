@@ -25,8 +25,8 @@
 		</div>
 	</div>
 	<script>
-		window.Echo.channel('chat')
-			.listen('.message.sent', (event) => {
+		window.Echo.channel('chat.123')
+			.listen('*', (event) => {
 				console.log('New message:', event.message);
 				document.getElementById('messages').innerHTML += `<p>${event.message}</p>`;
 			});
