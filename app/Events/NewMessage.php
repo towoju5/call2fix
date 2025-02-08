@@ -18,9 +18,10 @@ class NewMessage implements ShouldBroadcast
     public $message;
 
     // Constructor
-    public function __construct(Message $message)
+    public function __construct(Message $message, $user)
     {
         $this->message = $message;
+        $this->user = $user;
     }
 
     // Broadcast on the channel
@@ -34,8 +35,8 @@ class NewMessage implements ShouldBroadcast
     public function broadcastWith()
     {
         return [
-            'message' => $this->message->content,
-            'sender' => $this->message->user->name,
+            'message' => (array)$this->message->content,
+            'sender' => (array)$this->user,
             'timestamp' => $this->message->created_at->toDateTimeString(),
         ];
     }
