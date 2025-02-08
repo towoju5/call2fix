@@ -43,7 +43,7 @@ class ChatController extends Controller
             'content' => $validated['content']
         ]);
 
-        $user = User::whereId(auth()->id())->first());
+        $user = User::whereId(auth()->id())->first();
 
         // Broadcast the message to the Ably channel
         broadcast(new NewMessage($message, $user))->toOthers();
