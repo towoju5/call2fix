@@ -43,10 +43,12 @@ class ChatController extends Controller
             'content' => $validated['content']
         ]);
 
-        // Broadcast the message to the Ably channel
-        broadcast(new NewMessage($message))->toOthers();
+        $user = User::whereId(auth()->id())->first());
 
-        $deviceId = auth()->user()->device_id;
+        // Broadcast the message to the Ably channel
+        broadcast(new NewMessage($message, $user))->toOthers();
+
+        $deviceId = $user->device_id;
 
         fcm("New chat Message", $request->content, $deviceId);
         return get_success_response($message->load('user'));
