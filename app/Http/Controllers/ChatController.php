@@ -44,14 +44,18 @@ class ChatController extends Controller
             'content' => $validated['content']
         ]);
 
-        $user = User::whereId(auth()->id())->first();
+        $notifiables = $chat->participants;
 
+        foreach ($notifiables as $k => $u) {
+            $response = fcm("New chat Message", $request->content, $u->device_id);
+            Log::channel('chat')->info("New fcm message response", ['response' => $response]);
+        }
+
+
+        $user = User::whereId(auth()->id())->first();
         // Broadcast the message to the Ably channel
         broadcast(new NewMessage($message, $user))->toOthers();
 
-        $deviceId = $user->device_id;
-
-        fcm("New chat Message", $request->content, $deviceId);
         return get_success_response($message->load('user'));
     }
 
