@@ -90,11 +90,15 @@ class OrderController extends Controller
             // Calculate total price based on lease or normal purchase
             if ($request->has('lease_duration')) {
                 $rentablePrice = $this->getRentablePrice($product->id, $orderData['duration_type']);
-                $orderData['rentable_price'] = $rentablePrice;
-                $orderData["total_price"] = round(floatval($rentablePrice * $orderData['quantity']) + $shippingFee, 4);
+                $orderData['rentable_price'] = $rentablePrice * $request->lease_duration;
+                $subtotal = ($rentablePrice * $orderData['quantity']) + $shippingFee;
+                $vatAmount = ($subtotal * get_settings_value('vat_percentage', 7.5)) / 100;
+                $orderData["total_price"] = floatval($subtotal + $vatAmount);
             } else {
-                $orderData["total_price"] = round(floatval($product->price * $orderData['quantity']) + $shippingFee, 4);
+                $subtotal = ($product->price * $orderData['quantity']) + $shippingFee;
+                $orderData["total_price"] = floatval($subtotal);
             }
+            
     
             // Withdraw from wallet
             $wallet->withdrawal($orderData["total_price"], ["description" => "Order placed", "Order placement"]);
