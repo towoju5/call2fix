@@ -30,7 +30,6 @@ class OrderController extends Controller
                 "delivery_type" => "required|in:home_delivery,pick_up",
                 "delivery_address" => "required_if:delivery_type,home_delivery|string",
                 "quantity" => "required|integer|min:1",
-                // "additional_info" => "sometimes|string",
                 "product_id" => "required|exists:products,id",
                 "delivery_longitude" => "required_if:delivery_type,home_delivery|string",
                 "delivery_latitude" => "required_if:delivery_type,home_delivery|string",
@@ -40,11 +39,8 @@ class OrderController extends Controller
                 "lease_notes" => "sometimes|string",
             ];
     
-            
             $validator = Validator::make($request->all(), $validationRules);
     
-            // Log::error("Validation: ", ["additional_info" => $request->additional_info, "incomin_request" => $request->all()]);
-            
             if ($validator->fails()) {
                 return get_error_response("Validation error", $validator->errors(), 422);
             }
@@ -61,7 +57,7 @@ class OrderController extends Controller
             $orderData["seller_id"] = $product->seller_id;
             $orderData["status"] = "pending";
     
-            if($request->delivery_type === 'home_delivery') {
+            if ($request->delivery_type === 'home_delivery') {
                 // Calculate total price and shipping fee
                 $kwik = new KwikDeliveryController();
                 $shippingFee = $kwik->calculatePricing(
@@ -75,16 +71,13 @@ class OrderController extends Controller
             } else {
                 $shippingFee = 0;
             }
-            
+    
             $orderData["shipping_fee"] = $shippingFee; 
             $orderData["product_category_id"] = $product->category_id; 
             $orderData["product_service_category_id"] = $product->category_id; 
-
-            // Log::error("Validation: ", ["$orderData" => $orderData]);
-
-
-            if(is_array($shippingFee) || isset($shippingFee['error'])) {
-                return get_error_response( $shippingFee['error'], ["error" => $shippingFee['error']], 400);
+    
+            if (is_array($shippingFee) || isset($shippingFee['error'])) {
+                return get_error_response($shippingFee['error'], ["error" => $shippingFee['error']], 400);
             }
     
             // Calculate total price based on lease or normal purchase
@@ -92,13 +85,13 @@ class OrderController extends Controller
                 $rentablePrice = $this->getRentablePrice($product->id, $orderData['duration_type']);
                 $orderData['rentable_price'] = $rentablePrice * $request->lease_duration;
                 $subtotal = ($rentablePrice * $orderData['quantity']) + $shippingFee;
-                $vatAmount = ($subtotal * get_settings_value('vat_percentage', 7.5)) / 100;
-                $orderData["total_price"] = floatval($subtotal + $vatAmount);
             } else {
                 $subtotal = ($product->price * $orderData['quantity']) + $shippingFee;
-                $orderData["total_price"] = floatval($subtotal);
             }
-            
+    
+            // Apply VAT for both rentable and non-rentable products
+            $vatAmount = ($subtotal * get_settings_value('vat_percentage', 7.5)) / 100;
+            $orderData["total_price"] = floatval($subtotal + $vatAmount);
     
             // Withdraw from wallet
             $wallet->withdrawal($orderData["total_price"], ["description" => "Order placed", "Order placement"]);
@@ -109,7 +102,6 @@ class OrderController extends Controller
             // Notify the user
             if ($order) {
                 // $user->notify(new OrderPlacedSuccessfully($order));
-    
                 return get_success_response($order, "Order placed successfully", 201);
             }
     
@@ -120,6 +112,7 @@ class OrderController extends Controller
             return get_error_response("Order placement failed", ["error" => $e->getMessage()], 500);
         }
     }
+    
     
 
     public function getUserOrders()
