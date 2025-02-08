@@ -35,8 +35,8 @@ class NewMessage implements ShouldBroadcast
     public function broadcastWith()
     {
         return [
-            'message' => $this->message->content,
-            'sender' => (array)$this->user,
+            'message' => (array)$this->message->content,
+            'sender' => (array)request()->user(),
             'timestamp' => $this->message->created_at->toDateTimeString(),
         ];
     }
