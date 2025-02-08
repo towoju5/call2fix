@@ -26,14 +26,16 @@ class Product extends Model
         'product_location',
         'product_longitude',
         'product_latitude',
-        'product_image'
+        'product_image',
+        "rentable_price"
     ];
 
     protected $casts = [
         'price' => 'decimal:2',
         'is_active' => 'boolean',
         'is_leasable' => 'boolean',
-        'product_image' => 'array'
+        'product_image' => 'array',
+        'rentable_price' => 'array'
     ];
 
     protected $hidden = [
