@@ -54,7 +54,7 @@ class ChatController extends Controller
 
         foreach ($notifiables as $k => $u) {
             $response = fcm("New chat Message", $request->content, $u->device_id);
-            Log::channel('chat')->info("New fcm message response", ['response' => $response]);
+            \Log::channel('chat')->info("New fcm message response", ['response' => $response]);
         }
 
         return get_success_response($message->load('user'));
