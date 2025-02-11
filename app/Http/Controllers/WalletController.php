@@ -33,7 +33,7 @@ class WalletController extends Controller
 
             switch ($request->payment_mode) {
                 case 'bank_transfer':
-                    $bankAccount = BankAccounts::where(['user_id' => auth()->id(), 'account_type' => 'withdrawal'])->first();
+                    return $bankAccount = BankAccounts::where(['user_id' => auth()->id(), 'account_type' => 'withdrawal'])->first();
                     if (!$bankAccount) {
                         // generate deposit account for customer
                         $accountInfo = BankAccounts::generateAccount();
