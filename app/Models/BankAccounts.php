@@ -49,7 +49,7 @@ class BankAccounts extends BaseModel
     public static function generateAccount()
     {
         $paystack = new PaystackServices();
-        $account = $this->createPaystackVirtualAccount();
+        $account = self::createPaystackVirtualAccount();
         return $account;
     }
 
