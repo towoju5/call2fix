@@ -70,10 +70,8 @@ class WalletController extends Controller
                     }
 
                     return get_error_response('Unable to retrieve bank account', ['error' => 'Unable to retrieve bank account']);
-                case 'credit_card':
-                    $amount = ($request->amount * 100);
-                    
-                    $response = $this->initializePaystackPayment($amount);
+                case 'credit_card':                   
+                    $response = $this->initializePaystackPayment($request->amount);
                     
                     if ($response && isset($response['data']['authorization_url'])) {
                         return get_success_response($response['data']);
@@ -400,21 +398,34 @@ class WalletController extends Controller
     }
 
     private function createPaystackVirtualAccount() {
-        $paystack_secret_key = get_settings_value('paystack_secret_key', 'sk_test_390011d63d233cad6838504b657721883bc096ec');
-        $url = "https://api.paystack.co/dedicated_account";
         $user = auth()->user();
         $fields = [
-            "customer" => [
-                "email" => $user->email,
-                "first_name" => $user->first_name,
-                "last_name" => $user->last_name
-            ],
-            "preferred_bank" => "test-bank",
-            "country" => "NG",
-            "currency" => "NGN",
-            "account_type" => "PAY_WITH_TRANSFER"
+            "customer" => ,
+            "preferred_bank" => "test-bank"
         ];
-    
+        $endpoint = "dedicated_account";
+        return $this->processPaystack($endpoint, $fields);
+    }
+
+    public function createCustomer()
+    {
+        $url = "customer";
+        $user = auth()->user();
+        $fields = [
+            "email" => $user->email,
+            "first_name" => $user->first_name,
+            "last_name" => $user->last_name,
+            "phone" => $user->phone
+        ];
+
+        return $this->processPaystack($endpoint, $fields);
+    }
+
+    private function processPaystack(string $endpoint, array $payload)
+    {
+        $paystack_secret_key = get_settings_value('paystack_secret_key', 'sk_test_390011d63d233cad6838504b657721883bc096ec');
+        $url = "https://api.paystack.co/{$endpoint}";
+            
         $fields_string = json_encode($fields);
     
         $ch = curl_init();
