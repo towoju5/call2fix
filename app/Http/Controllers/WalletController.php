@@ -40,7 +40,7 @@ class WalletController extends Controller
                     ])->first();
                     if (!$bankAccount) {
                         // generate deposit account for customer
-                        $accountInfo = BankAccounts::generateAccount();
+                        $accountInfo = $this->createPaystackVirtualAccount();
 
                         if (isset($accountInfo['error'])) {
                             return get_error_response($accountInfo['error'], ['error' => 'Failed to create account']);
@@ -379,6 +379,40 @@ class WalletController extends Controller
             'email' => auth()->user()->email,
             'amount' => $amount * 100,
             'currency' => $user_country,
+        ];
+    
+        $fields_string = json_encode($fields);
+    
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            "Authorization: Bearer $paystack_secret_key",
+            "Content-Type: application/json"
+        ]);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $fields_string);
+    
+        $response = curl_exec($ch);
+        curl_close($ch);
+    
+        return json_decode($response, true);
+    }
+
+    private function createPaystackVirtualAccount() {
+        $paystack_secret_key = get_settings_value('paystack_secret_key', 'sk_test_390011d63d233cad6838504b657721883bc096ec');
+        $url = "https://api.paystack.co/dedicated_account";
+        $user = auth()->user();
+        $fields = [
+            "customer" => [
+                "email" => $user->email,
+                "first_name" => $user->first_name,
+                "last_name" => $user->last_name
+            ],
+            "preferred_bank" => "wema-bank",
+            "country" => "NG",
+            "currency" => "NGN",
+            "account_type" => "PAY_WITH_TRANSFER"
         ];
     
         $fields_string = json_encode($fields);
