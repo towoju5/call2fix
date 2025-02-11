@@ -33,7 +33,7 @@ class WalletController extends Controller
 
             switch ($request->payment_mode) {
                 case 'bank_transfer':
-                    $bankAccount = $user->bankAccount()->where('account_type', 'withdrawal')->first();
+                    $bankAccount = BankAccounts::where(['user_id' => auth()->id(), 'account_type' => 'withdrawal'])->first();
                     if (!$bankAccount) {
                         // generate deposit account for customer
                         $accountInfo = BankAccounts::generateAccount();
@@ -72,13 +72,11 @@ class WalletController extends Controller
                     $response = $this->initializePaystackPayment($amount);
                     
                     if ($response && isset($response['data']['authorization_url'])) {
-                        header("Location: " . $response['data']['authorization_url']);
+                        return get_success_response(['checkoutUrl' => $response['data']['authorization_url']]);
                         exit();
-                    } else {
-                        echo "Payment initialization failed: " . ($response['message'] ?? "Unknown error");
-                    }
+                    } 
                     
-                    return get_success_response($checkoutUrl);
+                    return get_error_response(['error' => "Payment initialization failed: " . ($response['message'] ?? "Unknown error")]);
             }
         } catch (\Throwable $th) {
             return get_error_response($th->getMessage(), ['error' => $th->getMessage()]);
