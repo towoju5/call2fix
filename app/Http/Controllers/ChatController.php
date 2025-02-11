@@ -14,7 +14,7 @@ class ChatController extends Controller
 {
     public function index()
     {
-        $chats = Auth::user()->chats()->with('participants', 'lastChat')->get();
+        $chats = Auth::user()->chats()->with('participants')->get();
         // Attach lastChat manually
         $chats->each(function ($chat) {
             $chat->last_chat = $chat->lastChat(); // Adding lastChat manually
