@@ -9,6 +9,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Validator;
 use App\Models\User;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
 
 class ChatController extends Controller
 {
@@ -78,10 +81,19 @@ class ChatController extends Controller
             return get_error_response('Unauthorized access to this chat', 403);
         }
     
-        // Mark the message as read (Assuming a `read_by` column as JSON or a pivot table)
-        $message->update([
-            'read_by' => array_unique(array_merge($message->read_by ?? [], [Auth::id()])) // Store user IDs who have read the message
-        ]);
+        // Check if 'read_by' column exists, if not, add it
+        if (!Schema::hasColumn('messages', 'read_by')) {
+            Schema::table('messages', function (Blueprint $table) {
+                $table->json('read_by')->nullable()->after('content');
+            });
+        }
+    
+        // Mark the message as read (ensure `read_by` is stored as JSON array)
+        $readBy = $message->read_by ? json_decode($message->read_by, true) : [];
+        if (!in_array(Auth::id(), $readBy)) {
+            $readBy[] = Auth::id();
+            $message->update(['read_by' => json_encode($readBy)]);
+        }
     
         return get_success_response($message->fresh(), 'Message marked as read');
     }
