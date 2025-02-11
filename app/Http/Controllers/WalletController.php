@@ -400,7 +400,7 @@ class WalletController extends Controller
     private function createPaystackVirtualAccount() {
         $user = auth()->user();
         $fields = [
-            "customer" => ,
+            "customer" => $this->createCustomer(),
             "preferred_bank" => "test-bank"
         ];
         $endpoint = "dedicated_account";
