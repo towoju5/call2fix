@@ -14,7 +14,7 @@ class ChatController extends Controller
 {
     public function index()
     {
-        $chats = Auth::user()->chats()->with('participants')->get();
+        $chats = Auth::user()->chats()->with('participants')->lastChat()->get();
         return get_success_response($chats);
     }
 
