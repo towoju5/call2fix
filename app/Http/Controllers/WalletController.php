@@ -33,7 +33,7 @@ class WalletController extends Controller
 
             switch ($request->payment_mode) {
                 case 'bank_transfer':
-                    $bankAccount = $user->bankAccount()->first();
+                    $bankAccount = $user->bankAccount()->where('account_type', 'withdrawal')->first();
                     if (!$bankAccount) {
                         // generate deposit account for customer
                         $accountInfo = BankAccounts::generateAccount();
@@ -48,6 +48,7 @@ class WalletController extends Controller
                             'account_name' => $accountInfo['account_name'],
                             'bank_name' => $accountInfo['bank_name'],
                             'bank_code' => $accountInfo['bank_code'],
+                            'account_type' => 'withdrawal',
                             'provider_response' => $accountInfo['provider_response'] ?? null,
                         ]);
 
@@ -66,11 +67,17 @@ class WalletController extends Controller
 
                     return get_error_response('Unable to retrieve bank account', ['error' => 'Unable to retrieve bank account']);
                 case 'credit_card':
-                    $paystack = new Paystack();
-                    $data = [
-                        'amount' => $request->amount,
-                    ];
-                    $checkoutUrl = $paystack->makePaymentRequest($data);
+                    $amount = ($request->amount * 100);
+                    
+                    $response = $this->initializePaystackPayment($amount);
+                    
+                    if ($response && isset($response['data']['authorization_url'])) {
+                        header("Location: " . $response['data']['authorization_url']);
+                        exit();
+                    } else {
+                        echo "Payment initialization failed: " . ($response['message'] ?? "Unknown error");
+                    }
+                    
                     return get_success_response($checkoutUrl);
             }
         } catch (\Throwable $th) {
@@ -217,7 +224,6 @@ class WalletController extends Controller
         }
     }
 
-
     public function transactions($walletType)
     {
         $user = auth()->user();
@@ -359,5 +365,34 @@ class WalletController extends Controller
         } catch (\Throwable $th) {
             return get_error_response($th->getMessage(), ['error' => $th->getMessage()]);
         }
+    }
+
+    private function initializePaystackPayment($amount) {
+        $paystack_secret_key = get_settings_value('paystack_secret_key', 'sk_test_390011d63d233cad6838504b657721883bc096ec');
+    
+        $url = 'https://api.paystack.co/transaction/initialize';
+        $user_country = auth()->user()->country->currency_code;
+        $fields = [
+            'email' => $email,
+            'amount' => $amount * 100,
+            'currency' => $user_country,
+        ];
+    
+        $fields_string = json_encode($fields);
+    
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            "Authorization: Bearer $paystack_secret_key",
+            "Content-Type: application/json"
+        ]);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $fields_string);
+    
+        $response = curl_exec($ch);
+        curl_close($ch);
+    
+        return json_decode($response, true);
     }
 }
