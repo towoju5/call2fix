@@ -39,6 +39,8 @@ class ServiceProviderActionNotification extends Notification
         return [
             'action' => $this->action,
             'data' => $this->data,
+            'title' => $this->action,
+            'message' => 'Please check your service logs for new changes'
         ];
     }
 

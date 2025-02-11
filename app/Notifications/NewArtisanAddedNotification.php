@@ -64,7 +64,8 @@ class NewArtisanAddedNotification extends Notification
     public function toArray(object $notifiable): array
     {
         return [
-            //
+            'title' => 'Artisan Account Created',
+            'message' => 'Your artisan account has been successfully created'
         ];
     }
 }

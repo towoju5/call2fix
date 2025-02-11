@@ -26,6 +26,7 @@ class PaymentStatusUpdated extends Notification
             'negotiation_id' => $this->negotiation->id,
             'status' => $this->status,
             'message' => $this->msg,
+            'title' => 'Payment Status Updated'
         ];
     }
 

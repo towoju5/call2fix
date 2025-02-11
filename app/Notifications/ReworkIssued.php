@@ -26,7 +26,7 @@ class ReworkIssued extends Notification
      */
     public function via(object $notifiable): array
     {
-        return ['mail'];
+        return ['mail', 'database'];
     }
 
     /**
@@ -48,7 +48,8 @@ class ReworkIssued extends Notification
     public function toArray(object $notifiable): array
     {
         return [
-            //
+            'title' => 'Rework issued',
+            'message' => 'Rework has been issued on one of your projects, please check your project list'.
         ];
     }
 }

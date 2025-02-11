@@ -699,12 +699,21 @@ class AuthController extends Controller
         // Create a referral record for the user
         $referral = $user->createReferralAccount($referred_by);
 
-        // Check if the referrer exists and and credit for referring user
-        if ($referrer) {
+        // check if device ID exists in the user table.
+        if(User::where('device_id', request()->device_id)->exists()){
+            return true;
+        }
+
+        if($user->hasRole('private_account')) {
+            // increment the number of referrer
+            // also if the count total of referred so far is in the array [10, 20, 30, 40, 50] then give user referrer bonues
+        } else if ($referrer) {    // Check if the referrer exists and and credit for referring user
             $wallet = $user->getWallet('bonus');
             if ($wallet) {
                 $wallet->deposit(get_settings_value($account_type.'_referal_commission', 0.1), ["description" => "Referral Bonus"], ["description" => "Referral Bonus"]);
             }
+        } else {
+            return true;
         }
     }
 }

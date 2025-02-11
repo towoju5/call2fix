@@ -55,6 +55,8 @@ class OrderPlacedSuccessfully extends Notification
     public function toArray(object $notifiable): array
     {
         return [
+            'title' => 'Order Placed Successfully',
+            'message' => 'You have place a new order with ORDER-ID: '.$this->order->id,
             'order_id' => $this->order->id,
             'order_number' => $this->order->order_number,
             'total_amount' => $this->order->total_amount,

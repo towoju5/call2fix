@@ -14,7 +14,7 @@ class ServiceRequestModelObserver
     {        
         $activity = new APiLog();
         $activity->user_id = auth()->id();
-        $activity->activity_title = "ServiceRequest created";
+        $activity->activity_title = "Service Request created";
         $activity->activity_amount = $serviceRequest->total_price;
         $activity->activity_extra = [
             "ServiceRequest_id" => $serviceRequest->id,
@@ -29,7 +29,7 @@ class ServiceRequestModelObserver
     {        
         $activity = new ApiLog();
         $activity->user_id = auth()->id();
-        $activity->activity_title = "ServiceRequest updated";
+        $activity->activity_title = "Service Request updated";
         $activity->activity_amount = $serviceRequest->total_price;
         $activity->activity_extra = [
             "ServiceRequest_id" => $serviceRequest->id,
@@ -44,7 +44,7 @@ class ServiceRequestModelObserver
     {        
         $activity = new APiLog();
         $activity->user_id = auth()->id();
-        $activity->activity_title = "ServiceRequest deleted";
+        $activity->activity_title = "Service Request deleted";
         $activity->activity_amount = $serviceRequest->total_price;
         $activity->activity_extra = [
             "ServiceRequest_id" => $serviceRequest->id,
@@ -59,7 +59,7 @@ class ServiceRequestModelObserver
     {        
         $activity = new APiLog();
         $activity->user_id = auth()->id();
-        $activity->activity_title = "ServiceRequest restored";
+        $activity->activity_title = "Service Request restored";
         $activity->activity_amount = $serviceRequest->total_price;
         $activity->activity_extra = [
             "ServiceRequest_id" => $serviceRequest->id,
@@ -74,7 +74,7 @@ class ServiceRequestModelObserver
     {        
         $activity = new APiLog();
         $activity->user_id = auth()->id();
-        $activity->activity_title = "ServiceRequest forceDeleted";
+        $activity->activity_title = "Service Request forceDeleted";
         $activity->activity_amount = $serviceRequest->total_price;
         $activity->activity_extra = [
             "ServiceRequest_id" => $serviceRequest->id,

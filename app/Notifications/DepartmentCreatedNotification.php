@@ -51,6 +51,7 @@ class DepartmentCreatedNotification extends Notification
     public function toArray(object $notifiable): array
     {
         return [
+            'title' => 'New Department Createed'
             'message' => 'A new department has been created.',
             'department_name' => $this->department->name,
             'department_id' => $this->department->id,
