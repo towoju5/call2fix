@@ -21,7 +21,7 @@ class Chat extends BaseModel
         return $this->belongsToMany(User::class, 'chat_user');
     }
 
-   public function lastChat()
+    public function lastChat()
     {
         return $this->hasOne(Message::class)->latest();
     }  

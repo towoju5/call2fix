@@ -204,6 +204,12 @@ class User extends Authenticatable
             ->withTimestamps();
     }
 
+    public function lastChat()
+    {
+        return $this->hasOne(Message::class)->latest();
+    }
+
+
 
     // Relationship: User belongs to many departments
     public function departments()
