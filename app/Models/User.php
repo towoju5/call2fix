@@ -203,14 +203,6 @@ class User extends Authenticatable
         return $this->belongsToMany(Chat::class, 'chat_user', 'user_id', 'chat_id')
             ->withTimestamps();
     }
-    
-    public function lastChat()
-    {
-        return $this->belongsToMany(Chat::class, 'chat_user', 'user_id', 'chat_id')
-            ->withTimestamps()
-            ->latest('chat_user.created_at')
-            ->first();
-    }    
 
 
     // Relationship: User belongs to many departments
