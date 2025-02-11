@@ -409,7 +409,7 @@ class WalletController extends Controller
 
     public function createCustomer()
     {
-        $url = "customer";
+        $endpoint = "customer";
         $user = auth()->user();
         $fields = [
             "email" => $user->email,
@@ -417,7 +417,6 @@ class WalletController extends Controller
             "last_name" => $user->last_name,
             "phone" => $user->phone
         ];
-
         return $this->processPaystack($endpoint, $fields);
     }
 
