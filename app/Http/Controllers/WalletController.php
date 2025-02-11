@@ -372,8 +372,9 @@ class WalletController extends Controller
     
         $url = 'https://api.paystack.co/transaction/initialize';
         $user_country = auth()->user()->country->currency_code;
+
         $fields = [
-            'email' => $email,
+            'email' => auth()->user()->email,
             'amount' => $amount * 100,
             'currency' => $user_country,
         ];
