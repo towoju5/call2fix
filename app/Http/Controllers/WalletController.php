@@ -76,7 +76,7 @@ class WalletController extends Controller
                     $response = $this->initializePaystackPayment($amount);
                     
                     if ($response && isset($response['data']['authorization_url'])) {
-                        return get_success_response($response['data']]);
+                        return get_success_response($response['data']);
                         exit();
                     } 
                     
