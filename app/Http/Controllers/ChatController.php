@@ -71,6 +71,22 @@ class ChatController extends Controller
         // $validated = Validator::make($request->all(), [
     }
 
+    public function readMessage(Chat $chat, Message $message)
+    {
+        // Ensure the user is a participant in the chat
+        if (!$chat->participants()->where('user_id', Auth::id())->exists()) {
+            return get_error_response('Unauthorized access to this chat', 403);
+        }
+    
+        // Mark the message as read (Assuming a `read_by` column as JSON or a pivot table)
+        $message->update([
+            'read_by' => array_unique(array_merge($message->read_by ?? [], [Auth::id()])) // Store user IDs who have read the message
+        ]);
+    
+        return get_success_response($message->fresh(), 'Message marked as read');
+    }
+    
+
     // public function sendMessage(Request $request, Chat $chat)
     // {
     //     $validated = $request->validate([
