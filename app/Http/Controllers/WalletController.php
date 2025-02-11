@@ -409,7 +409,7 @@ class WalletController extends Controller
                 "first_name" => $user->first_name,
                 "last_name" => $user->last_name
             ],
-            "preferred_bank" => "wema-bank",
+            "preferred_bank" => "test-bank",
             "country" => "NG",
             "currency" => "NGN",
             "account_type" => "PAY_WITH_TRANSFER"
