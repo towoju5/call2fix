@@ -17,7 +17,7 @@ class ChatController extends Controller
         $chats = Auth::user()->chats()->with('participants')->get();
         // Attach lastChat manually
         $chats->each(function ($chat) {
-            $chat->last_chat = $chat->lastChat(); // Adding lastChat manually
+            $chat->last_chat = $chat->load()->lastest(); // Adding lastChat manually
         });
         return get_success_response($chats);
     }

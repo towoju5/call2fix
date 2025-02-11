@@ -20,14 +20,10 @@ class Chat extends BaseModel
     {
         return $this->belongsToMany(User::class, 'chat_user');
     }
-    
-    public function lastChat()
+
+   public function lastChat()
     {
-        return $this->belongsToMany(User::class, 'chat_user', 'chat_id', 'user_id')
-            ->withTimestamps()
-            ->latest('chat_user.created_at')
-            ->first();
-    }
-    
+        return $this->hasOne(Message::class)->latest();
+    }  
     
 }
