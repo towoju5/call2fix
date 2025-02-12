@@ -77,9 +77,9 @@ class ChatController extends Controller
     public function readMessage(Chat $chat, Message $message)
     {
         // Ensure the user is a participant in the chat
-        // if (!$chat->participants()->where('user_id', Auth::id())->exists()) {
-        //     return get_error_response(['error' => 'Unauthorized access to this chat'], 403);
-        // }
+        if (!$chat->participants()->where('user_id', auth()->id())->exists()) {
+            return get_error_response(['error' => 'Unauthorized access to this chat'], 403);
+        }
     
         // Check if 'read_by' column exists, if not, add it
         if (!Schema::hasColumn('messages', 'read_by')) {
@@ -87,31 +87,18 @@ class ChatController extends Controller
                 $table->json('read_by')->nullable()->after('content');
             });
         }
+
+        return response()->json($message);
     
         // Mark the message as read (ensure `read_by` is stored as JSON array)
         $readBy = $message->read_by ? json_decode($message->read_by, true) : [];
         if (!in_array(Auth::id(), $readBy)) {
-            $readBy[] = Auth::id();
+            $readBy[] = auth()->id();
             $message->update(['read_by' => json_encode($readBy)]);
+    
+            return get_success_response($message->fresh(), 'Message marked as read');
         }
-    
-        return get_success_response($message->fresh(), 'Message marked as read');
+
+        return get_error_response(['error' => 'Server error'])
     }
-    
-
-    // public function sendMessage(Request $request, Chat $chat)
-    // {
-    //     $validated = $request->validate([
-    //         'content' => 'required|string'
-    //     ]);
-
-    //     $message = $chat->messages()->create([
-    //         'user_id' => Auth::id(),
-    //         'content' => $validated['content']
-    //     ]);
-
-    //     broadcast(new NewMessage($message))->toOthers();
-
-    //     return get_success_response($message->load('user'));
-    // }
 }
