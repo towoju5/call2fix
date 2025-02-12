@@ -99,6 +99,6 @@ class ChatController extends Controller
             return get_success_response($message->fresh(), 'Message marked as read');
         }
 
-        return get_error_response(['error' => 'Server error'])
+        return get_error_response(['error' => 'Server error']);
     }
 }
