@@ -74,7 +74,7 @@ class ChatController extends Controller
         // $validated = Validator::make($request->all(), [
     }
 
-    public function readMessage(Chat $chat, Message $message)
+    public function readMessage(Chat $chat, $messageId)
     {
         // Ensure the user is a participant in the chat
         if (!$chat->participants()->where('user_id', auth()->id())->exists()) {
@@ -87,6 +87,8 @@ class ChatController extends Controller
                 $table->json('read_by')->nullable()->after('content');
             });
         }
+
+        $message = Message::whereId($messageId)->first();
 
         return response()->json($message);
     
