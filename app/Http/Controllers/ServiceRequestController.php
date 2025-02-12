@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Support\Facades\RateLimiter;
 use App\Models\BusinessOfficeAddress;
 use App\Models\Property;
 use App\Models\Negotiation;
@@ -43,6 +45,20 @@ class ServiceRequestController extends Controller
 
     public function store(Request $request)
     {
+        $key = 'rate_limit_' . ($request->user()?->id ?: $request->ip()); // Unique key per user or IP
+        $maxAttempts = 1; // Limit: 1 requests
+        $decayMinutes = 1; // Time frame: 1 minute
+    
+        if (RateLimiter::tooManyAttempts($key, $maxAttempts)) {
+            return response()->json([
+                'error' => 'Too many requests. Please wait before trying again.'
+            ], Response::HTTP_TOO_MANY_REQUESTS);
+        }
+    
+        // Record the attempt
+        RateLimiter::hit($key, $decayMinutes * 60); // Convert minutes to seconds
+
+        
         $validate = Validator::make($request->all(), [
             'property_id' => 'required|exists:properties,id',
             'service_category_id' => 'nullable|exists:categories,id',
