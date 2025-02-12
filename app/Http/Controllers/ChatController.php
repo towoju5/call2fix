@@ -74,8 +74,9 @@ class ChatController extends Controller
         // $validated = Validator::make($request->all(), [
     }
 
-    public function readMessage(Chat $chat, $messageId)
+    public function readMessage(Request $request, $chatId, $messageId)
     {
+        $chat = Chat::whereId($chatId)->first();
         // Ensure the user is a participant in the chat
         // if (!$chat->participants()->where('user_id', auth()->id())->exists()) {
         //     return get_error_response('Unauthorized access to this chat', ['error' => 'Unauthorized access to this chat'], 403);
@@ -88,7 +89,7 @@ class ChatController extends Controller
             });
         }
 
-        $message = Message::get();
+        $message = Message::whereId($messageId)->first();
 
         return response()->json(["id" => $messageId, "message" => $message]);
     
