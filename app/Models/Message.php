@@ -9,7 +9,7 @@ class Message extends BaseModel
 {
     use HasFactory;
 
-    protected $fillable = ['chat_id', 'user_id', 'content'];
+    protected $fillable = ['chat_id', 'user_id', 'content', 'read_by'];
 
     public function chat()
     {
@@ -20,4 +20,8 @@ class Message extends BaseModel
     {
         return $this->belongsTo(User::class);
     }
+
+    protected $casts = [
+        'read_by' => 'array'
+    ];
 }
