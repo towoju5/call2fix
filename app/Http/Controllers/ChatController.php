@@ -88,9 +88,9 @@ class ChatController extends Controller
             });
         }
 
-        $message = Message::whereId($messageId)->first();
+        $message = Message::where('id', $messageId)->first();
 
-        return response()->json($message);
+        return response()->json(["id" => $messageId, "message" => $message]);
     
         // Mark the message as read (ensure `read_by` is stored as JSON array)
         $readBy = $message->read_by ? json_decode($message->read_by, true) : [];
