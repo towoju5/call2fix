@@ -66,22 +66,19 @@ class ServiceRequestController extends Controller
 
         $validatedData['user_id'] = auth()->id();
         $validatedData['problem_images'] = $request->problem_images;
-
-        // get alphamead service account and return it as part of the service providers
         $alphameadAccount = get_settings_value('alphamaed_service_account_id', 'a599fd50-15b4-4db5-a839-9e722aea226d');
 
         if ($request->use_featured_providers) {
             $validatedData['featured_providers_id'] = $request->featured_providers_id;
         } else {
             $propertyId = $request->property_id;
-            // Get the property details
             $property = Property::findOrFail($propertyId);
-            // Get the radius limit in kilometers from settings and convert to meters
-            $radiusLimitMeters = $this->radiusLimitKm * 1000; // Convert km to meters
+            $radiusLimitMeters = $this->radiusLimitKm * 1000;
 
             $latitude = $property->latitude;
             $longitude = $property->longitude;
 
+            // Get nearby providers
             $providers = BusinessOfficeAddress::select(
                 'user_id',
                 DB::raw("
@@ -91,33 +88,39 @@ class ServiceRequestController extends Controller
                     ) as distance
                 ")
             )
-                ->setBindings([$longitude, $latitude]) // Bind longitude and latitude values
-                ->having('distance', '<=', $radiusLimitMeters) // Filter within radius
-                ->orderBy('distance') // Closest first
-                ->groupBy('user_id') // Ensure distinct user_id
-                ->take(5) // Limit to 5 records
-                ->pluck('user_id'); // Retrieve only the user IDs
+                ->setBindings([$longitude, $latitude])
+                ->having('distance', '<=', $radiusLimitMeters)
+                ->orderBy('distance')
+                ->groupBy('user_id')
+                ->take(5)
+                ->pluck('user_id')
+                ->toArray(); // Convert collection to array
 
-            // If you also need the provider details:
-            $distinctProviders = User::whereIn('id', $providers->toArray())
+            // Ensure only provider users
+            $distinctProviders = User::whereIn('id', $providers)
                 ->whereHas('roles', function ($query) {
-                    $query->where('name', 'providers'); // Filter only providers
+                    $query->where('name', 'providers');
                 })
-                ->get();
+                ->pluck('id')
+                ->toArray();
 
-            $providers[] = $alphameadAccount;
+            // Ensure Alphamead is always included and unique
+            if (!in_array($alphameadAccount, $distinctProviders)) {
+                $distinctProviders[] = $alphameadAccount;
+            }
 
-            if (empty($providers) || count($providers) < 1) {
+            if (empty($distinctProviders)) {
                 return get_error_response('No provider found!', ['error' => 'No service provider found nearby']);
             }
 
-            $validatedData['featured_providers_id'] = $providers;
+            $validatedData['featured_providers_id'] = $distinctProviders;
         }
 
         $serviceRequest = ServiceRequest::create($validatedData);
         if ($serviceRequest) {
             return get_success_response($serviceRequest, "Request created successfully", 201);
         }
+
     }
 
     public function show(ServiceRequestModel $serviceRequest)
@@ -172,7 +175,7 @@ class ServiceRequestController extends Controller
         $serviceRequest = ServiceRequestModel::find($serviceRequest);
 
         if (!$serviceRequest) {
-            return get_error_response("Service Request Not Found", [], 404);
+            return get_error_response("Service Request Not Found", ["error" => "Service Request Not Found"], 404);
         }
 
         $featuredProviderIds = $serviceRequest->featured_providers_id;
