@@ -190,7 +190,7 @@ Route::middleware(['api'])->domain(env('API_URL'))->prefix('v1')->group(function
             Route::post('/', [ChatController::class, 'store']);
             Route::get('{chat}', [ChatController::class, 'show']);
             Route::post('{chat}/messages', [ChatController::class, 'sendMessage']);
-            Route::post('{chatId}/{messageId}', [ChatController::class, 'readMessage']);
+            Route::put('{chatId}/{messageId}', [ChatController::class, 'readMessage']);
         });
 
         Route::prefix('plans')->group(function () {

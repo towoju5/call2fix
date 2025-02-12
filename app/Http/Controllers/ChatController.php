@@ -77,9 +77,9 @@ class ChatController extends Controller
     public function readMessage(Chat $chat, Message $message)
     {
         // Ensure the user is a participant in the chat
-        if (!$chat->participants()->where('user_id', Auth::id())->exists()) {
-            return get_error_response('Unauthorized access to this chat', 403);
-        }
+        // if (!$chat->participants()->where('user_id', Auth::id())->exists()) {
+        //     return get_error_response(['error' => 'Unauthorized access to this chat'], 403);
+        // }
     
         // Check if 'read_by' column exists, if not, add it
         if (!Schema::hasColumn('messages', 'read_by')) {
