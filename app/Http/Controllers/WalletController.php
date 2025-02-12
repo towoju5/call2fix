@@ -377,6 +377,10 @@ class WalletController extends Controller
             'email' => auth()->user()->email,
             'amount' => $amount * 100,
             'currency' => $user_country,
+            'metadata' => [
+                "_account_type" => active_role(),
+                "user_id" => auth()->id()
+            ]
         ];
     
         $fields_string = json_encode($fields);

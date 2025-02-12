@@ -88,7 +88,7 @@ class ChatController extends Controller
             });
         }
 
-        $message = \DB::table('messages')->where('id', $messageId)->first();
+        $message = Message::get();
 
         return response()->json(["id" => $messageId, "message" => $message]);
     
