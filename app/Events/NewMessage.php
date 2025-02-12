@@ -37,7 +37,7 @@ class NewMessage implements ShouldBroadcast
         return [
             'message' => $this->message,
             'sender' => auth()->user(),
-            'user' = (array)$this->user,
+            'user' => (array)$this->user,
             'timestamp' => $this->message->created_at->toDateTimeString(),
         ];
     }
