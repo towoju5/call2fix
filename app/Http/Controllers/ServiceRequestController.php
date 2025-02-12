@@ -67,6 +67,9 @@ class ServiceRequestController extends Controller
         $validatedData['user_id'] = auth()->id();
         $validatedData['problem_images'] = $request->problem_images;
 
+        // get alphamead service account and return it as part of the service providers
+        $alphameadAccount = get_settings_value('alphamaed_service_account_id', 'a599fd50-15b4-4db5-a839-9e722aea226d')
+
         if ($request->use_featured_providers) {
             $validatedData['featured_providers_id'] = $request->featured_providers_id;
         } else {
@@ -102,6 +105,7 @@ class ServiceRequestController extends Controller
                 })
                 ->get();
 
+            $providers[] = $alphameadAccount;
 
             if (empty($providers) || count($providers) < 1) {
                 return get_error_response('No provider found!', ['error' => 'No service provider found nearby']);
