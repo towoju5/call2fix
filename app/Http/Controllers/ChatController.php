@@ -78,7 +78,7 @@ class ChatController extends Controller
     {
         // Ensure the user is a participant in the chat
         if (!$chat->participants()->where('user_id', auth()->id())->exists()) {
-            return get_error_response(['error' => 'Unauthorized access to this chat'], 403);
+            return get_error_response('Unauthorized access to this chat', ['error' => 'Unauthorized access to this chat'], 403);
         }
     
         // Check if 'read_by' column exists, if not, add it
