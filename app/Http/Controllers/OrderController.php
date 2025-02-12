@@ -31,11 +31,11 @@ class OrderController extends Controller
                 "delivery_address" => "required_if:delivery_type,home_delivery|string",
                 "quantity" => "required|integer|min:1",
                 "product_id" => "required|exists:products,id",
-                "delivery_longitude" => "required_if:delivery_type,home_delivery|string",
-                "delivery_latitude" => "required_if:delivery_type,home_delivery|string",
+                "delivery_longitude" => "required_if:delivery_type,home_delivery",
+                "delivery_latitude" => "required_if:delivery_type,home_delivery",
                 "duration_type" => "required|in:days,weekly,months",
-                "lease_duration" => "sometimes|integer|min:1",
-                "lease_rate" => "sometimes|numeric|min:0",
+                "lease_duration" => "sometimes|integer",
+                "lease_rate" => "sometimes|numeric",
                 "lease_notes" => "sometimes|string",
             ];
     
@@ -217,7 +217,7 @@ class OrderController extends Controller
         try {
             $order = OrderModel::whereId($orderId)->whereUserId(auth()->id())->first();
             $orderStatus = ['STARTED', 'ENDED', 'FAILED', 'ARRIVED', 'UNASSIGNED', 'ACCEPTED', 'DECLINE', 'CANCEL', 'Deleted'];
-            if ($order && in_array($order->status, $orderStatus)) {
+            if ($order && !in_array($order->status, $orderStatus)) {
                 $order->status = "CANCEL";
                 if ($order->save()) {
                     return get_success_response($order, "Order canceled successfully", 200);
