@@ -97,7 +97,7 @@ class ChatController extends Controller
         $readBy = $message->read_by ? json_decode($message->read_by, true) : [];
         if (!in_array(Auth::id(), $readBy)) {
             $readBy[] = auth()->id();
-            $message->update(['read_by' => json_encode($readBy)]);
+            $message->update(['read_by' => [$readBy]]);
     
             return get_success_response($message->fresh(), 'Message marked as read');
         }
