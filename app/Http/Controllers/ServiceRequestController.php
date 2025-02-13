@@ -52,13 +52,12 @@ class ServiceRequestController extends Controller
         if (RateLimiter::tooManyAttempts($key, $maxAttempts)) {
             return get_error_response('1 Service Request per minute is allowed', [
                 'error' => 'Too many requests. Please wait before trying again.'
-            ], Response::HTTP_TOO_MANY_REQUESTS);
+            ]);
         }
     
         // Record the attempt
         RateLimiter::hit($key, $decayMinutes * 60); // Convert minutes to seconds
 
-        
         $validate = Validator::make($request->all(), [
             'property_id' => 'required|exists:properties,id',
             'service_category_id' => 'nullable|exists:categories,id',
@@ -67,7 +66,7 @@ class ServiceRequestController extends Controller
             'problem_description' => 'required|string',
             'inspection_time' => 'required',
             'inspection_date' => 'required|date',
-            'problem_images' => 'nullable|array',
+            'problem_images' => 'nullable|array|max:5',
             'use_featured_providers' => 'boolean',
             'featured_providers_id' => 'nullable|array',
             'department_id' => 'nullable|exists:departments,id',

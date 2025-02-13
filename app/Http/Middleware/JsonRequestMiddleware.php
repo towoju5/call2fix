@@ -29,7 +29,7 @@ class JsonRequestMiddleware
 
         }
 
-        Http::get(url('generate-ref-accounts'));
+        // Http::get(url('generate-ref-accounts'));
         
         $request->headers->add(['Accept' => 'application/json']);
         return $next($request);

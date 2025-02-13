@@ -12,7 +12,7 @@ class MediaController extends Controller
         try {
             // Validate the request
             $request->validate([
-                'file' => 'required|file|max:10240', 
+                'file' => 'required|file|max:6000', 
             ]);
 
             $file = $request->file('file');
