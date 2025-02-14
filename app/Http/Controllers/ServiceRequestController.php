@@ -133,6 +133,13 @@ class ServiceRequestController extends Controller
         }
 
         $serviceRequest = ServiceRequest::create($validatedData);
+        // charge user for assessment fees
+        $wallet1 = $user->getWallet($data['currency']);
+        $wallet1->withdrawal(get_settings_value('assessment_fee'), [
+            'source' => 'Assessment Fee for Service Request: '.$serviceRequest->id,
+            'description' => 'Assessment fee for service request',
+        ]);
+
         if ($serviceRequest) {
             return get_success_response($serviceRequest, "Request created successfully", 201);
         }

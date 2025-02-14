@@ -68,7 +68,7 @@
         <div class="loading-icon">
             <i class="fas fa-spinner fa-spin"></i>
         </div>
-        <p>Please wait while we securely process your transaction.</p>
+        <p>You can continue to you dashboard to complete deposit.</p>
     </div>
 </body>
 </html>

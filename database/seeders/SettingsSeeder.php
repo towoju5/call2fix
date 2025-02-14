@@ -19,6 +19,7 @@ class SettingsSeeder extends Seeder
             ['key' => 'withdrawal_fee', 'value' => '1'],
             ['key' => 'support_email', 'value' => 'support@call2fix.com'],
             ['key' => 'administrative_fee', 'value' => '5.00'],
+            ['key' => 'administrative_fee', 'value' => '5.00'],
             ['key' => 'website_name', 'value' => 'Your Website Name'],
             ['key' => 'alphamaed_service_account_id', 'value' => 'your_service_account_id'],
             ['key' => 'recharge_points', 'value' => '0.05'],
