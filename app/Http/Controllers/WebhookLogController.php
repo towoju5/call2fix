@@ -36,29 +36,34 @@ class WebhookLogController extends Controller
     public function handleWebhook(Request $request)
     {
         try {
-            if (!$this->isValidRequest($request)) {
-                Log::warning('Invalid Paystack webhook request received');
-                // return response()->json(['error' => 'Invalid request'], 400);
-                $error = true;
-                return view('paystack', compact('error'));
+            // If the request is a GET request, just return the view
+            if ($request->isMethod('get')) {
+                return view('paystack');
             }
-
+    
             $input = $request->getContent();
             $event = json_decode($input, true);
-
-            if (!$this->isValidSignature($input)) {
-                Log::warning('Invalid Paystack signature');
-                // return response()->json(['error' => 'Invalid signature'], 400);
-                $error = true;
-                return view('paystack', compact('error'));
+    
+            // If the event is null or not an array, log and silently continue
+            if (!is_array($event) || !isset($event['event'])) {
+                Log::warning('Received invalid or empty Paystack webhook event', ['payload' => $input]);
+                http_response_code(200); // Acknowledge the webhook to prevent retries
+                return;
             }
-
+    
             $paystack = new PaystackServices();
             $eventType = $event['event'];
-
+    
             Log::info("Processing Paystack webhook event: {$eventType}");
             Log::info("Paystack webhook event content:", $event);
-
+    
+            // Ensure 'data' exists before passing it to handlers
+            if (!isset($event['data'])) {
+                Log::warning("Missing 'data' field in Paystack event: {$eventType}");
+                http_response_code(200);
+                return;
+            }
+    
             switch ($eventType) {
                 case 'charge.success':
                     $paystack->handleSuccessfulCharge($event['data']);
@@ -73,12 +78,9 @@ class WebhookLogController extends Controller
                     Log::info("Unhandled event type: {$eventType}");
                     break;
             }
-
+    
             Log::info("Paystack webhook processed successfully: {$eventType}");
-            // return response()->json(['message' => 'Webhook processed successfully']);
-            http_response_code(200);
-            $error = false;
-            return view('paystack', compact('error'));
+            http_response_code(200); // Respond with success to Paystack
         } catch (\Exception $e) {
             Log::error('Paystack Webhook Error: ' . $e->getMessage(), [
                 'exception' => $e,
@@ -87,7 +89,7 @@ class WebhookLogController extends Controller
             return response()->json(['error' => 'Internal server error'], 500);
         }
     }
-
+    
     /**
      * Check if the request is valid
      * @param Request $request
