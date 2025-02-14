@@ -22,6 +22,16 @@ use Laravel\Telescope\Telescope;
 use LaravelDaily\LaravelCharts\Classes\LaravelChart;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Database\Schema\Blueprint;
+
+
+if (!Schema::hasColumn('users', 'parent_account')) {
+	Schema::table('users', function (Blueprint $table) {
+		$table->unsignedBigInteger('parent_account')->nullable()->after('id');
+	});
+}
+
 
 
 
