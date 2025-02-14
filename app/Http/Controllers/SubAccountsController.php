@@ -87,13 +87,18 @@ class SubAccountsController extends Controller
     public function deleteSubAccount($subAccountId)
     {
         try {
-            $account = $this->sub->fetchAccount(auth()->user()->role, $subAccountId);
+            $user = $request->user();
+            $account = User::where([
+                'parent_account_id' => $user->id,
+                'id' => $subAccountId,
+                'main_account_role' => $user->current_role
+            ])->first(); //$this->sub->fetchAccount(auth()->user()->role, $subAccountId);
 
             if (!$account) {
                 return get_error_response("Sub account not found", ['error' => "Sub account not found!"], 404);
             }
 
-            if ($this->sub->deleteSubAccount($subAccountId)) {
+            if ($account->delete()) {
                 return get_success_response(null, "Sub account deleted successfully");
             }
         } catch (\Throwable $th) {
