@@ -377,6 +377,7 @@ class WalletController extends Controller
             'email' => auth()->user()->email,
             'amount' => $amount * 100,
             'currency' => $user_country,
+            'callback_url' => route('paystack.callback'),
             'metadata' => [
                 "_account_type" => active_role(),
                 "user_id" => auth()->id()

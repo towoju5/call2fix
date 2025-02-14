@@ -53,6 +53,8 @@ Route::post('logout', function () {
 
 Route::any('send-sms', [DojaWebhookController::class, 'sendSMS']);
 
+Route::get('paystack/processing', [WebhookLogController::class, 'callback'])->name('paystack.callback');
+
 Route::put('api/v1/update-device-token', [FcmController::class, 'updateDeviceToken'])->withoutMiddleware(VerifyCsrfToken::class);
 Route::post('api/v1/send-fcm-notification', [FcmController::class, 'sendFcmNotification'])->withoutMiddleware(VerifyCsrfToken::class);
 
