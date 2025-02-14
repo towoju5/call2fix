@@ -52,6 +52,7 @@ class SubAccountsController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'name' => 'required|string',
+            'phone' => 'required|string|regex:/^\+[1-9]\d{1,14}$/|max:20|unique:users',
             'email' => 'required|email|unique:users,email',
             'sub_account_type' => 'required|string',
         ]);
@@ -70,11 +71,11 @@ class SubAccountsController extends Controller
             $data['last_name'] = isset($name[1]) ? implode(' ', array_slice($name, 1)) : $name[0];
             $password = Str::random(12);
             $data['password'] = bcrypt($password);
+            $data['phone'] = $request->phone;
             $data['username'] = explode("@", $request->email)[0].rand(1, 299);
             $data['main_account_role'] = $user->current_role;
 
             $subAccount = User::create($data);
-
             Mail::to($subAccount->email)->send(new NewSubAccountMail($subAccount, $password));
 
             return get_success_response($subAccount, "Sub account added successfully and password sent via email");
