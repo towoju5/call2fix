@@ -57,6 +57,9 @@ class OrderController extends Controller
             $orderData["seller_id"] = $product->seller_id;
             $orderData["status"] = "pending";
     
+            // Default shipping fee
+            $shippingFee = 0;
+    
             if ($request->delivery_type === 'home_delivery') {
                 // Calculate total price and shipping fee
                 $kwik = new KwikDeliveryController();
@@ -68,17 +71,15 @@ class OrderController extends Controller
                     $product->seller,
                     $user
                 );
-            } else {
-                $shippingFee = 0;
+    
+                if (is_array($shippingFee) || isset($shippingFee['error'])) {
+                    return get_error_response($shippingFee['error'], ["error" => $shippingFee['error']], 400);
+                }
             }
     
-            $orderData["shipping_fee"] = $shippingFee; 
-            $orderData["product_category_id"] = $product->category_id; 
-            $orderData["product_service_category_id"] = $product->category_id; 
-    
-            if (is_array($shippingFee) || isset($shippingFee['error'])) {
-                return get_error_response($shippingFee['error'], ["error" => $shippingFee['error']], 400);
-            }
+            $orderData["shipping_fee"] = $shippingFee;
+            $orderData["product_category_id"] = $product->category_id;
+            $orderData["product_service_category_id"] = $product->category_id;
     
             // Calculate total price based on lease or normal purchase
             if ($request->has('lease_duration')) {
@@ -101,7 +102,6 @@ class OrderController extends Controller
     
             // Notify the user
             if ($order) {
-                // $user->notify(new OrderPlacedSuccessfully($order));
                 return get_success_response($order, "Order placed successfully", 201);
             }
     
@@ -112,7 +112,7 @@ class OrderController extends Controller
             return get_error_response("Order placement failed", ["error" => $e->getMessage()], 500);
         }
     }
-    
+   
     
 
     public function getUserOrders()
@@ -120,9 +120,9 @@ class OrderController extends Controller
         try {
             $orders = Order::with('product', 'seller', 'user');
             if(request()->user()->current_role == 'suppliers'){
-                $orders = $orders->latest()->where('seller_id', auth()->id())->paginate(get_settings_value('per_page') ?? 10);
+                $orders = $orders->latest()->where('seller_id', auth()->id())->limit(100)->get();
             } else {
-                $orders = $orders->latest()->where('user_id', auth()->id())->paginate(get_settings_value('per_page') ?? 10);
+                $orders = $orders->latest()->where('user_id', auth()->id())->limit(100)->get();
             }
             return get_success_response($orders, "User orders retrieved successfully");
         } catch (\Exception $e) {
@@ -131,7 +131,6 @@ class OrderController extends Controller
         }
     }
     
-
     public function getOrder($orderId)
     {
         try {
@@ -226,7 +225,7 @@ class OrderController extends Controller
                 return get_error_response("Failed to cancel order. Please try again.", [], 500);
             }
     
-            return get_error_response("Order cannot be canceled or not found.", [], 400);
+            return get_error_response("Order cannot be canceled.", [], 400);
         } catch (ModelNotFoundException $e) {
             return get_error_response("Order not found", [], 404);
         } catch (\Exception $e) {
