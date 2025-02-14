@@ -133,11 +133,19 @@ class ServiceRequestController extends Controller
         }
 
         $serviceRequest = ServiceRequest::create($validatedData);
+
         // charge user for assessment fees
-        $wallet1 = $user->getWallet($data['currency']);
-        $wallet1->withdrawal(get_settings_value('assessment_fee'), [
-            'source' => 'Assessment Fee for Service Request: '.$serviceRequest->id,
-            'description' => 'Assessment fee for service request',
+        $user = auth()->user();
+
+        // Validate default currency and role
+        $currency = get_default_currency($user->id);
+        $role = $user->current_role;
+
+        // Locate wallet
+        $wallet = Wallet::where(['user_id' => $user->id, 'currency' => $currency, 'role' => $role])->first();
+        $wallet1 = $user->getWallet($currency);
+        $wallet1->withdrawal($data['amount'], [
+            "description" => "Assessment fee for Service request order."
         ]);
 
         if ($serviceRequest) {
