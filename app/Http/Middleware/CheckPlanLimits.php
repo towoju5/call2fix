@@ -5,6 +5,8 @@ namespace App\Http\Middleware;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Database\Schema\Blueprint;
 
 class CheckPlanLimits
 {
@@ -17,6 +19,13 @@ class CheckPlanLimits
     {
         $merchant = auth()->user()->merchant;
         $plan = $merchant->plan;
+
+        if (!Schema::hasColumn('users', 'parent_account')) {
+            Schema::table('users', function (Blueprint $table) {
+                $table->unsignedBigInteger('parent_account')->nullable()->after('id');
+            });
+        }
+
 
         if ($plan) {
             // Check service category limit
