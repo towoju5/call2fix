@@ -50,9 +50,10 @@ class ServiceRequestController extends Controller
         $decayMinutes = 1; // Time frame: 1 minute
     
         if (RateLimiter::tooManyAttempts($key, $maxAttempts)) {
-            return get_error_response('1 Service Request per minute is allowed', [
-                'error' => 'Too many requests. Please wait before trying again.'
-            ]);
+            return false;
+            // return get_error_response('1 Service Request per minute is allowed', [
+            //     'error' => 'Too many requests. Please wait before trying again.'
+            // ]);
         }
     
         // Record the attempt
