@@ -87,7 +87,7 @@ class SubAccountsController extends Controller
     public function deleteSubAccount($subAccountId)
     {
         try {
-            $user = $request->user();
+            $user = auth()->user();
             $account = User::where([
                 'parent_account_id' => $user->id,
                 'id' => $subAccountId,
