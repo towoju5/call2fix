@@ -18,6 +18,7 @@ use App\Notifications\ReworkIssuedNotification;
 use App\Notifications\PaymentStatusUpdated;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
+use Towoju5\Wallet\Models\Wallet;
 
 class ServiceRequestController extends Controller
 {
