@@ -31,22 +31,22 @@ class WebhookLogController extends Controller
     public function handleWebhook(Request $request)
     {
         try {
-            if (!$this->isValidRequest($request)) {
-                Log::warning('Invalid Paystack webhook request received');
-                // return response()->json(['error' => 'Invalid request'], 400);
-                $error = true;
-                return view('paystack', compact('error'));
-            }
+            // if (!$this->isValidRequest($request)) {
+            //     Log::warning('Invalid Paystack webhook request received');
+            //     // return response()->json(['error' => 'Invalid request'], 400);
+            //     $error = true;
+            //     return view('paystack', compact('error'));
+            // }
 
             $input = $request->getContent();
             $event = json_decode($input, true);
 
-            if (!$this->isValidSignature($input)) {
-                Log::warning('Invalid Paystack signature');
-                // return response()->json(['error' => 'Invalid signature'], 400);
-                $error = true;
-                return view('paystack', compact('error'));
-            }
+            // if (!$this->isValidSignature($input)) {
+            //     Log::warning('Invalid Paystack signature');
+            //     // return response()->json(['error' => 'Invalid signature'], 400);
+            //     $error = true;
+            //     return view('paystack', compact('error'));
+            // }
 
             $paystack = new PaystackServices();
             $eventType = $event['event'];
