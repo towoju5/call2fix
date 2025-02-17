@@ -43,7 +43,7 @@ class ServiceRequestController extends Controller
         $serviceRequests = ServiceRequestModel::with('reworkMessages', 'service_provider', 'invited_artisan')->whereJsonContains('featured_providers_id', [auth()->id()])->latest()->get();
         return get_success_response($serviceRequests);
     }
-
+    
     public function store(Request $request)
     {
         $key = 'rate_limit_' . ($request->user()?->id ?: $request->ip()); // Unique key per user or IP
@@ -69,13 +69,11 @@ class ServiceRequestController extends Controller
                 'department_id' => 'nullable|exists:departments,id',
             ]);
     
-    
             if ($validate->fails()) {
                 return get_error_response("Validation Error", $validate->errors()->toArray());
             }
     
             $validatedData = $validate->validated();
-    
             $validatedData['user_id'] = auth()->id();
             $validatedData['problem_images'] = $request->problem_images;
             $alphameadAccount = get_settings_value('alphamaed_service_account_id', 'a599fd50-15b4-4db5-a839-9e722aea226d');
@@ -128,29 +126,38 @@ class ServiceRequestController extends Controller
                 $validatedData['featured_providers_id'] = $distinctProviders;
             }
     
-            $serviceRequest = ServiceRequest::create($validatedData);
+            DB::beginTransaction();
+            try {
+                $serviceRequest = ServiceRequest::create($validatedData);
     
-            // charge user for assessment fees
-            $user = auth()->user();
+                // charge user for assessment fees
+                $user = auth()->user();
     
-            // Validate default currency and role
-            $currency = get_default_currency($user->id);
-            $role = $user->current_role;
+                // Validate default currency and role
+                $currency = get_default_currency($user->id);
+                $role = $user->current_role;
     
-            // Locate wallet
-            $wallet = Wallet::where(['user_id' => $user->id, 'currency' => $currency, 'role' => $role])->first();
-            $wallet1 = $user->getWallet($currency);
-            $wallet1->withdrawal(get_settings_value('assessment_fee', 500), [
-                "description" => "Assessment fee for Service request order."
-            ]);
+                // Locate wallet
+                $wallet = Wallet::where(['user_id' => $user->id, 'currency' => $currency, 'role' => $role])->first();
+                $wallet1 = $user->getWallet($currency ?? 'ngn');
     
-            if ($serviceRequest) {
+                $wallet1->withdrawal(get_settings_value('assessment_fee', 500), [
+                    "description" => "Assessment fee for Service request order."
+                ]);
+    
+                // Commit transaction if everything is successful
+                DB::commit();
+    
                 return get_success_response($serviceRequest, "Request created successfully", 201);
-            }    
+            } catch (\Exception $e) {
+                DB::rollBack();
+                return get_error_response("Transaction failed", ['error' => $e->getMessage()]);
+            }
         }
-
+    
         return get_error_response("Only one service request can be placed per minute", ['error' => "Only one service request can be placed per minute"]);
     }
+    
 
     public function show(ServiceRequestModel $serviceRequest)
     {
