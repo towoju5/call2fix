@@ -110,6 +110,7 @@ class OrderController extends Controller
             return get_error_response("Product not found", [], 404);
         } catch (\Exception $e) {
             // Log the actual error for debugging
+            Log::error('Order placement failed error: ', ['error'=> $e->getMessage(), 'trace' => $e->getTrace()]);
             return get_error_response("Order placement failed", ["error" => $e->getMessage()], 500);
         }
     }
