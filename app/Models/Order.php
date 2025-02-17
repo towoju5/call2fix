@@ -26,7 +26,6 @@ class Order extends BaseModel
         'lease_duration',
         'lease_rate',
         'lease_notes',
-        'product_id',
         'delivery_address',
         'delivery_longitude',
         'delivery_latitude',

@@ -19,6 +19,7 @@ use App\Notifications\PaymentStatusUpdated;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Towoju5\Wallet\Models\Wallet;
+use App\Notifications\ServiceRequest\ServiceRequestSuccessful;
 
 class ServiceRequestController extends Controller
 {
@@ -43,7 +44,7 @@ class ServiceRequestController extends Controller
         $serviceRequests = ServiceRequestModel::with('reworkMessages', 'service_provider', 'invited_artisan')->whereJsonContains('featured_providers_id', [auth()->id()])->latest()->get();
         return get_success_response($serviceRequests);
     }
-    
+
     public function store(Request $request)
     {
         $key = 'rate_limit_' . ($request->user()?->id ?: $request->ip()); // Unique key per user or IP
@@ -141,13 +142,13 @@ class ServiceRequestController extends Controller
                 $wallet = Wallet::where(['user_id' => $user->id, 'currency' => $currency, 'role' => $role])->first();
                 $wallet1 = $user->getWallet($currency ?? 'ngn');
     
-                $wallet1->withdrawal(get_settings_value('assessment_fee', 500), [
+                $wallet1->withdrawal(floatval(get_settings_value('assessment_fee', 500) * 100), [
                     "description" => "Assessment fee for Service request order."
                 ]);
     
                 // Commit transaction if everything is successful
                 DB::commit();
-    
+                $user->notify(new ServiceRequestSuccessful($serviceRequest));
                 return get_success_response($serviceRequest, "Request created successfully", 201);
             } catch (\Exception $e) {
                 DB::rollBack();
