@@ -42,6 +42,7 @@ class OrderController extends Controller
             $validator = Validator::make($request->all(), $validationRules);
     
             if ($validator->fails()) {
+                Log::error('Order placement validation error: ', ['error'=> $validator->errors()->toArray()]);
                 return get_error_response("Validation error", $validator->errors(), 422);
             }
     
