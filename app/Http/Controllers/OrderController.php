@@ -34,8 +34,8 @@ class OrderController extends Controller
                 "delivery_longitude" => "required_if:delivery_type,home_delivery",
                 "delivery_latitude" => "required_if:delivery_type,home_delivery",
                 "duration_type" => "sometimes",
-                "lease_duration" => "sometimes|integer",
-                "lease_rate" => "sometimes|numeric",
+                "lease_duration" => "sometimes",
+                "lease_rate" => "sometimes",
                 "lease_notes" => "sometimes",
             ];
     
