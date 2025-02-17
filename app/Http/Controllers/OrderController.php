@@ -36,7 +36,7 @@ class OrderController extends Controller
                 "duration_type" => "sometimes",
                 "lease_duration" => "sometimes|integer",
                 "lease_rate" => "sometimes|numeric",
-                "lease_notes" => "sometimes|string",
+                "lease_notes" => "sometimes",
             ];
     
             $validator = Validator::make($request->all(), $validationRules);
