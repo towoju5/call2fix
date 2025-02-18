@@ -180,7 +180,7 @@ class OrderController extends Controller
             // Calculate total price for Rentable and Non-Rentable Products
             if ($request->has('lease_duration')) {
                 // Rentable Product
-                $rentingRate = $product->renting_rate; // Assuming rentable rate is stored in the product model
+                $rentingRate = $request->lease_rate; // Assuming rentable rate is stored in the product model
                 $itemPrice = $request->quantity * $rentingRate;
                 $vatAmount = 0.075 * $itemPrice;
                 $totalPrice = $shippingFee + $itemPrice + $vatAmount;
