@@ -197,7 +197,7 @@ class OrderController extends Controller
             \Log::info('Amount due now is ', ['amount_due' => $orderData]);
             // Withdraw from wallet
             if(!$wallet->withdrawal(floatval($orderData["total_price"] * 100, 2), ["description" => "Order placed", "Order placement"])){
-                return ['error' => 'Insufficient Balance']
+                return ['error' => 'Insufficient Balance'];
             }
 
             // Create order
