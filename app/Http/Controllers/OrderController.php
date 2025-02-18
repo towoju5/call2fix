@@ -203,6 +203,7 @@ class OrderController extends Controller
 
             // Notify the user
             if ($order) {
+                $user->notify(new OrderPlacedSuccessfully($order));
                 return get_success_response($order, "Order placed successfully", 201);
             }
 
@@ -214,9 +215,6 @@ class OrderController extends Controller
             return get_error_response("Order placement failed", ["error" => $e->getMessage()], 500);
         }
     }
-
-   
-    
 
     public function getUserOrders()
     {
