@@ -193,10 +193,10 @@ class OrderController extends Controller
                 $totalPrice = $shippingFee + $itemPrice + $vatAmount;
             }
 
-            $orderData["total_price"] = floatval($totalPrice, 2);
+            $orderData["total_price"] = round($totalPrice, 2);
             \Log::info('Amount due now is ', ['amount_due' => $orderData]);
             // Withdraw from wallet
-            if(!$wallet->withdrawal(floatval($orderData["total_price"] * 100, 2), ["description" => "Order placed", "Order placement"])){
+            if(!$wallet->withdrawal(round($orderData["total_price"] * 100, 2), ["description" => "Order placed", "Order placement"])){
                 return ['error' => 'Insufficient Balance'];
             }
 
