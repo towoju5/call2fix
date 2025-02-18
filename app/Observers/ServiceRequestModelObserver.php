@@ -18,6 +18,7 @@ class ServiceRequestModelObserver
         $activity->activity_amount = $serviceRequest->total_price;
         $activity->activity_extra = [
             "ServiceRequest_id" => $serviceRequest->id,
+            "txn_type" => "debit"
         ];
         $activity->save();
     }

@@ -18,6 +18,7 @@ class OrderModelObserver
         $activity->activity_amount = $order->total_price;
         $activity->activity_extra = [
             "order_id" => $order->id,
+            "txn_type" => "debit"
         ];
         $activity->save();
     }
