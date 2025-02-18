@@ -24,7 +24,7 @@ class ApiLog extends Model
     ];
 
     protected $hidden = [
-        'activity_extra',
+        // 'activity_extra',
         'updated_at',
         'deleted_at'
     ];
