@@ -180,7 +180,7 @@ class OrderController extends Controller
             // Calculate total price for Rentable and Non-Rentable Products
             if ($request->has('lease_duration')) {
                 // Rentable Product
-                $rentingRate = $request->lease_rate; // Assuming rentable rate is stored in the product model
+                $rentingRate = $request->lease_rate;
                 $itemPrice = $request->quantity * $rentingRate;
                 $vatAmount = 0.075 * $itemPrice;
                 $totalPrice = $shippingFee + $itemPrice + $vatAmount;
@@ -193,7 +193,7 @@ class OrderController extends Controller
                 $totalPrice = $shippingFee + $itemPrice + $vatAmount;
             }
 
-            $orderData["total_price"] = floatval($totalPrice);
+            $orderData["total_price"] = floatval($totalPrice * 100);
 
             // Withdraw from wallet
             $wallet->withdrawal($orderData["total_price"], ["description" => "Order placed", "Order placement"]);
