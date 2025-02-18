@@ -76,33 +76,42 @@ class ChatController extends Controller
 
     public function readMessage(Request $request, $chatId, $messageId)
     {
-        $chat = Chat::whereId($chatId)->first();
-        // Ensure the user is a participant in the chat
-        // if (!$chat->participants()->where('user_id', auth()->id())->exists()) {
-        //     return get_error_response('Unauthorized access to this chat', ['error' => 'Unauthorized access to this chat'], 403);
-        // }
+        $chat = Chat::find($chatId);
+        
+        if (!$chat) {
+            return get_error_response('Chat not found', ['error' => 'Chat not found'], 404);
+        }
     
-        // Check if 'read_by' column exists, if not, add it
+        // Ensure the user is a participant in the chat
+        if (!$chat->participants()->where('user_id', auth()->id())->exists()) {
+            return get_error_response('Unauthorized access to this chat', ['error' => 'Unauthorized access to this chat'], 403);
+        }
+    
+        // Check if 'read_by' column exists, if not, add it (This should be done in a migration)
         if (!Schema::hasColumn('messages', 'read_by')) {
             Schema::table('messages', function (Blueprint $table) {
                 $table->json('read_by')->nullable()->after('content');
             });
         }
-
-        $message = Message::whereId($messageId)->first();
-
-        // return response()->json(["id" => $messageId, "message" => $message]);
     
-        // Mark the message as read (ensure `read_by` is stored as JSON array)
-        
-        $readBy = $message->read_by ? (array)$message->read_by : [];
-        if (!in_array(Auth::id(), $readBy)) {
+        $message = Message::find($messageId);
+    
+        if (!$message) {
+            return get_error_response('Message not found', ['error' => 'Message not found'], 404);
+        }
+    
+        // Decode read_by as an array or initialize an empty array if null
+        $readBy = is_array($message->read_by) ? $message->read_by : json_decode($message->read_by, true) ?? [];
+    
+        // Check if the user has already marked it as read
+        if (!in_array(auth()->id(), $readBy)) {
             $readBy[] = auth()->id();
-            $message->update(['read_by' => [$readBy]]);
+            $message->update(['read_by' => json_encode($readBy)]);
     
             return get_success_response($message->fresh(), 'Message marked as read');
         }
-
-        return get_error_response(['error' => 'Server error']);
+    
+        return get_error_response(['error' => 'Message already read']);
     }
+    
 }
