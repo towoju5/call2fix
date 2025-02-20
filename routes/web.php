@@ -22,37 +22,18 @@ use Laravel\Telescope\Telescope;
 use LaravelDaily\LaravelCharts\Classes\LaravelChart;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
-use Illuminate\Support\Facades\Storage;
 
 
 Route::get('/', function () {
 	return view('welcome');
 });
 
-Route::get('/fb', function () {
-    try {
-        // Path to the SQL file
-        $filePath = storage_path('app/fb.sql');
-
-        // Check if the file exists
-        if (!file_exists($filePath)) {
-            return response()->json(['error' => 'SQL file not found'], 404);
-        }
-
-        // Read the content of the SQL file
-        $sql = file_get_contents($filePath);
-
-        // Execute the SQL commands to restore into the database
-        DB::unprepared($sql);
-
-        return response()->json(['message' => 'Database restored successfully'], 200);
-    } catch (\Throwable $th) {
-        // Log the error
-        Log::error('Error restoring database: ' . $th->getMessage());
-
-        return response()->json(['error' => 'Something went wrong while restoring the database'], 500);
-    }
-});
+// Route::get('/fb', function () {
+// 	// Read the SQL file content
+// 	$device = "eHNQuZw2TI6lrJrCti1_vW:APA91bFfmxuqlaWcqhUrNwfXY4bMuhkJ4xDbrdVVWHLYq6HoSVs22zdax4jTMQBg7tVErr8YQlU_j4SfJ998QLW4h6G0-tUDxiPHYozI4DO6CVdBxJJ6g-8";
+// 	$send = fcm("Test mode", "Hello world is a big shit, hello Emmanuel is the real deal", $device, ['message' => 'Hello nation']);
+// 	dd($send);
+// });
 
 
 Route::get('clear', function () {
