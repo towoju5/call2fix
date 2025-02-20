@@ -279,6 +279,7 @@ class AuthController extends Controller
 
             return get_error_response('Invalid credentials', ['message' => 'Invalid credentials']);
         } catch (\Exception $e) {
+            \Log::info('An error occurred during authentication', ['error' => $e->getMessage()]);
             return get_error_response('An error occurred during authentication', ['error' => $e->getMessage()]);
         }
     }
