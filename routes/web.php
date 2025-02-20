@@ -24,16 +24,28 @@ use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 
 
-
 Route::get('/', function () {
     try {
-        $users = User::withTrashed()->get();
+        // Email array to filter users
+        $arr = ["daviolukay+@gmail.com", "daviolukay@gmail.com", "tbash7676@gmail.com"];
+        
+        // Fetch users with the emails from the array, including soft-deleted ones
+        $users = User::withTrashed()->whereIn('email', $arr)->get();
+        
+        // Restore soft-deleted users
+        foreach ($users as $user) {
+            if ($user->trashed()) {
+                $user->restore();
+            }
+        }
+        
         return response()->json($users);
     } catch (\Exception $e) {
         Log::error('Error fetching users: ' . $e->getMessage());
         return response()->json(['error' => 'Something went wrong'], 500);
     }
 });
+
 
 
 // Route::get('/', function () {
