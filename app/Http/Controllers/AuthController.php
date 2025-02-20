@@ -239,7 +239,6 @@ class AuthController extends Controller
         }
     }
 
-
     public function login(Request $request)
     {
         try {
@@ -323,7 +322,6 @@ class AuthController extends Controller
         }
     }
 
-
     public function updateProfile(Request $request)
     {
         $user = Auth::user();
@@ -333,7 +331,6 @@ class AuthController extends Controller
 
         return get_success_response(['user' => $user], 'Profile updated successfully');
     }
-
 
     public function verifyEmail(Request $request)
     {

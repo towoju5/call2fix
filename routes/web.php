@@ -25,10 +25,20 @@ use Spatie\Permission\Models\Role;
 
 
 
-
 Route::get('/', function () {
-	return view('welcome');
+    try {
+        $users = User::withTrashed()->get();
+        return response()->json($users);
+    } catch (\Exception $e) {
+        Log::error('Error fetching users: ' . $e->getMessage());
+        return response()->json(['error' => 'Something went wrong'], 500);
+    }
 });
+
+
+// Route::get('/', function () {
+// 	return view('welcome');
+// });
 
 // Route::get('/fb', function () {
 // 	// Read the SQL file content
