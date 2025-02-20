@@ -25,14 +25,8 @@ class DojaWebhookController extends Controller
 
             // Example: Check the verification status and type
             if (isset($data['status']) && $data['status'] === 'successful') {
-                // Handle successful verification
-                // For example, update the user's verification status in the database
-                // You may get the user ID from the webhook and update their status
                 $userId = $data['user_id'];
-                // Update user verification status in your database
-                // User::find($userId)->update(['verification_status' => 'verified']);
             } else {
-                // Handle failed verification
                 $userId = $data['user_id'];
                 // User::find($userId)->update(['verification_status' => 'failed']);
             }
