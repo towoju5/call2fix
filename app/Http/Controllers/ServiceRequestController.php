@@ -90,18 +90,19 @@ class ServiceRequestController extends Controller
                 $longitude = $property->longitude;
     
                 // Get nearby providers
-                $providers = BusinessOfficeAddress::select(
-                    'user_id',
-                    DB::raw("
-                        ST_Distance_Sphere(
-                            point(longitude, latitude),
-                            point(?, ?)
-                        ) as distance
-                    ")
-                )
-                    ->setBindings([$longitude, $latitude])
-                    ->having('distance', '<=', $radiusLimitMeters)
-                    ->orderBy('distance')
+                $providers = BusinessOfficeAddress::query()
+                    // select(
+                    //     'user_id',
+                    //     DB::raw("
+                    //         ST_Distance_Sphere(
+                    //             point(longitude, latitude),
+                    //             point(?, ?)
+                    //         ) as distance
+                    //     ")
+                    // )
+                    // ->setBindings([$longitude, $latitude])
+                    // ->having('distance', '<=', $radiusLimitMeters)
+                    // ->orderBy('distance')
                     ->groupBy('user_id')
                     ->take(5)
                     ->pluck('user_id')
