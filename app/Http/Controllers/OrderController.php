@@ -19,7 +19,6 @@ class OrderController extends Controller
         return view('order');
     }
     
-    
     // public function place_order(Request $request)
     // {
     //     try {
