@@ -316,9 +316,9 @@ class OrderController extends Controller
     public function cancelOrder($orderId)
     {
         try {
-            $order = OrderModel::whereId($orderId)->whereStatus('pending')->whereUserId(auth()->id())->first();
-            // $orderStatus = ['STARTED', 'ENDED', 'FAILED', 'ARRIVED', 'UNASSIGNED', 'ACCEPTED', 'DECLINE', 'CANCEL', 'Deleted'];
-            if ($order) { //&& !in_array($order->status, $orderStatus)) {
+            $order = OrderModel::whereId($orderId)->first();
+            $orderStatus = ['STARTED', 'ENDED', 'FAILED', 'ARRIVED', 'UNASSIGNED', 'ACCEPTED', 'DECLINE', 'CANCEL', 'Deleted'];
+            if ($order && !in_array($order->status, $orderStatus)) {
                 $order->status = "CANCEL";
                 if ($order->save()) {
                     return get_success_response($order, "Order canceled successfully", 200);
