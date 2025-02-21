@@ -41,6 +41,40 @@ class OrderModel extends Model
         'kwik_order_id',
     ];
 
+
+    public const STATUSES = [
+        0 => 'UPCOMING',
+        1 => 'STARTED',
+        2 => 'ENDED',
+        3 => 'FAILED',
+        4 => 'ARRIVED',
+        6 => 'UNASSIGNED',
+        7 => 'ACCEPTED',
+        8 => 'DECLINE',
+        9 => 'CANCEL',
+        10 => 'DELETED',
+    ];
+
+    // Mutator to set status
+    public function setStatusAttribute($value)
+    {
+        // Check if the passed value is an integer (array key)
+        if (is_numeric($value) && array_key_exists((int) $value, self::STATUSES)) {
+            $this->attributes['status'] = self::STATUSES[(int) $value]; // Convert to string status
+        } 
+        // If the value is a string, map it to the corresponding integer key and then to a string
+        elseif (is_string($value)) {
+            $statusKey = array_search(strtoupper($value), self::STATUSES);
+            if ($statusKey !== false) {
+                $this->attributes['status'] = self::STATUSES[$statusKey]; // Store as string
+            } else {
+                $this->attributes['status'] = $value; // Fallback in case value is unknown
+            }
+        } else {
+            $this->attributes['status'] = $value; // Store whatever is passed (fallback)
+        }
+    }
+
     public function leasableProducts()
     {
         return $this->where('is_leasable', true);
