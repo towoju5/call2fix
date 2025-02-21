@@ -96,7 +96,7 @@ class SuppliersController extends Controller
             }
 
             $order = OrderModel::with('product', 'seller', 'user')
-                        // ->where('seller_id', auth()->id())
+                        ->where('seller_id', auth()->id())
                         ->whereId($request->order_id)->first();
             
             if (empty($order)) {
@@ -108,7 +108,10 @@ class SuppliersController extends Controller
             }
             
             if($request->status == "accept") {
-                $status = "ACCEPTED";
+                $status = 7;
+            }
+            if($request->status == "reject") {
+                $status = 9;
             }
             
             $order->status = $status;
