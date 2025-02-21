@@ -63,6 +63,7 @@ class SuppliersController extends Controller
                         "account_type", users.account_type
                     ) as user')
                 )
+                ->latest()
                 ->limit(100) // Keeping a reasonable limit to prevent excessive data load
                 ->get(); // Fetching all records without pagination
         
