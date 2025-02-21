@@ -96,7 +96,7 @@ class Order extends BaseModel
         // If the value is a string, map it to the corresponding integer
         $statusKey = array_search(strtoupper($value), self::STATUSES);
         if ($statusKey !== false) {
-            $this->attributes['status'] = $statusKey;
+            $this->attributes['status'] = $value;
         } else {
             // Otherwise, just set the value as it is (assume it's an integer)
             $this->attributes['status'] = $value;
