@@ -91,6 +91,8 @@ class SuppliersController extends Controller
                 'status' => 'required|in:accept,reject',
             ]);
 
+            $status = $request->status;
+
             if ($validate->fails()) {
                 return get_error_response("validation errors", $validate->errors(), 422);
             }
