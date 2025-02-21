@@ -114,32 +114,6 @@ class OrderModel extends Model
         return $this->hasOne(Payment::class);
     }
 
-    public const STATUSES = [
-        0 => 'UPCOMING',
-        1 => 'STARTED',
-        2 => 'ENDED',
-        3 => 'FAILED',
-        4 => 'ARRIVED',
-        6 => 'UNASSIGNED',
-        7 => 'ACCEPTED',
-        8 => 'DECLINE',
-        9 => 'CANCEL',
-        10 => 'DELETED',
-    ];
-
-    // Mutator to set status
-    public function setStatusAttribute($value)
-    {
-        // If the value is a string, map it to the corresponding integer
-        $statusKey = array_search(strtoupper($value), self::STATUSES);
-        if ($statusKey !== false) {
-            $this->attributes['status'] = $statusKey;
-        } else {
-            // Otherwise, just set the value as it is (assume it's an integer)
-            $this->attributes['status'] = $value;
-        }
-    }
-
     // Accessor to get status description
     public function getStatusDescriptionAttribute()
     {
