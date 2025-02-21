@@ -64,7 +64,7 @@ class SuppliersController extends Controller
                             "account_type", users.account_type
                         ) as user')
                     )
-                    ->paginate(10);
+                    ->limit(100)->get();
 
                 // Transform the collection to parse JSON fields
                 $orders->getCollection()->transform(function ($order) {
