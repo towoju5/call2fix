@@ -327,7 +327,7 @@ class OrderController extends Controller
                 return get_error_response("Failed to cancel order. Please try again.", [], 500);
             }
     
-            return get_error_response("Order cannot be canceled.", [], 400);
+            // return get_error_response("Order cannot be canceled.", [], 400);
         } catch (ModelNotFoundException $e) {
             return get_error_response("Order not found", [], 404);
         } catch (\Exception $e) {
