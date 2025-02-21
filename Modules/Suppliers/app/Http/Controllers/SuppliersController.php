@@ -81,8 +81,7 @@ class SuppliersController extends Controller
         }
         
     }
-    
-    
+
     public function updateOrder(Request $request)
     {
         try {
@@ -91,36 +90,32 @@ class SuppliersController extends Controller
                 'status' => 'required|in:accept,reject',
             ]);
 
-            $status = $request->status;
-
             if ($validate->fails()) {
-                return get_error_response("validation errors", $validate->errors(), 422);
+                return get_error_response("Validation errors", $validate->errors(), 422);
             }
 
             $order = OrderModel::with('product', 'seller', 'user')
-                        // ->where('seller_id', auth()->id())
                         ->whereId($request->order_id)->first();
             
             if (empty($order)) {
                 return get_error_response("Order not found!", ['error' => "Selected order not found"], 404);
             }
             
-            if(strtolower($order->status) === 'reject') {
+            if (strtolower($order->status) === 'reject') {
                 return get_error_response("Order already canceled!", ['error' => "Order already canceled"], 403);
             }
             
-            if($request->status == "accept") {
-                $status = 7;
-            }
-            if($request->status == "reject") {
-                $status = 9;
-            }
-            
-            $order->status = $status;
-            
+            // Map status to the string value
+            $statusMapping = [
+                'accept' => OrderModel::STATUSES[7], // 'ACCEPTED'
+                'reject' => OrderModel::STATUSES[9], // 'CANCEL'
+            ];
+
+            $order->status = $statusMapping[$request->status]; // Store as string
+
             if ($order->save()) {
-                if(strtolower($request->status) === 'accept' && $order->product->delivery_type === 'home_delivery') {
-                    // create delivery request on behalf of the seller on Kwik Delivery
+                if (strtolower($request->status) === 'accept' && $order->product->delivery_type === 'home_delivery') {
+                    // Create delivery request on behalf of the seller on Kwik Delivery
                     $kwik = new KwikDeliveryController();
                     $place_order = $kwik->createPickupAndDeliveryTask(
                         $order->delivery_address, 
@@ -128,17 +123,18 @@ class SuppliersController extends Controller
                         $order->delivery_longitude, 
                         $order->product, 
                         $order->seller, 
-                        $order->user);
-                \Log::info("Kwik Order Placement response", $place_order);
-                
-                } else if(strtolower($request->status) === 'reject') {
-                    // refund customer and cancel order
+                        $order->user
+                    );
+                    \Log::info("Kwik Order Placement response", $place_order);
+                } else if (strtolower($request->status) === 'reject') {
+                    // Refund customer and cancel order
                 }
                 
                 return get_success_response($order, "Order status updated successfully", 200);
             }
         } catch (\Throwable $th) {
-            return get_error_response("Order update failed!", ['error' => $th->getMessage()] , 400);
+            return get_error_response("Order update failed!", ['error' => $th->getMessage()], 400);
         }
     }
+
 }
