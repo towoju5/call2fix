@@ -93,18 +93,23 @@ class Order extends BaseModel
     // Mutator to set status
     public function setStatusAttribute($value)
     {
-        if (is_string($value)) {
-            // Convert string to uppercase and find the corresponding key
+        // Check if the passed value is an integer (array key)
+        if (is_numeric($value) && array_key_exists((int) $value, self::STATUSES)) {
+            $this->attributes['status'] = self::STATUSES[(int) $value]; // Convert to string status
+        } 
+        // If the value is a string, map it to the corresponding integer key and then to a string
+        elseif (is_string($value)) {
             $statusKey = array_search(strtoupper($value), self::STATUSES);
-            $this->attributes['status'] = $statusKey !== false ? self::STATUSES[$statusKey] : $value;
-        } elseif (is_int($value) && array_key_exists($value, self::STATUSES)) {
-            // If an integer key is passed, store the corresponding status string
-            $this->attributes['status'] = self::STATUSES[$value];
+            if ($statusKey !== false) {
+                $this->attributes['status'] = self::STATUSES[$statusKey]; // Store as string
+            } else {
+                $this->attributes['status'] = $value; // Fallback in case value is unknown
+            }
         } else {
-            // If the value is invalid, store as is
-            $this->attributes['status'] = $value;
+            $this->attributes['status'] = $value; // Store whatever is passed (fallback)
         }
-    }   
+    }
+
 
     // Accessor to get status description
     public function getStatusDescriptionAttribute()
