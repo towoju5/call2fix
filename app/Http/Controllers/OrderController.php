@@ -312,28 +312,41 @@ class OrderController extends Controller
 
         return null;
     }
-    
+
     public function cancelOrder($orderId)
     {
         try {
             $order = OrderModel::whereId($orderId)->first();
-            $orderStatus = ['STARTED', 'ENDED', 'FAILED', 'ARRIVED', 'UNASSIGNED', 'ACCEPTED', 'DECLINE', 'CANCEL', 'Deleted'];
-            if ($order && !in_array($order->status, $orderStatus)) {
-                $order->status = "CANCEL";
-                if ($order->save()) {
-                    return get_success_response($order, "Order canceled successfully", 200);
-                }
-    
-                return get_error_response("Failed to cancel order. Please try again.", [], 500);
+
+            if (!$order) {
+                return get_error_response("Order not found", [], 404);
             }
-    
-            // return get_error_response("Order cannot be canceled.", [], 400);
-        } catch (ModelNotFoundException $e) {
-            return get_error_response("Order not found", [], 404);
+
+            $orderStatus = [
+                'UPCOMING', 'STARTED', 'ENDED', 'FAILED', 'ARRIVED', 
+                'UNASSIGNED', 'ACCEPTED', 'DECLINE', 'CANCEL', 'DELETED'
+            ];
+
+            // Ensure the status is compared as a string
+            $currentStatus = strtoupper($order->status);
+
+            if (!in_array($currentStatus, $orderStatus)) {
+                return get_error_response("Order cannot be canceled.", [], 400);
+            }
+
+            $order->status = "CANCEL";
+
+            if ($order->save()) {
+                return get_success_response($order, "Order canceled successfully", 200);
+            }
+
+            return get_error_response("Failed to cancel order. Please try again.", [], 500);
+
         } catch (\Exception $e) {
             return get_error_response("An unexpected error occurred.", ['error' => $e->getMessage()], 500);
         }
     }
+
     
     public function getShippingRate()
     {
