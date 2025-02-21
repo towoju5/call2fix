@@ -668,7 +668,7 @@ class ServiceRequestController extends Controller
                 ], 'Payment successful');
             }
         } catch (\Throwable $th) {
-            return ['error' => $th->getMessage()];
+            return get_error_response(['error' => $th->getMessage()]);
         }
     }
 }
