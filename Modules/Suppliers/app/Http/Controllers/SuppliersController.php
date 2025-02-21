@@ -16,67 +16,69 @@ class SuppliersController extends Controller
     public function orders()
     {
         try {
-            // $orders = C::with('product', 'seller', 'user')->where('seller_id', auth()->id())->paginate(10);
-                $orders = DB::table('orders')
-                    ->join('products', 'orders.product_id', '=', 'products.id')
-                    ->join('users as sellers', 'orders.seller_id', '=', 'sellers.id') // Seller information
-                    ->join('users as users', 'orders.user_id', '=', 'users.id') // User information
-                    ->where('sellers.id', auth()->id()) // Authenticated seller
-                    ->select(
-                        'orders.*',
-                        DB::raw('JSON_OBJECT(
-                            "id", products.id,
-                            "name", products.name,
-                            "description", products.description,
-                            "price", products.price,
-                            "category_id", products.category_id,
-                            "stock", products.stock,
-                            "sku", products.sku,
-                            "product_currency", products.product_currency,
-                            "product_location", products.product_location,
-                            "product_image", products.product_image,
-                            "weight", products.weight,
-                            "dimensions", products.dimensions,
-                            "is_active", products.is_active,
-                            "is_leasable", products.is_leasable,
-                            "rentable_price", products.rentable_price,
-                            "product_longitude", products.product_longitude,
-                            "product_latitude", products.product_latitude
-                        ) as product'),
-                        DB::raw('JSON_OBJECT(
-                            "id", sellers.id,
-                            "first_name", sellers.first_name,
-                            "last_name", sellers.last_name,
-                            "username", sellers.username,
-                            "email", sellers.email,
-                            "phone", sellers.phone,
-                            "profile_picture", sellers.profile_picture,
-                            "account_type", sellers.account_type
-                        ) as seller'),
-                        DB::raw('JSON_OBJECT(
-                            "id", users.id,
-                            "first_name", users.first_name,
-                            "last_name", users.last_name,
-                            "username", users.username,
-                            "email", users.email,
-                            "phone", users.phone,
-                            "profile_picture", users.profile_picture,
-                            "account_type", users.account_type
-                        ) as user')
-                    )
-                    ->limit(100);
-
-                // Transform the collection to parse JSON fields
-                $orders->getCollection()->transform(function ($order) {
-                    $order->product = json_decode($order->product);
-                    $order->seller = json_decode($order->seller);
-                    $order->user = json_decode($order->user);
-                    return $order;
-                });
-            return get_success_response($orders, "Order retrieved successfully", 200);
+            $orders = DB::table('orders')
+                ->join('products', 'orders.product_id', '=', 'products.id')
+                ->join('users as sellers', 'orders.seller_id', '=', 'sellers.id') // Seller information
+                ->join('users as users', 'orders.user_id', '=', 'users.id') // User information
+                ->where('sellers.id', auth()->id()) // Authenticated seller
+                ->select(
+                    'orders.*',
+                    DB::raw('JSON_OBJECT(
+                        "id", products.id,
+                        "name", products.name,
+                        "description", products.description,
+                        "price", products.price,
+                        "category_id", products.category_id,
+                        "stock", products.stock,
+                        "sku", products.sku,
+                        "product_currency", products.product_currency,
+                        "product_location", products.product_location,
+                        "product_image", products.product_image,
+                        "weight", products.weight,
+                        "dimensions", products.dimensions,
+                        "is_active", products.is_active,
+                        "is_leasable", products.is_leasable,
+                        "rentable_price", products.rentable_price,
+                        "product_longitude", products.product_longitude,
+                        "product_latitude", products.product_latitude
+                    ) as product'),
+                    DB::raw('JSON_OBJECT(
+                        "id", sellers.id,
+                        "first_name", sellers.first_name,
+                        "last_name", sellers.last_name,
+                        "username", sellers.username,
+                        "email", sellers.email,
+                        "phone", sellers.phone,
+                        "profile_picture", sellers.profile_picture,
+                        "account_type", sellers.account_type
+                    ) as seller'),
+                    DB::raw('JSON_OBJECT(
+                        "id", users.id,
+                        "first_name", users.first_name,
+                        "last_name", users.last_name,
+                        "username", users.username,
+                        "email", users.email,
+                        "phone", users.phone,
+                        "profile_picture", users.profile_picture,
+                        "account_type", users.account_type
+                    ) as user')
+                )
+                ->limit(100) // Keeping a reasonable limit to prevent excessive data load
+                ->get(); // Fetching all records without pagination
+        
+            // Transform collection to parse JSON fields
+            $orders->transform(function ($order) {
+                $order->product = json_decode($order->product);
+                $order->seller = json_decode($order->seller);
+                $order->user = json_decode($order->user);
+                return $order;
+            });
+        
+            return get_success_response($orders, "Orders retrieved successfully", 200);
         } catch (\Throwable $th) {
-            return get_error_response("Order retrival failed!", ['error' => $th->getMessage()] , 400);
+            return get_error_response("Order retrieval failed!", ['error' => $th->getMessage()], 400);
         }
+        
     }
     
     
