@@ -51,6 +51,14 @@ class ServiceRequestController extends Controller
         $maxAttempts = 1; // Limit: 1 requests
         $decayMinutes = 1; // Time frame: 1 minute
     
+        // Check if 'read_by' column exists, if not, add it (This should be done in a migration)
+        if (!Schema::hasColumn('service_requests')) {
+            Schema::table('service_requests', function (Blueprint $table) {
+                $table->string('total_cost')->nullable()->after('content');
+            });
+        }
+    
+    
         if (!RateLimiter::tooManyAttempts($key, $maxAttempts)) {
     
             // Record the attempt
@@ -91,19 +99,20 @@ class ServiceRequestController extends Controller
     
                 // Get nearby providers
                 $providers = BusinessOfficeAddress::query()
-                    // select(
-                    //     'user_id',
-                    //     DB::raw("
-                    //         ST_Distance_Sphere(
-                    //             point(longitude, latitude),
-                    //             point(?, ?)
-                    //         ) as distance
-                    //     ")
-                    // )
-                    // ->setBindings([$longitude, $latitude])
-                    // ->having('distance', '<=', $radiusLimitMeters)
-                    // ->orderBy('distance')
+                    ->select(
+                        'user_id',
+                        DB::raw("
+                            ST_Distance_Sphere(
+                                point(longitude, latitude),
+                                point(?, ?)
+                            ) as distance
+                        ")
+                    )
+                    ->setBindings([$longitude, $latitude])
+                    ->having('distance', '<=', $radiusLimitMeters)
+                    ->orderBy('distance')
                     ->groupBy('user_id')
+                    ->where('user_id', '!=', auth()->id())
                     ->take(5)
                     ->pluck('user_id')
                     ->toArray(); // Convert collection to array
@@ -121,7 +130,7 @@ class ServiceRequestController extends Controller
                     $distinctProviders[] = $alphameadAccount;
                 }
     
-                if (empty($distinctProviders)) {
+                if (empty($distinctProviders)) { 
                     return get_error_response('No provider found!', ['error' => 'No service provider found nearby']);
                 }
     
@@ -143,9 +152,15 @@ class ServiceRequestController extends Controller
                 $wallet = Wallet::where(['user_id' => $user->id, 'currency' => $currency, 'role' => $role])->first();
                 $wallet1 = $user->getWallet($currency ?? 'ngn');
     
-                $wallet1->withdrawal(floatval(get_settings_value('assessment_fee', 500) * 100), [
+                $isPaySuccessfull = $wallet1->withdrawal(floatval(get_settings_value('assessment_fee', 500) * 100), [
                     "description" => "Assessment fee for Service request order."
                 ]);
+
+                if($isPaySuccessfull) {
+                    $serviceRequest->update([
+                        "assesment_fee_paid" => true
+                    ]);
+                }
     
                 // Commit transaction if everything is successful
                 DB::commit();
