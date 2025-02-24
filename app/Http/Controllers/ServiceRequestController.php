@@ -20,6 +20,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Towoju5\Wallet\Models\Wallet;
 use App\Notifications\ServiceRequest\ServiceRequestSuccessful;
+use Illuminate\Support\Facades\Schema;
 
 class ServiceRequestController extends Controller
 {
