@@ -53,12 +53,6 @@ class ServiceRequestController extends Controller
         $maxAttempts = 1; // Limit: 1 requests
         $decayMinutes = 1; // Time frame: 1 minute
         // Check if 'read_by' column exists, if not, add it (This should be done in a migration)
-        if (!Schema::hasColumn('service_requests', 'total_cost')) {
-            Schema::table('service_requests', function (Blueprint $table) {
-                $table->string('total_cost')->nullable();
-                $table->string('formatted_price')->nullable();
-            });
-        }
     
     
         if (!RateLimiter::tooManyAttempts($key, $maxAttempts)) {
@@ -256,6 +250,11 @@ class ServiceRequestController extends Controller
     public function updateStatus(Request $request, $requestId)
     {
         try {
+            if (!Schema::hasColumn('service_requests', 'request_status')) {
+                Schema::table('service_requests', function (Blueprint $table) {
+                    $table->string('request_status')->nullable();
+                });
+            }
             // Fetch the service request with auth checks
             $authId = auth()->id();
             $serviceRequest = ServiceRequestModel::whereId($requestId)->first();
