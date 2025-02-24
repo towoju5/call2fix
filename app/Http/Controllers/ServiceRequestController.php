@@ -53,9 +53,10 @@ class ServiceRequestController extends Controller
         $decayMinutes = 1; // Time frame: 1 minute
     
         // Check if 'read_by' column exists, if not, add it (This should be done in a migration)
-        if (!Schema::hasColumn('service_requests')) {
+        if (!Schema::hasColumn('service_requests', 'total_cost')) {
             Schema::table('service_requests', function (Blueprint $table) {
-                $table->string('total_cost')->nullable()->after('content');
+                $table->string('total_cost')->nullable();
+                $table->string('formatted_price')->nullable();
             });
         }
     
