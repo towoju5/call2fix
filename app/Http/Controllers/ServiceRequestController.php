@@ -686,6 +686,9 @@ class ServiceRequestController extends Controller
             $transaction[] = $wallet->withdrawal($total_cost,  ['description' => "Service request payment - {$serviceRequest->id}", "narration" => $request->narration ?? null]);
 
             if ($transaction && $wallet) {
+                $serviceRequest->update([
+                    "request_status" => "Payment Confirmed"
+                ]);
                 // return success data with the transaction and service request data
                 return get_success_response([
                     'transaction' => $transaction,
