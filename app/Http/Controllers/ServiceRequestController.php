@@ -270,23 +270,25 @@ class ServiceRequestController extends Controller
             }
 
             // Fetch enum values directly from the database schema
-            $table = $serviceRequest->getTable();
-            $column = 'request_status';
-            $validStatuses = $this->getEnumValues($table, $column);
+            // $table = $serviceRequest->getTable();
+            // $column = 'request_status';
+            // $validStatuses = $this->getEnumValues($table, $column);
 
-            // Validate the status input
-            $validatedData = $request->validate([
-                'status' => ['required', function ($attribute, $value, $fail) use ($validStatuses) {
-                    // Match input to enum values case-insensitively
-                    if (!in_array(strtolower($value), array_map('strtolower', $validStatuses))) {
-                        $fail("The selected $attribute is invalid.");
-                    }
-                }],
-            ]);
+            // // Validate the status input
+            // $validatedData = $request->validate([
+            //     'status' => ['required', function ($attribute, $value, $fail) use ($validStatuses) {
+            //         // Match input to enum values case-insensitively
+            //         if (!in_array(strtolower($value), array_map('strtolower', $validStatuses))) {
+            //             $fail("The selected $attribute is invalid.");
+            //         }
+            //     }],
+            // ]);
 
-            // Convert to the correct case as stored in the enum
-            $inputStatus = strtolower($validatedData['status']);
-            $finalStatus = $validStatuses[array_search($inputStatus, array_map('strtolower', $validStatuses))];
+            // // Convert to the correct case as stored in the enum
+            // $inputStatus = strtolower($validatedData['status']);
+            // $finalStatus = $validStatuses[array_search($inputStatus, array_map('strtolower', $validStatuses))];
+
+            $finalStatus = $request->status;
 
             // Update the status in the database
             $update = $serviceRequest->update(['request_status' => $finalStatus]);
