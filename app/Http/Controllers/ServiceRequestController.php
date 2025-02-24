@@ -20,6 +20,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Towoju5\Wallet\Models\Wallet;
 use App\Notifications\ServiceRequest\ServiceRequestSuccessful;
+use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
 class ServiceRequestController extends Controller
@@ -51,12 +52,19 @@ class ServiceRequestController extends Controller
         $key = 'rate_limit_' . ($request->user()?->id ?: $request->ip()); // Unique key per user or IP
         $maxAttempts = 1; // Limit: 1 requests
         $decayMinutes = 1; // Time frame: 1 minute
-    
         // Check if 'read_by' column exists, if not, add it (This should be done in a migration)
         if (!Schema::hasColumn('service_requests', 'total_cost')) {
             Schema::table('service_requests', function (Blueprint $table) {
                 $table->string('total_cost')->nullable();
                 $table->string('formatted_price')->nullable();
+            });
+        }
+    
+
+        // Check if 'read_by' column exists, if not, add it (This should be done in a migration)
+        if (!Schema::hasColumn('orders', 'status')) {
+            Schema::table('orders', function (Blueprint $table) {
+                $table->string('status')->change();
             });
         }
     

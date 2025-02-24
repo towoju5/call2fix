@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Log;
 
+
 class OrderController extends Controller
 {
     public function index()
@@ -19,101 +20,6 @@ class OrderController extends Controller
         return view('order');
     }
     
-    // public function place_order(Request $request)
-    // {
-    //     try {
-    //         $product = Product::findOrFail($request->product_id);
-    
-    //         // Validation rules
-    //         $validationRules = [
-    //             "delivery_type" => "required|in:home_delivery,pick_up",
-    //             "delivery_address" => "required_if:delivery_type,home_delivery|string",
-    //             "quantity" => "required|integer|min:1",
-    //             "product_id" => "required|exists:products,id",
-    //             "delivery_longitude" => "required_if:delivery_type,home_delivery",
-    //             "delivery_latitude" => "required_if:delivery_type,home_delivery",
-    //             "duration_type" => "sometimes",
-    //             "lease_duration" => "sometimes",
-    //             "lease_rate" => "sometimes",
-    //             "lease_notes" => "sometimes",
-    //         ];
-    
-    //         $validator = Validator::make($request->all(), $validationRules);
-    
-    //         if ($validator->fails()) {
-    //             Log::error('Order placement validation error: ', ['error'=> $validator->errors()->toArray()]);
-    //             return get_error_response("Validation error", $validator->errors(), 422);
-    //         }
-    
-    //         $user = $request->user();
-    //         $wallet = $user->getWallet("ngn");
-    
-    //         if (!$wallet) {
-    //             return get_error_response("User wallet not found", ["error" => "User wallet not found"], 404);
-    //         }
-    
-    //         $orderData = $validator->validated();
-    //         $orderData["user_id"] = $user->id;
-    //         $orderData["seller_id"] = $product->seller_id;
-    //         $orderData["status"] = "pending";
-    
-    //         // Default shipping fee
-    //         $shippingFee = 0;
-    
-    //         if ($request->delivery_type === 'home_delivery') {
-    //             // Calculate total price and shipping fee
-    //             $kwik = new KwikDeliveryController();
-    //             $shippingFee = $kwik->calculatePricing(
-    //                 $orderData['delivery_address'],
-    //                 $orderData['delivery_latitude'],
-    //                 $orderData['delivery_longitude'],
-    //                 $product,
-    //                 $product->seller,
-    //                 $user
-    //             );
-    
-    //             if (is_array($shippingFee) || isset($shippingFee['error'])) {
-    //                 return get_error_response($shippingFee['error'], ["error" => $shippingFee['error']], 400);
-    //             }
-    //         }
-    
-    //         $orderData["shipping_fee"] = $shippingFee;
-    //         $orderData["product_category_id"] = $product->category_id;
-    //         $orderData["product_service_category_id"] = $product->category_id;
-    
-    //         // Calculate total price based on lease or normal purchase
-    //         if ($request->has('lease_duration')) {
-    //             $rentablePrice = $this->getRentablePrice($product->id, $orderData['duration_type']);
-    //             $orderData['rentable_price'] = $rentablePrice * $request->lease_duration;
-    //             $subtotal = ($rentablePrice * $orderData['quantity']) + $shippingFee;
-    //         } else {
-    //             $subtotal = ($product->price * $orderData['quantity']) + $shippingFee;
-    //         }
-    
-    //         // Apply VAT for both rentable and non-rentable products
-    //         $vatAmount = ($subtotal * get_settings_value('vat_percentage', 7.5)) / 100;
-    //         $orderData["total_price"] = floatval($subtotal + $vatAmount);
-    
-    //         // Withdraw from wallet
-    //         $wallet->withdrawal($orderData["total_price"], ["description" => "Order placed", "Order placement"]);
-    
-    //         // Create order
-    //         $order = Order::create($orderData);
-    
-    //         // Notify the user
-    //         if ($order) {
-    //             return get_success_response($order, "Order placed successfully", 201);
-    //         }
-    
-    //     } catch (ModelNotFoundException $e) {
-    //         return get_error_response("Product not found", [], 404);
-    //     } catch (\Exception $e) {
-    //         // Log the actual error for debugging
-    //         Log::error('Order placement failed error: ', ['error'=> $e->getMessage(), 'trace' => $e->getTrace()]);
-    //         return get_error_response("Order placement failed", ["error" => $e->getMessage()], 500);
-    //     }
-    // }
-
     public function place_order(Request $request)
     {
         try {
