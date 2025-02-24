@@ -250,11 +250,11 @@ class ServiceRequestController extends Controller
     public function updateStatus(Request $request, $requestId)
     {
         try {
-            if (!Schema::hasColumn('service_requests', 'request_status')) {
+            // if (!Schema::hasColumn('service_requests', 'request_status')) {
                 Schema::table('service_requests', function (Blueprint $table) {
-                    $table->string('request_status')->nullable();
+                    $table->string('request_status')->change();
                 });
-            }
+            // }
             // Fetch the service request with auth checks
             $authId = auth()->id();
             $serviceRequest = ServiceRequestModel::whereId($requestId)->first();
