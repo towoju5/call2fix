@@ -60,14 +60,6 @@ class ServiceRequestController extends Controller
             });
         }
     
-
-        // Check if 'read_by' column exists, if not, add it (This should be done in a migration)
-        if (!Schema::hasColumn('orders', 'status')) {
-            Schema::table('orders', function (Blueprint $table) {
-                $table->string('status')->change();
-            });
-        }
-    
     
         if (!RateLimiter::tooManyAttempts($key, $maxAttempts)) {
     

@@ -10,6 +10,8 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Validator, DB;
 use App\Models\OrderModel;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
 
 class SuppliersController extends Controller
 {
@@ -84,6 +86,14 @@ class SuppliersController extends Controller
 
     public function updateOrder(Request $request)
     {
+
+        // Check if 'read_by' column exists, if not, add it (This should be done in a migration)
+        if (!Schema::hasColumn('orders', 'status')) {
+            Schema::table('orders', function (Blueprint $table) {
+                $table->string('status')->change();
+            });
+        }
+
         try {
             $validate = Validator::make($request->all(), [
                 'order_id' => 'required|string',
