@@ -77,8 +77,7 @@ class ServiceRequestController extends Controller
             if ($validate->fails()) {
                 return get_error_response("Validation Error", $validate->errors()->toArray());
             }
-            // 
-            "request_status" => "Pending",
+
             $validatedData = $validate->validated();
             $validatedData['user_id'] = auth()->id();
             $validatedData['request_status'] = "Pending";
