@@ -252,7 +252,6 @@ class ServiceRequestController extends Controller
         }
     }
 
-
     public function updateStatus(Request $request, $requestId)
     {
         try {
@@ -570,7 +569,6 @@ class ServiceRequestController extends Controller
             return get_error_response($th->getMessage(), ["error" => $th->getMessage()]);
         }
     }
-
 
     /**
      * Issue a rework for a service request.
