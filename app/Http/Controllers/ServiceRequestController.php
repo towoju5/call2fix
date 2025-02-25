@@ -198,6 +198,8 @@ class ServiceRequestController extends Controller
             'problem_images' => 'sometimes|array',
             'use_featured_providers' => 'sometimes|boolean',
             'featured_providers_id' => 'nullable|array',
+            "alternative_date" => "sometimes",
+            "alternative_time" => "sometimes"
         ]);
 
         if (isset($validatedData['problem_images'])) {
