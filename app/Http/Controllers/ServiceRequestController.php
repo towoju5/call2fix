@@ -72,6 +72,8 @@ class ServiceRequestController extends Controller
                 'use_featured_providers' => 'boolean',
                 'featured_providers_id' => 'nullable|array',
                 'department_id' => 'nullable|exists:departments,id',
+                "alternative_date" => "sometimes",
+                "alternative_time" => "sometimes"
             ]);
     
             if ($validate->fails()) {
