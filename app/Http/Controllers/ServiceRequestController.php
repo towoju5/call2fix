@@ -77,11 +77,12 @@ class ServiceRequestController extends Controller
             if ($validate->fails()) {
                 return get_error_response("Validation Error", $validate->errors()->toArray());
             }
-
+            // 
+            "request_status" => "Pending",
             $validatedData = $validate->validated();
             $validatedData['user_id'] = auth()->id();
-            $validatedData['user_id'] = "Pending";
-            $validatedData["request_status"] = $request->problem_images;
+            $validatedData['request_status'] = "Pending";
+            $validatedData['problem_images'] = $request->problem_images;
             $alphameadAccount = get_settings_value('alphamaed_service_account_id', 'a599fd50-15b4-4db5-a839-9e722aea226d');
     
             if ($request->use_featured_providers) {
