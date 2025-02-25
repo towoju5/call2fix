@@ -154,6 +154,7 @@ class ServiceRequestController extends Controller
 
                 if($isPaySuccessfull) {
                     $serviceRequest->update([
+                        "request_status" => "Pending",
                         "assesment_fee_paid" => true
                     ]);
                 }
