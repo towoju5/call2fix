@@ -13,7 +13,7 @@ use Carbon\Carbon;
 
 class ChartController extends Controller
 {
-    public function getFilteredData($model, $filter)
+    public function getFilteredData($model, $filter, $hasUserColumn=true)
     {
         $query = $model->query();
         $groupBy = 'day';
@@ -53,7 +53,7 @@ class ChartController extends Controller
                 $groupBy = 'day';
         }
 
-        $query = $query->where(['user_id' => auth()->id(), '_account_type' => active_role()]);
+        if($hasUserColumn) $query = $query->where(['user_id' => auth()->id(), '_account_type' => active_role()]);
         // Fetch and process data as before
         $data = $query->whereBetween('created_at', [$startDate, $endDate])
             ->selectRaw("DATE_FORMAT(created_at, '%Y-%m-%d') as date, COUNT(*) as count")
@@ -108,7 +108,7 @@ class ChartController extends Controller
     public function orders()
     {
         $filter = request()->get('filter', '7d');
-        $data = $this->getFilteredData(new WalletTransaction, $filter);
+        $data = $this->getFilteredData(new OrderModel, $filter);
         return get_success_response($data);
     }
 
@@ -122,7 +122,7 @@ class ChartController extends Controller
     public function wallet_transactions()
     {
         $filter = request()->get('filter', '7d');
-        $data = $this->getFilteredData(new \Towoju5\Wallet\Models\WalletTransaction(), $filter);
+        $data = $this->getFilteredData(new \Towoju5\Wallet\Models\WalletTransaction(), $filter, false);
         return get_success_response($data);
     }
 
