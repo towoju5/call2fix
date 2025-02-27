@@ -92,23 +92,23 @@ class ProductController extends Controller
             // $request->user()->can('update products');
 
             $validator = Validator::make($request->all(), [
-                'name' => 'required|string|max:255',
-                'description' => 'required|string',
+                'name' => 'sometimes|string|max:255',
+                'description' => 'sometimes|string',
                 'price' => 'required_if:rentable_price,null|numeric|min:0',
                 'rentable_price' => 'required_if:price,null|numeric|min:0',
                 'rentable_price.*' => 'sometimes|required_with:rentable_price.days,rentable_price.weekly,rentable_price.months|array', 
-                'category_id' => 'required|exists:categories,id',
-                'stock' => 'required|integer|min:0',
-                'sku' => 'required|string|unique:products,sku',
+                'category_id' => 'sometimes|exists:categories,id',
+                'stock' => 'sometimes|integer|min:0',
+                'sku' => 'sometimes|string|unique:products,sku',
                 'weight' => 'nullable|numeric|min:0',
                 'dimensions' => 'nullable|string',
                 'is_active' => 'boolean',
                 'is_leasable' => 'boolean',
-                'product_currency' => 'required|string|max:3',
-                'product_location' => 'required|string',
-                'product_longitude' => 'required|string',
-                'product_latitude' => 'required|string',
-                'product_image' => 'required|array',
+                'product_currency' => 'sometimes|string|max:3',
+                'product_location' => 'sometimes|string',
+                'product_longitude' => 'sometimes|string',
+                'product_latitude' => 'sometimes|string',
+                'product_image' => 'sometimes|array',
             ]);
 
             if ($validator->fails()) {
