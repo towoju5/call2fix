@@ -147,6 +147,79 @@ class ServiceProviderController extends Controller
         }
     }
 
+    public function updateArtisan(Request $request, $artisanId)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                "first_name" => "sometimes|string|max:255",
+                "last_name" => "sometimes|string|max:255",
+                "trade" => "sometimes|string|max:255", // category the artisan is registered under - max.
+                "location" => "sometimes|array|max:255", // locations service provider offers services.
+                "id_type" => "sometimes|string|in:national_id,drivers_license,passport,voters_card",
+                "id_image" => "sometimes",
+                "trade_certificate" => "sometimes",
+                "payment_plan" => "sometimes|string|in:percentage,fixed",
+                "payment_amount" => "sometimes|numeric|min:0",
+                "bank_code" => "sometimes|string|max:20",
+                "account_number" => "sometimes|string|max:20",
+                "account_name" => "sometimes|string|max:255",
+                "artisan_category" => "sometimes|exists:categories,id"
+            ]);
+
+            if ($validator->fails()) {
+                return get_error_response("Validation error", $validator->errors()->toArray(), 422);
+            }
+
+            $validateData = $validator->validated();
+            $validateData['service_provider_id'] = auth()->id();
+
+            DB::beginTransaction(); // Start transaction
+
+
+            if ($request->has('phone')) {
+                $userData['phone'] = str_replace(" ", "", $request->phone);
+            }
+            
+            // Add Artisan to user DB
+            $artisanPassword = Str::random(8);
+            $userData = [
+                'first_name' => $validateData['first_name'],
+                'last_name' => $validateData['last_name'],
+                'password' => bcrypt($artisanPassword),
+                'username' => $validateData['first_name'] . rand(23, 999),
+                'is_social' => false,
+                'account_type' => 'artisan',
+                'device_id' => 'device_id',
+                'current_role' => 'artisan',
+                'main_account_role' => 'artisan',
+            ];
+
+            $newArtisan = User::whereId($artisanId)->first();
+            if(!$newArtisan) {
+                return get_error_response("Artisan not found", [], 404);
+            }
+            
+            if ($newArtisan->update($userData)) {
+                $newArtisan->assignRole('artisan');
+                $validateData['artisan_id'] = $newArtisan->id;
+                Artisans::updateOrCreate($validateData);
+
+                // Send a notification to the artisan with the default password
+                $newArtisan->notify(new NewArtisanAddedNotification($newArtisan, $artisanPassword));
+
+                DB::commit(); // Commit transaction if everything is successful
+                return get_success_response($validateData, "Artisan created successfully", 200);
+            }
+
+            DB::rollBack(); // Roll back if the new artisan could not be created
+            return get_error_response("Unable to complete request", ["error" => "Unable to complete request, please contact support if error persists"], 400);
+
+        } catch (\Throwable $th) {
+            DB::rollBack(); // Roll back on any exception
+            return get_error_response($th->getMessage(), ['error' => $th->getMessage()]);
+        }
+    }
+
     public function provider_address(Request $request)
     {
         try {

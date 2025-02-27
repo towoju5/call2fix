@@ -16,12 +16,13 @@ use Modules\ServiceProvider\Http\Controllers\ServiceProviderController;
 
 Route::middleware(['auth:sanctum'])->domain(env('API_URL'))->prefix('v1')->group(function () {
     Route::apiResource('serviceprovider', ServiceProviderController::class)->names('serviceprovider');
-
+    
     Route::get('provider/artisan', [ServiceProviderController::class, 'artisans'])->name('serviceprovider.artisans');
     Route::get('providers/artisan/{id}', [ServiceProviderController::class, 'viewArtisan'])->name('serviceprovider.viewArtisan');
     Route::get('providers/featured/{propertyId}', [ServiceProviderController::class, 'getFeaturedProvider'])->name('serviceprovider.property.viewArtisan');
     Route::delete('providers/delete-artisan/{id}', [ServiceProviderController::class, 'deleteArtisan'])->name('serviceprovider.deleteArtisan');
     Route::post('providers/artisan', [ServiceProviderController::class, 'addArtisan'])->name('serviceprovider.storeArtisan');
+    Route::post('providers/artisan/{artisanId}', [ServiceProviderController::class, 'updateArtisan'])->name('serviceprovider.updateArtisan');
 
     Route::prefix('providers')->group(function () {
         Route::get('artisans', [ServiceProviderController::class, 'artisans']);

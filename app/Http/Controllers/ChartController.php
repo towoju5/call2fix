@@ -13,40 +13,135 @@ use Towoju5\Wallet\Models\Wallet;
 class ChartController extends Controller
 {
     // Shared method for filtering and fetching data
+    // public function getFilteredData($model, $filter)
+    // {
+    //     $query = $model->query();
+    //     $groupBy = 'day';
+    //     $startDate = now();
+    //     $endDate = now();
+    
+    //     // Determine the start and end date based on the filter
+    //     switch ($filter) {
+    //         case '7d':
+    //             $startDate = now()->subDays(6); // Start from 6 days ago to include today
+    //             $groupBy = 'day';
+    //             break;
+    //         case '4w':
+    //             $startDate = now()->subWeeks(3)->startOfWeek(); // Start 3 weeks ago, including this week
+    //             $groupBy = 'week';
+    //             break;
+    //         case '3m':
+    //             $startDate = now()->subMonths(2)->startOfMonth(); // Start 2 months ago, including this month
+    //             $groupBy = 'month';
+    //             break;
+    //         case '6m':
+    //             $startDate = now()->subMonths(5)->startOfMonth(); // Start 5 months ago
+    //             $groupBy = 'month';
+    //             break;
+    //         case '1y':
+    //             $startDate = now()->subYear()->startOfMonth()->addMonth(); // Start from Dec last year
+    //             $groupBy = 'month';
+    //             break;
+    //         default:
+    //             $startDate = now()->subDays(6);
+    //             $groupBy = 'day';
+    //     }
+    
+    //     // Fetch data from the model
+    //     $data = $query->whereBetween('created_at', [$startDate, $endDate])
+    //         ->selectRaw("DATE_FORMAT(created_at, '%Y-%m-%d') as date, COUNT(*) as count")
+    //         ->groupBy('date')
+    //         ->orderBy('date')
+    //         ->get()
+    //         ->pluck('count', 'date')
+    //         ->toArray();
+    
+    //     // Prepare a date range with zero counts for missing dates
+    //     $allDates = [];
+    //     $currentDate = $startDate->copy();
+    
+    //     if ($groupBy === 'day') {
+    //         // Loop through the days and label with short day names (Mon, Tue, etc.)
+    //         while ($currentDate->lte($endDate)) {
+    //             $dayOfWeek = $currentDate->format('D'); // Get the short form of day (Mon, Tue, Wed...)
+    //             $allDates[$dayOfWeek] = $data[$currentDate->format('Y-m-d')] ?? 0;
+    //             $currentDate->addDay();
+    //         }
+    //     } elseif ($groupBy === 'week') {
+    //         // Group by weeks and label as w1, w2, w3, etc.
+    //         $weekCount = 1; // Initialize week count as 1
+    //         while ($currentDate->lte($endDate)) {
+    //             $weekLabel = 'w' . $weekCount; // Format week as w1, w2, w3, etc.
+    //             $allDates[$weekLabel] = 0; // Initialize with 0
+    //             $currentDate->addWeek(); // Move to next week
+    //             $weekCount++; // Increment week count
+    //         }
+    
+    //         // Add counts from data to the correct week labels
+    //         foreach ($data as $date => $count) {
+    //             // Calculate the week number of the current date
+    //             $weekNumber = now()->create($date)->weekOfYear - now()->subWeeks(3)->startOfWeek()->weekOfYear + 1;
+    //             $weekLabel = 'w' . $weekNumber; // Format week as w1, w2, etc.
+    //             $allDates[$weekLabel] = ($allDates[$weekLabel] ?? 0) + $count;
+    //         }
+    //     } elseif ($groupBy === 'month') {
+    //         // Group by months and return month names (Jan, Feb, Mar, etc.)
+    //         while ($currentDate->lte($endDate)) {
+    //             $monthName = $currentDate->format('F'); // Get the full month name (January, February, etc.)
+    //             $allDates[$monthName] = 0; // Initialize with 0
+    //             $currentDate->addMonth();
+    //         }
+            
+    //         // Add counts from data to the correct month labels
+    //         foreach ($data as $date => $count) {
+    //             $monthName = now()->create($date)->format('F'); // Get the month name
+    //             $allDates[$monthName] = ($allDates[$monthName] ?? 0) + $count;
+    //         }
+    //     }
+    
+    //     return $allDates;
+    // }
+
     public function getFilteredData($model, $filter)
     {
         $query = $model->query();
         $groupBy = 'day';
         $startDate = now();
         $endDate = now();
-    
+
         // Determine the start and end date based on the filter
         switch ($filter) {
             case '7d':
-                $startDate = now()->subDays(6); // Start from 6 days ago to include today
+                $startDate = now()->subDays(6)->startOfDay();
+                $endDate = now()->endOfDay();
                 $groupBy = 'day';
                 break;
             case '4w':
-                $startDate = now()->subWeeks(3)->startOfWeek(); // Start 3 weeks ago, including this week
+                $startDate = now()->subWeeks(3)->startOfWeek();
+                $endDate = now()->endOfDay();
                 $groupBy = 'week';
                 break;
             case '3m':
-                $startDate = now()->subMonths(2)->startOfMonth(); // Start 2 months ago, including this month
+                $startDate = now()->subMonths(2)->startOfMonth();
+                $endDate = now()->endOfDay();
                 $groupBy = 'month';
                 break;
             case '6m':
-                $startDate = now()->subMonths(5)->startOfMonth(); // Start 5 months ago
+                $startDate = now()->subMonths(5)->startOfMonth();
+                $endDate = now()->endOfDay();
                 $groupBy = 'month';
                 break;
             case '1y':
-                $startDate = now()->subYear()->startOfMonth()->addMonth(); // Start from Dec last year
+                $startDate = now()->subYear()->startOfYear();
+                $endDate = now()->endOfDay();
                 $groupBy = 'month';
                 break;
             default:
-                $startDate = now()->subDays(6);
+                $startDate = now()->subDays(6)->startOfDay();
+                $endDate = now()->endOfDay();
                 $groupBy = 'day';
         }
-    
+
         // Fetch data from the model
         $data = $query->whereBetween('created_at', [$startDate, $endDate])
             ->selectRaw("DATE_FORMAT(created_at, '%Y-%m-%d') as date, COUNT(*) as count")
@@ -55,11 +150,11 @@ class ChartController extends Controller
             ->get()
             ->pluck('count', 'date')
             ->toArray();
-    
+
         // Prepare a date range with zero counts for missing dates
         $allDates = [];
         $currentDate = $startDate->copy();
-    
+
         if ($groupBy === 'day') {
             // Loop through the days and label with short day names (Mon, Tue, etc.)
             while ($currentDate->lte($endDate)) {
@@ -70,35 +165,37 @@ class ChartController extends Controller
         } elseif ($groupBy === 'week') {
             // Group by weeks and label as w1, w2, w3, etc.
             $weekCount = 1; // Initialize week count as 1
-            while ($currentDate->lte($endDate)) {
-                $weekLabel = 'w' . $weekCount; // Format week as w1, w2, w3, etc.
-                $allDates[$weekLabel] = 0; // Initialize with 0
-                $currentDate->addWeek(); // Move to next week
-                $weekCount++; // Increment week count
+            $currentWeekStart = $startDate->copy()->startOfWeek();
+            while ($currentWeekStart->lte($endDate)) {
+                $weekLabel = 'w' . $weekCount;
+                $allDates[$weekLabel] = 0;
+                $currentWeekStart->addWeek();
+                $weekCount++;
             }
-    
+
             // Add counts from data to the correct week labels
             foreach ($data as $date => $count) {
-                // Calculate the week number of the current date
-                $weekNumber = now()->create($date)->weekOfYear - now()->subWeeks(3)->startOfWeek()->weekOfYear + 1;
-                $weekLabel = 'w' . $weekNumber; // Format week as w1, w2, etc.
-                $allDates[$weekLabel] = ($allDates[$weekLabel] ?? 0) + $count;
+                $date = Carbon::createFromFormat('Y-m-d', $date);
+                $weekNumber = $date->diffInWeeks($startDate->startOfWeek()) + 1;
+                $weekLabel = 'w' . $weekNumber;
+                $allDates[$weekLabel] += $count;
             }
         } elseif ($groupBy === 'month') {
             // Group by months and return month names (Jan, Feb, Mar, etc.)
+            $currentDate = $startDate->copy()->startOfMonth();
             while ($currentDate->lte($endDate)) {
-                $monthName = $currentDate->format('F'); // Get the full month name (January, February, etc.)
-                $allDates[$monthName] = 0; // Initialize with 0
+                $monthName = $currentDate->format('F');
+                $allDates[$monthName] = 0;
                 $currentDate->addMonth();
             }
-            
+
             // Add counts from data to the correct month labels
             foreach ($data as $date => $count) {
-                $monthName = now()->create($date)->format('F'); // Get the month name
-                $allDates[$monthName] = ($allDates[$monthName] ?? 0) + $count;
+                $monthName = Carbon::createFromFormat('Y-m-d', $date)->format('F');
+                $allDates[$monthName] += $count;
             }
         }
-    
+
         return $allDates;
     }
 
@@ -130,14 +227,6 @@ class ChartController extends Controller
         $data = $this->getFilteredData(new ServiceRequest, $filter);
         return get_success_response($data);
     }
-
-    // public function suppliers_items_sold()
-    // {
-    //     $filter = request()->get('filter', '7d');
-    //     $query = Order::where('seller_id', auth()->id());
-    //     $data = $this->getFilteredData($query, $filter);
-    //     return get_success_response($data);
-    // }
     
     public function suppliers_items_sold()
     {
@@ -202,24 +291,6 @@ class ChartController extends Controller
         ]);
     }
 
-    // public function service_request_counts()
-    // {
-    //     $query = ServiceRequest::where(function ($q) {
-    //         $q->where('user_id', auth()->id())
-    //             ->orWhere('approved_providers_id', auth()->id())
-    //             ->orWhere('approved_artisan_id', auth()->id());
-    //     });
-
-    //     // Count for service requests where the logged-in user is associated
-    //     $totalServiceRequests = $query->count();
-    //     $completedServiceRequests = $query->where('request_status', 'Completed')->count();
-
-    //     return get_success_response([
-    //         'total_service_requests' => $totalServiceRequests,
-    //         'completed_service_requests' => $completedServiceRequests,
-    //     ]);
-    // }
-    
     public function service_request_counts()
     {
         $query = ServiceRequest::where('_account_type', active_role())->where(function ($q) {
