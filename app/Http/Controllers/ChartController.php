@@ -9,7 +9,7 @@ use App\Models\ServiceRequest;
 use App\Models\WalletTransaction;
 use Illuminate\Http\Request;
 use Towoju5\Wallet\Models\Wallet;
-use Carbon;
+use Carbon\Carbon;
 
 class ChartController extends Controller
 {
