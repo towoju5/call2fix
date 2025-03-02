@@ -72,7 +72,7 @@ Route::middleware(['api'])->domain(env('API_URL'))->prefix('v1')->group(function
             Route::post('{walletType}/withdraw', [WalletController::class, 'withdraw']);
             Route::post('transfer', [WalletController::class, 'transfer']);
             Route::post('new', [WalletController::class, 'addNewWallet']);
-            Route::pogetst('withdrawal-data', [WalletController::class, 'withdrawalData']);
+            Route::pogetst('{walletType}/withdrawal-data', [WalletController::class, 'withdrawalData']);
             Route::get('{walletType}/transactions', [WalletController::class, 'transactions']);
         });
 
