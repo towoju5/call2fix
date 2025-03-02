@@ -474,7 +474,7 @@ class WalletController extends Controller
                     "type" => "withdrawal",
                     "_account_type" => $user->current_role
                 ])
-                ->whereBetween('created_at', [$currentMonthStart, $currentMonthEnd])
+                // ->whereBetween('created_at', [$currentMonthStart, $currentMonthEnd])
                 ->sum('amount');
             
             $total_earned_current_month = $wallet->transactions()
