@@ -508,7 +508,7 @@ class WalletController extends Controller
     
             // Calculate percentage difference
             if ($total_payout_previous_month > 0) {
-                $percentage_difference = (($total_payout_current_month - $total_payout) / $total_payout) * 100;
+                $percentage_difference = (($total_payout_current_month->sum('amount') - $total_payout->sum('amount')) / $total_payout->sum('amount')) * 100;
             } else {
                 $percentage_difference = $total_payout_current_month > 0 ? 100 : 0; // 100% increase if previous was 0, otherwise 0%
             }
