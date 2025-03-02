@@ -476,6 +476,14 @@ class WalletController extends Controller
                 ])
                 ->whereBetween('created_at', [$currentMonthStart, $currentMonthEnd])
                 ->sum('amount');
+            
+            $total_earned_current_month = $wallet->transactions()
+                ->where([
+                    "type" => "deposit",
+                    "_account_type" => $user->current_role
+                ])
+                ->whereBetween('created_at', [$currentMonthStart, $currentMonthEnd])
+                ->sum('amount');
     
             // Total payout for previous month
             $total_payout_previous_month = $wallet->transactions()
@@ -494,6 +502,7 @@ class WalletController extends Controller
             }
     
             $transactions = [
+                "total_income" => $total_earned_current_month,
                 "total_payout_current_month" => $total_payout_current_month,
                 "total_payout_previous_month" => $total_payout_previous_month,
                 "percentage_difference" => round($percentage_difference, 2) // Rounded to 2 decimal places
