@@ -453,4 +453,59 @@ class WalletController extends Controller
     
         return json_decode($response, true);
     }
+
+    public function withdrawalData($walletType)
+    {
+        try {
+            $user = auth()->user();
+            $wallet = $user->getWallet($walletType);
+    
+            // Total payout
+            $total_payout = $wallet->transactions()
+                ->where([
+                    "type" => "withdrawal",
+                    "_account_type" => $user->current_role
+                ])
+                ->sum('amount');
+    
+            // Total payin
+            $total_payin = $wallet->transactions()
+                ->where([
+                    "type" => "deposit",
+                    "_account_type" => $user->current_role
+                ])
+                ->sum('amount');
+    
+            // 7-day total payout sum
+            $seven_days_ago = now()->subDays(7);
+
+            $total_payout_last_7_days = $wallet->transactions()
+                ->where([
+                    "type" => "withdrawal",
+                    "_account_type" => $user->current_role
+                ])
+                ->whereBetween('created_at', [$seven_days_ago, now()])
+                ->sum('amount');
+            
+            $month_ago = $wallet->transactions()
+                ->where([
+                    "type" => "withdrawal",
+                    "_account_type" => $user->current_role
+                ])
+                ->whereBetween('created_at', [now()->subDays(30), now()])
+                ->sum('amount');
+    
+            $transactions = [
+                "total_payin" => $total_payin,
+                "total_payout" => $total_payout,
+                "total_payout_last_7_days" => $total_payout_last_7_days,
+                "a_month_ago" => $month_ago
+            ];
+    
+            return get_success_response($transactions, 'Transactions retrieved successfully');
+        } catch (\Throwable $th) {
+            return get_error_response('Something went wrong', 500);
+        }
+    }
+    
 }
