@@ -482,7 +482,7 @@ class WalletController extends Controller
                     "type" => "earned",
                     "_account_type" => $user->current_role
                 ])
-                ->whereBetween('created_at', [$currentMonthStart, $currentMonthEnd])
+                // ->whereBetween('created_at', [$currentMonthStart, $currentMonthEnd])
                 ->sum('amount');
     
             // Total payout for previous month
