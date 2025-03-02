@@ -469,42 +469,63 @@ class WalletController extends Controller
             $previousMonthEnd = now()->subMonth()->endOfMonth();
     
             // Total payout for current month
+            $total_payout = $wallet->transactions()
+                ->where([
+                    "type" => "withdrawal",
+                    "_account_type" => $user->current_role
+                ]);
+                
+                
             $total_payout_current_month = $wallet->transactions()
                 ->where([
                     "type" => "withdrawal",
                     "_account_type" => $user->current_role
                 ])
-                // ->whereBetween('created_at', [$currentMonthStart, $currentMonthEnd])
-                ->sum('amount');
+                ->whereBetween('created_at', [$currentMonthStart, $currentMonthEnd]);
             
+            $total_deposit = $wallet->transactions()
+                ->where([
+                    "type" => "deposit",
+                    "_account_type" => $user->current_role
+                ]);
+    
+
             $total_earned_current_month = $wallet->transactions()
                 ->where([
                     "type" => "deposit",
                     "_account_type" => $user->current_role
                 ])
-                // ->whereBetween('created_at', [$currentMonthStart, $currentMonthEnd])
-                ->sum('amount');
+                ->whereBetween('created_at', [$currentMonthStart, $currentMonthEnd]);
     
+
             // Total payout for previous month
             $total_payout_previous_month = $wallet->transactions()
                 ->where([
                     "type" => "withdrawal",
                     "_account_type" => $user->current_role
                 ])
-                ->whereBetween('created_at', [$previousMonthStart, $previousMonthEnd])
-                ->sum('amount');
+                ->whereBetween('created_at', [$previousMonthStart, $previousMonthEnd]);
     
             // Calculate percentage difference
             if ($total_payout_previous_month > 0) {
-                $percentage_difference = (($total_payout_current_month - $total_payout_previous_month) / $total_payout_previous_month) * 100;
+                $percentage_difference = (($total_payout_current_month - $total_payout) / $total_payout) * 100;
             } else {
                 $percentage_difference = $total_payout_current_month > 0 ? 100 : 0; // 100% increase if previous was 0, otherwise 0%
             }
     
             $transactions = [
-                "total_income" => $total_earned_current_month,
-                "total_payout_current_month" => $total_payout_current_month,
-                "total_payout_previous_month" => $total_payout_previous_month,
+                "total_payout" => $total_payout->sum('amount'),
+                "total_payout_current_month" => $total_payout_current_month->sum('amount'),
+                "total_deposit" => $total_deposit->sum('amount'),
+                "total_earned_current_month" => $total_earned_current_month->sum('amount'),
+                "total_payout_previous_month" => $total_payout_previous_month->sum('amount'),
+
+                "count_total_payout" => $total_payout->count(),
+                "count_total_payout_current_month" => $total_payout_current_month->count(),
+                "count_total_deposit" => $total_deposit->count(),
+                "count_total_earned_current_month" => $total_earned_current_month->count(),
+                "count_total_payout_previous_month" => $total_payout_previous_month->count(),
+
                 "percentage_difference" => round($percentage_difference, 2) // Rounded to 2 decimal places
             ];
     
