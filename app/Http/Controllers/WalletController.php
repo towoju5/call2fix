@@ -479,7 +479,7 @@ class WalletController extends Controller
             
             $total_earned_current_month = $wallet->transactions()
                 ->where([
-                    "type" => "deposit",
+                    "type" => "earned",
                     "_account_type" => $user->current_role
                 ])
                 ->whereBetween('created_at', [$currentMonthStart, $currentMonthEnd])
