@@ -81,7 +81,7 @@ class WalletController extends Controller
                     return get_error_response(['error' => "Payment initialization failed: " . ($response['message'] ?? "Unknown error")]);
             }
         } catch (\Throwable $th) {
-            return get_error_response($th->getMessage(), ['error' => $th->getMessage()."_Test_mode"]);
+            return get_error_response($th->getMessage(), ['error' => $th->getMessage().]);
         }
     }
 
@@ -371,7 +371,7 @@ class WalletController extends Controller
         $paystack_secret_key = get_settings_value('paystack_secret_key', 'sk_test_390011d63d233cad6838504b657721883bc096ec');
     
         $url = 'https://api.paystack.co/transaction/initialize';
-        $user_country = auth()->user()->country->currency_code;
+        $user_country = auth()->user()->country->currency_code ?? 'NGN';
 
         $fields = [
             'email' => auth()->user()->email,
