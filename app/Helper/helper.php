@@ -127,10 +127,13 @@ if (!function_exists('getGoogleAccessToken')) {
 if (!function_exists('fcm')) {
     function fcm($title, $body, string $deviceId = null, $data = [])
     {
-    $firebase = new FirebaseService();
-    $response = $firebase->sendNotification($title, $body, $deviceId, $data);
-    \Log::info("FCM response", ['response' => $response]);
-    return $response;
+        $user = auth()->user();
+        if(isset($user->fcm_notification) && $user->fcm_notification == true) {
+            $firebase = new FirebaseService();
+            $response = $firebase->sendNotification($title, $body, $deviceId, $data);
+            \Log::info("FCM response", ['response' => $response]);
+            return $response;
+        }
     }
 }
 

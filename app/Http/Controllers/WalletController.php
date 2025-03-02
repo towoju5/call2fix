@@ -81,7 +81,7 @@ class WalletController extends Controller
                     return get_error_response(['error' => "Payment initialization failed: " . ($response['message'] ?? "Unknown error")]);
             }
         } catch (\Throwable $th) {
-            return get_error_response($th->getMessage(), ['error' => $th->getMessage()]);
+            return get_error_response($th->getMessage(), ['error' => $th->getMessage()."_Test_mode"]);
         }
     }
 
