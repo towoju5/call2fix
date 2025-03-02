@@ -460,46 +460,43 @@ class WalletController extends Controller
             $user = auth()->user();
             $wallet = $user->getWallet($walletType);
     
-            // Total payout
-            $total_payout = $wallet->transactions()
+            // Get current month start and end date
+            $currentMonthStart = now()->startOfMonth();
+            $currentMonthEnd = now()->endOfMonth();
+    
+            // Get previous month start and end date
+            $previousMonthStart = now()->subMonth()->startOfMonth();
+            $previousMonthEnd = now()->subMonth()->endOfMonth();
+    
+            // Total payout for current month
+            $total_payout_current_month = $wallet->transactions()
                 ->where([
                     "type" => "withdrawal",
                     "_account_type" => $user->current_role
                 ])
+                ->whereBetween('created_at', [$currentMonthStart, $currentMonthEnd])
                 ->sum('amount');
     
-            // Total payin
-            $total_payin = $wallet->transactions()
+            // Total payout for previous month
+            $total_payout_previous_month = $wallet->transactions()
                 ->where([
-                    "type" => "deposit",
+                    "type" => "withdrawal",
                     "_account_type" => $user->current_role
                 ])
+                ->whereBetween('created_at', [$previousMonthStart, $previousMonthEnd])
                 ->sum('amount');
     
-            // 7-day total payout sum
-            $seven_days_ago = now()->subDays(7);
-
-            $total_payout_last_7_days = $wallet->transactions()
-                ->where([
-                    "type" => "withdrawal",
-                    "_account_type" => $user->current_role
-                ])
-                ->whereBetween('created_at', [$seven_days_ago, now()])
-                ->sum('amount');
-            
-            $month_ago = $wallet->transactions()
-                ->where([
-                    "type" => "withdrawal",
-                    "_account_type" => $user->current_role
-                ])
-                ->whereBetween('created_at', [now()->subDays(30), now()])
-                ->sum('amount');
+            // Calculate percentage difference
+            if ($total_payout_previous_month > 0) {
+                $percentage_difference = (($total_payout_current_month - $total_payout_previous_month) / $total_payout_previous_month) * 100;
+            } else {
+                $percentage_difference = $total_payout_current_month > 0 ? 100 : 0; // 100% increase if previous was 0, otherwise 0%
+            }
     
             $transactions = [
-                "total_payin" => $total_payin,
-                "total_payout" => $total_payout,
-                "total_payout_last_7_days" => $total_payout_last_7_days,
-                "a_month_ago" => $month_ago
+                "total_payout_current_month" => $total_payout_current_month,
+                "total_payout_previous_month" => $total_payout_previous_month,
+                "percentage_difference" => round($percentage_difference, 2) // Rounded to 2 decimal places
             ];
     
             return get_success_response($transactions, 'Transactions retrieved successfully');
