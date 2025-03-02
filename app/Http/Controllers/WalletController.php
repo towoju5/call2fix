@@ -453,83 +453,62 @@ class WalletController extends Controller
     
         return json_decode($response, true);
     }
-
+    
     public function withdrawalData($walletType)
     {
         try {
             $user = auth()->user();
             $wallet = $user->getWallet($walletType);
     
-            // Get current month start and end date
+            // Get date ranges
             $currentMonthStart = now()->startOfMonth();
             $currentMonthEnd = now()->endOfMonth();
-    
-            // Get previous month start and end date
             $previousMonthStart = now()->subMonth()->startOfMonth();
             $previousMonthEnd = now()->subMonth()->endOfMonth();
     
-            // Total payout for current month
-            $total_payout = $wallet->transactions()
-                ->where([
-                    "type" => "withdrawal",
-                    "_account_type" => $user->current_role
-                ]);
-                
-                
-            $total_payout_current_month = $wallet->transactions()
-                ->where([
-                    "type" => "withdrawal",
-                    "_account_type" => $user->current_role
-                ])
-                ->whereBetween('created_at', [$currentMonthStart, $currentMonthEnd]);
-            
-            $total_deposit = $wallet->transactions()
-                ->where([
-                    "type" => "deposit",
-                    "_account_type" => $user->current_role
-                ]);
+            // Fetch all relevant transactions at once
+            $transactions = $wallet->transactions()
+                ->whereIn('type', ['withdrawal', 'deposit'])
+                ->where('_account_type', $user->current_role)
+                ->whereBetween('created_at', [$previousMonthStart, $currentMonthEnd])
+                ->get();
     
-
-            $total_earned_current_month = $wallet->transactions()
-                ->where([
-                    "type" => "deposit",
-                    "_account_type" => $user->current_role
-                ])
-                ->whereBetween('created_at', [$currentMonthStart, $currentMonthEnd]);
+            // Group transactions
+            $total_payout = $transactions->where('type', 'withdrawal');
+            $total_payout_current_month = $total_payout->whereBetween('created_at', [$currentMonthStart, $currentMonthEnd]);
+            $total_payout_previous_month = $total_payout->whereBetween('created_at', [$previousMonthStart, $previousMonthEnd]);
     
-
-            // Total payout for previous month
-            $total_payout_previous_month = $wallet->transactions()
-                ->where([
-                    "type" => "withdrawal",
-                    "_account_type" => $user->current_role
-                ])
-                ->whereBetween('created_at', [$previousMonthStart, $previousMonthEnd]);
+            $total_deposit = $transactions->where('type', 'deposit');
+            $total_earned_current_month = $total_deposit->whereBetween('created_at', [$currentMonthStart, $currentMonthEnd]);
     
-            // Calculate percentage difference
-            if ($total_payout_previous_month > 0) {
-                $percentage_difference = (($total_payout_current_month->sum('amount') - $total_payout->sum('amount')) / $total_payout->sum('amount')) * 100;
-            } else {
-                $percentage_difference = $total_payout_current_month > 0 ? 100 : 0; // 100% increase if previous was 0, otherwise 0%
-            }
+            // Calculate total amounts
+            $sum_total_payout = $total_payout->sum('amount');
+            $sum_total_payout_current_month = $total_payout_current_month->sum('amount');
+            $sum_total_payout_previous_month = $total_payout_previous_month->sum('amount');
     
-            $transactions = [
-                "total_payout" => $total_payout->sum('amount'),
-                "total_payout_current_month" => $total_payout_current_month->sum('amount'),
+            // Calculate percentage difference safely
+            $percentage_difference = $sum_total_payout_previous_month > 0
+                ? (($sum_total_payout_current_month - $sum_total_payout_previous_month) / $sum_total_payout_previous_month) * 100
+                : ($sum_total_payout_current_month > 0 ? 100 : 0);
+    
+            // Build response
+            $response = [
+                "total_payout" => $sum_total_payout,
+                "total_payout_current_month" => $sum_total_payout_current_month,
                 "total_deposit" => $total_deposit->sum('amount'),
                 "total_earned_current_month" => $total_earned_current_month->sum('amount'),
-                "total_payout_previous_month" => $total_payout_previous_month->sum('amount'),
-
+                "total_payout_previous_month" => $sum_total_payout_previous_month,
+    
                 "count_total_payout" => $total_payout->count(),
                 "count_total_payout_current_month" => $total_payout_current_month->count(),
                 "count_total_deposit" => $total_deposit->count(),
                 "count_total_earned_current_month" => $total_earned_current_month->count(),
                 "count_total_payout_previous_month" => $total_payout_previous_month->count(),
-
-                "percentage_difference" => round($percentage_difference, 2) // Rounded to 2 decimal places
+    
+                "percentage_difference" => round($percentage_difference, 2)
             ];
     
-            return get_success_response($transactions, 'Transactions retrieved successfully');
+            return get_success_response($response, 'Transactions retrieved successfully');
         } catch (\Throwable $th) {
             return get_error_response('Something went wrong', ['error' => $th->getMessage()], 500);
         }
