@@ -531,7 +531,7 @@ class WalletController extends Controller
     
             return get_success_response($transactions, 'Transactions retrieved successfully');
         } catch (\Throwable $th) {
-            return get_error_response('Something went wrong', 500);
+            return get_error_response('Something went wrong', ['error' => $th->getMessage], 500);
         }
     }
     
