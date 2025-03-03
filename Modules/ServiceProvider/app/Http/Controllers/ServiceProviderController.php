@@ -505,6 +505,12 @@ class ServiceProviderController extends Controller
             }
 
             if ($artisan = ArtisanCanSubmitQuote::create($validate->validated())) {
+                $service_request = ServiceRequest::whereId($request->request_id)->first();
+                if($service_request) {
+                    $service_request->update([
+                        "approved_artisan_id" => $request->artisan_id
+                    ]);
+                }
                 return get_success_response($artisan, "Artisan invited successfully");
             }
 
