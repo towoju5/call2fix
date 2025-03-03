@@ -20,6 +20,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Towoju5\Wallet\Models\Wallet;
 use App\Notifications\ServiceRequest\ServiceRequestSuccessful;
+use App\Notifications\ServiceRequest\ServiceRequestNegotiated;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
@@ -360,6 +361,14 @@ class ServiceRequestController extends Controller
             $service_request = ServiceRequest::whereId($requestId)->with('user')->first();
             $service_requester = $service_request->user;
 
+    
+            // Check if 'read_by' column exists, if not, add it (This should be done in a migration)
+            if (!Schema::hasColumn('submitted_quotes', 'status')) {
+                Schema::table('submitted_quotes', function (Blueprint $table) {
+                    $table->string('status')->nullable();
+                });
+            }
+            
             $requests->each(function ($request) use ($quoteId) {
                 $request->status = ($request->id == $quoteId) ? "accepted" : "rejected";
                 $request->save();
@@ -462,6 +471,14 @@ class ServiceRequestController extends Controller
                 'status' => 'pending'
             ]);
 
+            $serviceRequest = ServiceRequest::whereId($requestId)->first();
+            if($serviceRequest) {
+                $user = User::whereId($serviceRequest->user_id)->first();
+                if($user) {
+                    // $user->notify(new ServiceRequestNegotiated($serviceRequest));
+                }
+            }
+
             return get_success_response($negotiation, "Price negotiation submitted successfully");
         } catch (\Throwable $th) {
             return get_error_response($th->getMessage(), ["error" => $th->getMessage()]);
@@ -531,17 +548,6 @@ class ServiceRequestController extends Controller
                     DB::rollBack();
                     return get_error_response("Provider or Customer not found", ["error" => "User not found"], 404);
                 }
-
-                // Process the customer's wallet
-                // $customer_wallet = $customer->getWallet('ngn');
-                // if ($customer_wallet) {
-                //     try {
-                //         $customer_wallet->withdrawal($negotiation->price, ["description" => "Payment for service request."]);
-                //     } catch (\Throwable $th) {
-                //         DB::rollBack();
-                //         return get_error_response($th->getMessage(), ["error" => $th->getMessage()]);
-                //     }
-                // }
 
                 // Retrieve the service request
                 $serviceRequest = ServiceRequestModel::findOrFail($negotiation->request_id);
