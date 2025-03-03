@@ -491,6 +491,14 @@ class ServiceProviderController extends Controller
                 "service_provider_id" => "required|exists:users,id"
             ]);
 
+            $checkExists =  ArtisanCanSubmitQuote::where([
+                "request_id" => $request->request_id,
+                "artisan_id" => $request->artisan_id,
+            ])->exists();
+
+            if($checkExists) {
+                return get_error_response("An Artisan has already been added to this project", ['error' => "An Artisan has already been added to this project"]);
+            }
 
             if ($validate->fails()) {
                 return get_error_response("Validation Error", $validate->errors()->toArray());
