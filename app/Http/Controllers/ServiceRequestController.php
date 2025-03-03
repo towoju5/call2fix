@@ -387,7 +387,7 @@ class ServiceRequestController extends Controller
                     $service_request->approved_providers_id = $acceptedRequest->provider_id;
                     $service_request->approved_artisan_id = $artisan->artisan_id ?? null;
 
-                    if ($service_request->save() && $service_requester->withdraw($acceptedRequest->total_charges) && $service_request->save()) {
+                    if ($service_request->save()) {
                         // $service_request->save();
                         return get_success_response($acceptedRequest, "Request approved successfully");
                     }
