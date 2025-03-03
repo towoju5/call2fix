@@ -25,7 +25,7 @@ class EventsController extends Controller
             $activity = ApiLog::where('user_id', auth()->id())->whereId($eventId)->latest()->first();
 
             if(!$activity) {
-                return get_error_response($th->getMessage(), ['error' => 'Event not found'], 404);
+                return get_error_response("Event not found", ['error' => 'Event not found'], 404);
             }
     
             return get_success_response($activity);
