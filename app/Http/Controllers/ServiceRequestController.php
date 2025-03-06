@@ -256,11 +256,11 @@ class ServiceRequestController extends Controller
     public function updateStatus(Request $request, $requestId)
     {
         try {
-            // if (!Schema::hasColumn('service_requests', 'request_status')) {
+            if (!Schema::hasColumn('service_requests', 'request_status')) {
                 Schema::table('service_requests', function (Blueprint $table) {
                     $table->string('request_status')->change();
                 });
-            // }
+            }
             // Fetch the service request with auth checks
             $authId = auth()->id();
             $serviceRequest = ServiceRequestModel::whereId($requestId)->first();
@@ -665,10 +665,14 @@ class ServiceRequestController extends Controller
         return $enumValues;
     }
 
-    public function makePayment($requestId, $walletType = 'ngn')
+    public function makePayment(Request $request, $requestId, $walletType = 'ngn')
     {
         try {
             // retrieved the service request firstly
+            $request->validate([
+                "artisan_id" => "required"
+            ]);
+
             $serviceRequest = ServiceRequestModel::whereId($requestId)->first();
             if (!$serviceRequest) {
                 return get_error_response("Service request not found", ["error" => "Service request not found"], 404);
@@ -690,6 +694,7 @@ class ServiceRequestController extends Controller
 
             if ($transaction && $wallet) {
                 $serviceRequest->update([
+                    "approved_artisan_id" => $request->artisan_id,
                     "request_status" => "Payment Confirmed"
                 ]);
                 // return success data with the transaction and service request data
