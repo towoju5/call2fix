@@ -15,6 +15,9 @@ use Illuminate\Http\Response;
 use Modules\Artisan\Models\ArtisanQuotes;
 use Validator;
 use Carbon\Carbon;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
 
 class ArtisanController extends Controller
 {
@@ -106,8 +109,14 @@ class ArtisanController extends Controller
                 // Calculate final total charges (total fee + VAT)
                 $total_charges = $total_fee + $service_vat;
                 
-                // Process quote submission 
+            
+                if (!Schema::hasColumn('artisan_quotes', 'old_price')) {
+                    Schema::table('artisan_quotes', function (Blueprint $table) {
+                        $table->string('old_price')->nullable();
+                    });
+                }
 
+                // Process quote submission 
                 $createQuote = ArtisanQuotes::updateOrCreate(
                     [
                         "artisan_id" => auth()->id(),
@@ -126,7 +135,8 @@ class ArtisanController extends Controller
                         "administrative_fee" => get_settings_value('administrative_fee'),
                         "service_vat" => $service_vat,
                         "items" => $request->items,
-                        "total_charges" => $total_charges,
+                        "old_price" => $request->total_charges ?? $total_charges,
+                        "total_charges" => $request->total_charges ?? $total_charges,
                     ]
                 );
 

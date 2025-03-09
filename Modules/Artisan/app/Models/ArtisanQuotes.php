@@ -28,6 +28,7 @@ class ArtisanQuotes extends Model
         "administrative_fee",
         "total_charges",
         "service_vat",
+        "old_price",
         "request_status"
     ];
 

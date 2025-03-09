@@ -17,6 +17,9 @@ use Modules\Artisan\Models\ArtisanQuotes;
 use Modules\ServiceProvider\Models\ServiceLocations;
 use Validator;
 use App\Notifications\NewArtisanAddedNotification;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
 
 class ServiceProviderController extends Controller
 {
@@ -320,8 +323,16 @@ class ServiceProviderController extends Controller
                 }
                 $service_vat += $items_total * 0.075;
             }
+                
+            
+            if (!Schema::hasColumn('submitted_quotes', 'old_price')) {
+                Schema::table('submitted_quotes', function (Blueprint $table) {
+                    $table->string('old_price')->nullable();
+                });
+            }
 
             // Process quote submission 
+            $items_total = $request->total_charges ?? $items_total;
             $createQuote = SubmittedQuotes::updateOrCreate(
                 [
                     "provider_id" => auth()->id(),
@@ -338,7 +349,8 @@ class ServiceProviderController extends Controller
                     "administrative_fee" => get_settings_value('administrative_fee', 500),
                     "service_vat" => $service_vat,
                     "items" => $request->items,
-                    "total_charges" => $request->workmanship + $items_total + get_settings_value('administrative_fee') + $service_vat,
+                    "old_price" => $request->total_charges ?? $request->workmanship + $items_total + get_settings_value('administrative_fee') + $service_vat,
+                    "total_charges" => $request->total_charges ?? $request->workmanship + $items_total + get_settings_value('administrative_fee') + $service_vat,
                 ]
             );
 

@@ -26,6 +26,7 @@ class SubmittedQuotes extends BaseModel
         "administrative_fee",
         "service_vat",
         "attachments",
+        "old_price",
         "total_charges",
         "quote_status",
         "artisan_id" // artisan working on the project
