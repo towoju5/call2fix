@@ -70,7 +70,7 @@ class User extends Authenticatable
         'password_reset_code',
         'virtual_account_number',
         'virtual_bank_name',
-        'parent_account_id',
+        // 'parent_account_id',
         // 'deleted_at'
     ];
 

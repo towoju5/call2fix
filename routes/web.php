@@ -25,6 +25,12 @@ use Spatie\Permission\Models\Role;
 
 
 Route::get('/', function () {
+	$user = User::whereEmail('daviolukay@gmail.com')->first();
+	if($user){
+			$sub = User::where('parent_account_id', $user->id)->get();
+			return response()->json(['user' => $user, 'sub' => $sub]);
+	}
+
 	return view('welcome');
 });
 
