@@ -15,11 +15,19 @@ class PropertyController extends Controller
     {
         try {
             $user = auth()->user();
-            $properties = Property::whereUserId(auth()->id());
-            if(!($user->parent_account_id)) {
-                $properties = $properties->orWhere('user_id', $user->parent_account_id)->first();
+            $query = Property::whereUserId(auth()->id());
+    
+            // Check if user has a parent account
+            if ($user->parent_account_id) {
+                $query->orWhere(function ($q) use ($user) {
+                    $q->where('main_account_role', 'private_accounts')
+                      ->where('user_id', $user->parent_account_id);
+                });
             }
-            return get_success_response($properties->latest()->get(););
+    
+            $properties = $query->latest()->get();
+    
+            return get_success_response($properties);
         } catch (\Exception $e) {
             return get_error_response($e->getMessage(), ['error' => $e->getMessage()]);
         }
