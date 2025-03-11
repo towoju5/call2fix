@@ -14,8 +14,12 @@ class PropertyController extends Controller
     public function index()
     {
         try {
-            $properties = Property::whereUserId(auth()->id())->latest()->get();
-            return get_success_response($properties);
+            $user = auth()->user();
+            $properties = Property::whereUserId(auth()->id());
+            if(!($user->parent_account_id)) {
+                $properties = $properties->orWhere('user_id', $user->parent_account_id)->first();
+            }
+            return get_success_response($properties->latest()->get(););
         } catch (\Exception $e) {
             return get_error_response($e->getMessage(), ['error' => $e->getMessage()]);
         }
