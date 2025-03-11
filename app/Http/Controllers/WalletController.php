@@ -236,6 +236,10 @@ class WalletController extends Controller
     public function getAllWallets()
     {
         $user = auth()->user();
+        if ($user && !empty($user->parent_account_id) && $user->main_account_role === 'private_accounts') {
+            $user = User::whereId($user->parent_account_id)->first();
+        }
+
         $wallets = $user->my_wallets();
         if ($wallets->isEmpty() || count($wallets) < 1) {
             // generate wallet for user

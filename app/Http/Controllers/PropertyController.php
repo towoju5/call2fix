@@ -23,6 +23,7 @@ class PropertyController extends Controller
                     $q->where('main_account_role', 'private_accounts')
                       ->where('id', $user->parent_account_id);
                 });
+                $query->orWhere('user', $user->parent_account_id);
             }
     
             $properties = $query->latest()->get();
