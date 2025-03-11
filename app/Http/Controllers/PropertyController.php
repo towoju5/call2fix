@@ -19,11 +19,7 @@ class PropertyController extends Controller
     
             // Check if user has a parent account
             if ($user->parent_account_id) {
-                $query->orWhereHas('user', function ($q) use ($user) {
-                    $q->where('main_account_role', 'private_accounts')
-                      ->where('id', $user->parent_account_id);
-                });
-                $query->orWhere('user', $user->parent_account_id);
+                $query->orWhere('user_id', $user->parent_account_id);
             }
     
             $properties = $query->latest()->get();
