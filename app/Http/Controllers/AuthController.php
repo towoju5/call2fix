@@ -362,7 +362,7 @@ class AuthController extends Controller
                 'referred_by' => 'sometimes|string|max:255',
             ]);
 
-            if(!User::whereEamil($request->email)->exists()) {
+            if(!User::whereEmail($request->email)->exists()) {
                 $notRegistered = Validator::make($request->all(), [
                     'account_type' => 'required|string|in:co-operate_accounts,private_accounts,affiliates,providers,suppliers',
                     'country_code' => 'required|string|max:255',
