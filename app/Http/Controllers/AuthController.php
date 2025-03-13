@@ -419,36 +419,54 @@ class AuthController extends Controller
 
             // Proceed with user creation or update
             if (isset($socialData['email'])) {
+                // Prepare update data with only fields that have values
+                $updateData = [
+                    'is_social' => true,
+                ];
+            
+                // Add fields only if they exist in the input
+                if (isset($socialData['picture'])) {
+                    $updateData['profile_picture'] = $socialData['picture'];
+                }
+            
+                if (isset($socialData['first_name'])) {
+                    $updateData['first_name'] = $socialData['first_name'];
+                } else {
+                    $updateData['first_name'] = 'Unknown';
+                }
+            
+                if (isset($socialData['last_name'])) {
+                    $updateData['last_name'] = $socialData['last_name'];
+                } else {
+                    $updateData['last_name'] = 'User';
+                }
+            
+                if ($request->has('country_code')) {
+                    $updateData['country_code'] = str_replace("+", "", $request->country_code);
+                }
+            
+                // Update or create the user
                 $user = User::updateOrCreate([
                     'email' => $socialData['email'],
-                ], [
-                    'email' => $socialData['email'],
-                    'profile_picture' => $socialData['picture'] ?? null,
-                    'first_name' => $socialData['first_name'] ?? 'Unknown',
-                    'last_name' => $socialData['last_name'] ?? 'User',
-                    'is_social' => true,
-                    'country_dialing_code' => str_replace("+", "", $request->country_code),
-                ]);
-
+                ], $updateData);
+            
                 $is_registered = !$user->wasRecentlyCreated;
-
+            
                 // Create token
                 $token = $user->createToken('auth_token')->plainTextToken;
                 $token = explode('|', $token);
-
+            
                 // Handle device ID updates
-                if ($user->device_id !== $request->device_id) {
+                if ($request->has('device_id') && $user->device_id !== $request->device_id) {
                     $user->tokens()->delete(); // Remove old tokens
                     $user->update(['device_id' => $request->device_id]); // Update device ID
                 }
-
+            
                 // Implement referral system if referred_by exists
                 if ($request->has('referred_by')) {
-                    if ($request->has('referred_by')) {
-                        $this->process_referral($user, $request->referred_by, $request->account_type);
-                    }
+                    $this->process_referral($user, $request->referred_by, $request->account_type);
                 }
-
+            
                 return get_success_response([
                     'user' => $user,
                     'token' => $token[1],
