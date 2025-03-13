@@ -14,6 +14,8 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Validator;
 use Jijunair\LaravelReferral\Models\Referral;
 use Towoju5\Wallet\Models\Wallet;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
 
 
 class AuthController extends Controller
@@ -326,7 +328,11 @@ class AuthController extends Controller
     public function updateProfile(Request $request)
     {
         $user = Auth::user();
-
+        if (!Schema::hasColumn('users', 'is_notification_enabled')) {
+            Schema::table('users', function (Blueprint $table) {
+                $table->boolean('is_notification_enabled')->default(true);
+            });
+        }
         // Update all fields except email and phone
         $user->update($request->except(['email', 'phone']));
 
@@ -353,10 +359,18 @@ class AuthController extends Controller
                 'access_token' => 'required|string',
                 'provider' => 'required|string|in:google,apple',
                 'device_id' => 'required|string|max:255',
-                'account_type' => 'required|string|in:co-operate_accounts,private_accounts,affiliates,providers,suppliers',
-                'country_code' => 'required|string|max:255',
                 'referred_by' => 'sometimes|string|max:255',
             ]);
+
+            if(!User::whereEamil($request->email)->exists()) {
+                $notRegistered = Validator::make($request->all(), [
+                    'account_type' => 'required|string|in:co-operate_accounts,private_accounts,affiliates,providers,suppliers',
+                    'country_code' => 'required|string|max:255',
+                ]);
+                if ($notRegistered->fails()) {
+                    return get_error_response(['error' => $notRegistered->errors()->toArray()]);
+                }
+            }
 
             if (in_array($request->account_type, ["providers", "suppliers"])) {
                 $businessValidation = Validator::make($request->all(), [
