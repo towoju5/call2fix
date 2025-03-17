@@ -72,6 +72,7 @@ class AuthController extends Controller
             ]);
 
             if ($validator->fails()) {
+                Log::debug("Validation Error", ['error' => $validator->errors()]);
                 return get_error_response("Validation error", $validator->errors());
             }
 
@@ -196,6 +197,7 @@ class AuthController extends Controller
             ]);
 
             if ($validator->fails()) {
+                Log::debug("Validation Error", ['error' => $validator->errors()]);
                 return get_error_response("Validation error", $validator->errors());
             }
 
