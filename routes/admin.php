@@ -11,6 +11,7 @@ use App\Http\Controllers\Admin\PropertyController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\ServiceAreaController;
 use App\Http\Controllers\Admin\ServiceRequestController;
+use App\Http\Controllers\Admin\ServicesController;
 use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Admin\SubscriptionsController;
 use App\Http\Controllers\AdminController;
@@ -44,6 +45,7 @@ Route::domain(env('ADMIN_URL'))->group(function () {
 
         Route::resource('service_areas', ServiceAreaController::class)->names('service_areas');
         Route::resource('categories', CategoryController::class)->names('categories');
+        Route::resource('services', ServicesController::class)->names('services');
         Route::get('categories/{category}/services', [CategoryController::class, 'showServices'])->name('categories.services');
         Route::resource('users', UsersController::class)->names('users');
         Route::resource('properties', PropertyController::class)->names('properties');

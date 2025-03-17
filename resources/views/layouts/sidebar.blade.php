@@ -144,6 +144,14 @@
             </a>
         </li>
 
+        <!-- Categories -->
+        <li class="menu-item">
+            <a href="{{ route('admin.services.index') }}" class="menu-link">
+                <i class="menu-icon tf-icons ti ti-category"></i>
+                <div data-i18n="Categories">Services</div>
+            </a>
+        </li>
+
         <!-- Orders -->
         <li class="menu-item">
             <a href="javascript:void(0);" class="menu-link menu-toggle">

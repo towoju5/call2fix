@@ -18,7 +18,8 @@ class ServicesController extends Controller
 
         try {
             $services = Service::with('category')->get();
-            return back()->with('success', $services);
+            return view('admin.services.index', compact('services'));
+            // return back()->with('success', $services);
         } catch (\Exception $e) {
             return back()->with('error', 'An error occurred while fetching services.');
         }
