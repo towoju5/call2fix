@@ -243,6 +243,16 @@ class OrderController extends Controller
             $order->status = "CANCEL";
 
             if ($order->save()) {
+                $user = auth()->user();
+                // process customer refund 
+                $wallet = $user->getWallet("ngn");
+
+                if (!$wallet) {
+                    return get_error_response("User wallet not found", ["error" => "User wallet not found"], 404);
+                }
+                if(!$wallet->withdrawal($order->total_price * 100, ["description" => "Order refund", "Order placement refunded"])){
+                    return ['error' => 'Insufficient Balance'];
+                }
                 return get_success_response($order, "Order canceled successfully", 200);
             }
 
@@ -252,7 +262,6 @@ class OrderController extends Controller
             return get_error_response("An unexpected error occurred.", ['error' => $e->getMessage()], 500);
         }
     }
-
     
     public function getShippingRate()
     {

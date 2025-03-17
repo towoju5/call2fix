@@ -20,6 +20,15 @@ use Illuminate\Support\Facades\Schema;
 
 class AuthController extends Controller
 {
+    public function __construct()
+    {
+        if (!Schema::hasColumn('users', 'country_dialing_code')) {
+            Schema::table('users', function (Blueprint $table) {
+                $table->string('country_dialing_code')->nullable();
+            });
+        }
+    }
+
     public function register(Request $request)
     {
         try {
