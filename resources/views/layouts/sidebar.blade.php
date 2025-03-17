@@ -148,7 +148,7 @@
         <li class="menu-item">
             <a href="{{ route('admin.services.index') }}" class="menu-link">
                 <i class="menu-icon tf-icons ti ti-category"></i>
-                <div data-i18n="Categories">Services</div>
+                <div data-i18n="Services">Services</div>
             </a>
         </li>
 
