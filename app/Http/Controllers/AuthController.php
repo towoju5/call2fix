@@ -68,7 +68,7 @@ class AuthController extends Controller
                 'password' => 'required|string|min:8',
                 'username' => 'required|string|max:255|unique:users',
                 'profile_picture' => 'nullable|string',
-                'referred_by' => 'sometimes|string',
+                // 'referred_by' => 'sometimes',
                 'country_code' => 'required|string|max:255',
             ]);
 
@@ -184,7 +184,7 @@ class AuthController extends Controller
                 'password' => 'required|string|min:8',
                 'username' => 'required|string|max:255|unique:users',
                 'profile_picture' => 'nullable|string',
-                'referred_by' => 'sometimes|string',
+                // 'referred_by' => 'sometimes',
                 "businessName" => "required|string",
                 "cacNumber" => "required|string",
                 "officeAddress" => "required|string",
@@ -409,7 +409,7 @@ class AuthController extends Controller
                 'access_token' => 'required|string',
                 'provider' => 'required|string|in:google,apple',
                 'device_id' => 'required|string|max:255',
-                'referred_by' => 'sometimes|string|max:255',
+                // 'referred_by' => 'sometimes|string|max:255',
             ]);
 
             if(!User::whereEmail($request->email)->exists()) {
