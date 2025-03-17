@@ -12,9 +12,9 @@ class ServicesController extends Controller
 {
     public function index(Request $request)
     {
-        if (!$request->user()->can('view services')) {
-            return back()->with('error', 'Unauthorized action.');
-        }
+        // if (!$request->user()->can('view services')) {
+        //     return back()->with('error', 'Unauthorized action.');
+        // }
 
         try {
             $services = Service::with('category')->get();
