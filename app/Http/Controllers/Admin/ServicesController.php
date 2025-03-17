@@ -17,7 +17,7 @@ class ServicesController extends Controller
         // }
 
         try {
-            $services = Service::with('category')->get();
+            $services = Service::with('category')->paginate(per_page());
             // return response()->json($services);
             return view('admin.services.index', compact('services'));
             // return back()->with('success', $services);

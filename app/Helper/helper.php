@@ -177,6 +177,15 @@ if (!function_exists('save_media')) {
     }
 }
 
+if (!function_exists('per_page')) {
+    function per_page($perPage = 10) {
+        if(request()->has('perPage')) {
+            $perPage = request('perPage');
+        }
+
+        return $perPage;
+    }
+}
 
 if (!function_exists('get_free_plan')) {
     function get_free_plan()
