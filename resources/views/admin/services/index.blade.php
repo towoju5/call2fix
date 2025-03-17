@@ -34,7 +34,7 @@
         </tbody>
     </table>
 
-    {{ $categories->links() }}
+    {{ $services->links() }}
 
     <!-- Edit service Modal -->
     <div class="modal fade" id="editserviceModal" tabindex="-1" aria-labelledby="editserviceModalLabel" aria-hidden="true">
@@ -45,7 +45,7 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <form action="{{ route('admin.categories.update', 'placeholder') }}" method="POST" enctype="multipart/form-data" id="editserviceForm">
+                    <form action="{{ route('admin.services.update', 'placeholder') }}" method="POST" enctype="multipart/form-data" id="editserviceForm">
                         @csrf
                         @method('PUT')
 
@@ -116,7 +116,7 @@
         var serviceImage = button.getAttribute('data-service-image');
 
         var modal = editserviceModal.querySelector('form');
-        modal.action = '/admin/categories/' + serviceId; // Update action URL
+        modal.action = '/admin/services/' + serviceId; // Update action URL
 
         // Set the modal form fields
         modal.querySelector('#service_name').value = serviceName;
@@ -131,7 +131,7 @@
         var serviceId = button.getAttribute('data-service-id');
 
         // Fetch services related to the service
-        fetch('/admin/categories/' + serviceId + '/services')
+        fetch('/admin/services/' + serviceId + '/services')
             .then(response => response.json())
             .then(data => {
                 var servicesList = document.getElementById('services-list');
