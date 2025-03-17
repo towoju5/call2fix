@@ -62,8 +62,8 @@
                         <div class="mb-3">
                             <label for="parent_service" class="form-label">Parent Service Area</label>
                             <select class="form-select" id="parent_service" name="parent_service" required>
-                                @foreach($serviceAreas as $serviceArea)
-                                    <option value="{{ $serviceArea->id }}">{{ $serviceArea->service_area_title }}</option>
+                                @foreach($categories as $category)
+                                    <option value="{{ $category->id }}">{{ $category->service_area_title }}</option>
                                 @endforeach
                             </select>
                         </div>

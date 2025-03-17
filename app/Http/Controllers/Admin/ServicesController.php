@@ -19,7 +19,8 @@ class ServicesController extends Controller
         try {
             $services = Service::with('category')->paginate(per_page());
             // return response()->json($services);
-            return view('admin.services.index', compact('services'));
+            $categories = Category::all();
+            return view('admin.services.index', compact('services', 'categories'));
             // return back()->with('success', $services);
         } catch (\Exception $e) {
             return back()->with('error', 'An error occurred while fetching services.');
