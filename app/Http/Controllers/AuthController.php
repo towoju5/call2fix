@@ -16,6 +16,7 @@ use Jijunair\LaravelReferral\Models\Referral;
 use Towoju5\Wallet\Models\Wallet;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use Log;
 
 
 class AuthController extends Controller
