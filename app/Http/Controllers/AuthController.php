@@ -34,19 +34,19 @@ class AuthController extends Controller
         try {
             switch ($request->account_type) {
                 case 'private_account':
-                    $accountType = "private_accounts"
+                    $accountType = "private_accounts";
                     break;
 
                 case 'co-operate_account':
-                    $accountType = "co-operate_accounts"
+                    $accountType = "co-operate_accounts";
                     break;
                 
                 case 'affiliate':
-                    $accountType = "affiliates"
+                    $accountType = "affiliates";
                     break;
                 
                 default:
-                    $accountType = $request->account_type
+                    $accountType = $request->account_type;
                     break;
             }
 
@@ -149,19 +149,19 @@ class AuthController extends Controller
         try {
             switch ($request->account_type) {
                 case 'private_account':
-                    $accountType = "private_accounts"
+                    $accountType = "private_accounts";
                     break;
 
                 case 'co-operate_account':
-                    $accountType = "co-operate_accounts"
+                    $accountType = "co-operate_accounts";
                     break;
                 
                 case 'affiliate':
-                    $accountType = "affiliates"
+                    $accountType = "affiliates";
                     break;
                 
                 default:
-                    $accountType = $request->account_type
+                    $accountType = $request->account_type;
                     break;
             }
 
