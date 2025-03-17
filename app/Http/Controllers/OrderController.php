@@ -250,9 +250,11 @@ class OrderController extends Controller
                 if (!$wallet) {
                     return get_error_response("User wallet not found", ["error" => "User wallet not found"], 404);
                 }
-                if(!$wallet->withdrawal($order->total_price * 100, ["description" => "Order refund", "Order placement refunded"])){
+
+                if(!$wallet->withdrawal($order->total_price * 100, ["description" => "Order refund for ORDER ID: {$order->id}", "Order placement refunded"])){
                     return ['error' => 'Insufficient Balance'];
                 }
+                
                 return get_success_response($order, "Order canceled successfully", 200);
             }
 

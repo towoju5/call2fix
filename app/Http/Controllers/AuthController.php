@@ -32,9 +32,28 @@ class AuthController extends Controller
     public function register(Request $request)
     {
         try {
+            switch ($request->account_type) {
+                case 'private_account':
+                    $accountType = "private_accounts"
+                    break;
+
+                case 'co-operate_account':
+                    $accountType = "co-operate_accounts"
+                    break;
+                
+                case 'affiliate':
+                    $accountType = "affiliates"
+                    break;
+                
+                default:
+                    $accountType = $request->account_type
+                    break;
+            }
+
             if (!$request->username) {
                 $request->merge([
                     'username' => explode('@', $request->email ?? $request->phone)[0] . rand(1, 99),
+                    'account_type' => $accountType,
                 ]);
             }
 
@@ -128,9 +147,28 @@ class AuthController extends Controller
     public function registerBis(Request $request)
     {
         try {
-            if (!isset($request->username)) {
+            switch ($request->account_type) {
+                case 'private_account':
+                    $accountType = "private_accounts"
+                    break;
+
+                case 'co-operate_account':
+                    $accountType = "co-operate_accounts"
+                    break;
+                
+                case 'affiliate':
+                    $accountType = "affiliates"
+                    break;
+                
+                default:
+                    $accountType = $request->account_type
+                    break;
+            }
+
+            if (!$request->username) {
                 $request->merge([
-                    'username' => explode('@', $request->email ?? $request->phone)[0] . rand(1, 99)
+                    'username' => explode('@', $request->email ?? $request->phone)[0] . rand(1, 99),
+                    'account_type' => $accountType,
                 ]);
             }
 

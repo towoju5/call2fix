@@ -121,6 +121,21 @@ class SuppliersController extends Controller
                 'reject' => OrderModel::STATUSES[9], // 'CANCEL'
             ];
 
+            if($request->status === "reject") {
+
+                $user = auth()->user();
+                // process customer refund 
+                $wallet = $user->getWallet("ngn");
+
+                if (!$wallet) {
+                    return get_error_response("User wallet not found", ["error" => "User wallet not found"], 404);
+                }
+
+                if(!$wallet->withdrawal($order->total_price * 100, ["description" => "Order refund for ORDER ID: {$order->id}", "Order placement refunded"])){
+                    return ['error' => 'Insufficient Balance'];
+                }
+            }
+
             $order->status = $statusMapping[$request->status]; // Store as string
 
             if ($order->save()) {
