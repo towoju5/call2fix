@@ -18,7 +18,7 @@
             <tr>
                 <td>{{ $loop->iteration }}</td>
                 <td>{{ $service->service_name }}</td>
-                <td>{{ $service->category->category_name }}</td>
+                <td>{{ $service->category?->category_name }}</td>
                 <td>
                     <!-- Button trigger modal -->
                     <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#editserviceModal" data-service-id="{{ $service->id }}" data-service-name="{{ $service->service_name }}" data-service-description="{{ $service->service_description }}" data-parent-service="{{ $service->parent_service }}" data-service-image="{{ $service->service_image }}">
