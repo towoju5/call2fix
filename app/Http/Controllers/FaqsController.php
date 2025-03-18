@@ -25,13 +25,9 @@ class FaqsController extends Controller
     {
         $supportEmail = get_settings_value('support_email');
 
-        // if(!auth()->check()) {
-        //     return get_error_response('Unathenticated', ['error' => 'Unathenticated'], 401);
-        // }
-
         $validator = Validator::make($request->all(), [
             'subject' => 'required|string|max:255',
-            'message' => 'required|string',
+            'message' => 'required|string'
         ]);
 
         if ($validator->fails()) {
