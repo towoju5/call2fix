@@ -23,7 +23,11 @@ class FaqsController extends Controller
 
     public function sendSupportEmail(Request $request)
     {
-        $supportEmail = get_settings_value('support_email') ?? "towojuads@gmail.com";
+        $supportEmail = get_settings_value('support_email');
+
+        if(!auth()->check()) {
+            return get_error_response('Unathenticated', ['error' => 'Unathenticated'], 401);
+        }
 
         $validator = Validator::make($request->all(), [
             'subject' => 'required|string|max:255',
