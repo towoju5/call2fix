@@ -252,8 +252,9 @@ Route::middleware(['api'])->domain(env('API_URL'))->prefix('v1')->group(function
             Route::get('wallets', [ChartController::class, 'wallets'])->name('chart.wallets');
             Route::get('wallet-transactions', [ChartController::class, 'wallet_transactions'])->name('chart.wallet_transactions');
         });
+        
+        Route::post('support/email', [FaqsController::class, 'sendSupportEmail']);
     });
 
     Route::apiResource('faqs', FaqsController::class);
-    Route::post('support/email', [FaqsController::class, 'sendSupportEmail']);
 });
