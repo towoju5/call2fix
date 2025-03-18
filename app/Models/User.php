@@ -64,7 +64,7 @@ class User extends Authenticatable
         'created_at',
         'two_factor_secret',
         'two_factor_recovery_codes',
-        'device_id',
+        // 'device_id',
         'google2fa_secret',
         'paystack_customer_id',
         'password_reset_code',
