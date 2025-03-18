@@ -47,11 +47,11 @@
     </style>
 </head>
 <body>
-    @php $user = auth()->user() @endphp
+    <?php $user = auth()->user() ?>
     <div class="container">
         <h1>Support Request: {{ $subject }}</h1>
         <div class="info">
-            <p><strong>From:</strong> {{ "$user?->first_name $user?->last_name" }}</p>
+            <p><strong>From:</strong> {{ "$user->first_name $user->last_name" }}</p>
             <p><strong>Email:</strong> {{ $user?->email }}</p>
         </div>
         <h2 style="margin-top: 3rem">Message:</h2>
