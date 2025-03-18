@@ -55,7 +55,7 @@
         </div>
         <h2 style="margin-top: 3rem">Message:</h2>
         <div class="message">
-            <p><?php var_dump($message) ?></p>
+            <p><?= $message ?></p>
         </div>
     </div>
 </body>
