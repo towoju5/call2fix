@@ -42,10 +42,27 @@ class RoleController extends Controller
         $request->validate([
             'role' => 'required|exists:roles,name',
         ]);
-
+    
         $user = auth()->user();
         $user->removeRole($request->role);
-
-        return redirect()->back()->with('success', 'Role removed successfully');
+    
+        // Reload the user's roles to get the updated list
+        $user->load('roles');
+    
+        // Check if main_account_role is not present in roles
+        if (!$user->roles->contains('name', $user->main_account_role)) {
+            // If there are still roles available, set the first one as main_account_role
+            if (!$user->roles->isEmpty()) {
+                $newMainRole = $user->roles->first()->name;
+                $user->current_role = $newMainRole;
+                $user->main_account_role = $newMainRole;
+                $user->save();
+            } else {
+                // If no roles left, delete the user
+                $user->delete();
+            }
+        }
+    
+        return get_success_response('Role removed successfully', ['message' => 'Role removed successfully']);
     }
 }
