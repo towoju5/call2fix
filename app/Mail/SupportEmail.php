@@ -24,7 +24,7 @@ class SupportEmail extends Mailable
                     ->view('emails.support')
                     ->with([
                         'subject' => $this->emailData['subject'],
-                        'message' => $this->emailData['message'],
+                        'payload' => $this->emailData['message'],
                         'sender' => $this->emailData['sender'],
                     ]);
     }
