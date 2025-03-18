@@ -47,16 +47,16 @@
     </style>
 </head>
 <body>
+    @php $user = auth()->user() @endphp
     <div class="container">
         <h1>Support Request: {{ $subject }}</h1>
         <div class="info">
-            <p><strong>From:</strong> {{ "$sender?->first_name $sender?->last_name" }}</p>
-            <p><strong>Email:</strong> {{ $sender?->email }}</p>
+            <p><strong>From:</strong> {{ "$user?->first_name $user?->last_name" }}</p>
+            <p><strong>Email:</strong> {{ $user?->email }}</p>
         </div>
         <h2 style="margin-top: 3rem">Message:</h2>
         <div class="message">
             <p><?= $payload ?></p>
-            <pre><?php var_dump($payload) ?></pre>
         </div>
     </div>
 </body>
