@@ -48,19 +48,145 @@ class ServiceRequestController extends Controller
         return get_success_response($serviceRequests);
     }
 
+    // public function store(Request $request)
+    // {
+    //     $key = 'rate_limit_' . ($request->user()?->id ?: $request->ip()); // Unique key per user or IP
+    //     $maxAttempts = 1; // Limit: 1 requests
+    //     $decayMinutes = 1; // Time frame: 1 minute
+    //     // Check if 'read_by' column exists, if not, add it (This should be done in a migration)
+    
+    
+    //     if (!RateLimiter::tooManyAttempts($key, $maxAttempts)) {
+    
+    //         // Record the attempt
+    //         RateLimiter::hit($key, $decayMinutes * 60); // Convert minutes to seconds
+    
+    //         $validate = Validator::make($request->all(), [
+    //             'property_id' => 'required|exists:properties,id',
+    //             'service_category_id' => 'nullable|exists:categories,id',
+    //             'service_id' => 'nullable|exists:services,id',
+    //             'problem_title' => 'required|string|max:255',
+    //             'problem_description' => 'required|string',
+    //             'inspection_time' => 'required',
+    //             'inspection_date' => 'required|date',
+    //             'problem_images' => 'nullable|array|max:5',
+    //             'use_featured_providers' => 'boolean',
+    //             'featured_providers_id' => 'nullable|array',
+    //             'department_id' => 'nullable|exists:departments,id',
+    //             "alternative_date" => "sometimes",
+    //             "alternative_time" => "sometimes"
+    //         ]);
+    
+    //         if ($validate->fails()) {
+    //             return get_error_response("Validation Error", $validate->errors()->toArray());
+    //         }
+
+    //         $validatedData = $validate->validated();
+    //         $validatedData['user_id'] = auth()->id();
+    //         $validatedData['request_status'] = "Pending";
+    //         $validatedData['problem_images'] = $request->problem_images;
+    //         $alphameadAccount = get_settings_value('alphamaed_service_account_id', 'a599fd50-15b4-4db5-a839-9e722aea226d');
+    
+    //         if ($request->use_featured_providers) {
+    //             $validatedData['featured_providers_id'] = $request->featured_providers_id;
+    //         } else {
+    //             $propertyId = $request->property_id;
+    //             $property = Property::findOrFail($propertyId);
+    //             $radiusLimitMeters = $this->radiusLimitKm * 1000;
+    
+    //             $latitude = $property->latitude;
+    //             $longitude = $property->longitude;
+    
+    //             // Get nearby providers
+    //             $providers = BusinessOfficeAddress::query()
+    //                 ->select(
+    //                     'user_id',
+    //                     DB::raw("
+    //                         ST_Distance_Sphere(
+    //                             point(longitude, latitude),
+    //                             point(?, ?)
+    //                         ) as distance
+    //                     ")
+    //                 )
+    //                 ->setBindings([$longitude, $latitude])
+    //                 ->having('distance', '<=', $radiusLimitMeters)
+    //                 ->orderBy('distance')
+    //                 ->groupBy('user_id')
+    //                 ->where('user_id', '!=', auth()->id())
+    //                 ->take(5)
+    //                 ->pluck('user_id')
+    //                 ->toArray(); // Convert collection to array
+    
+    //             // Ensure only provider users
+    //             $distinctProviders = User::whereIn('id', $providers)
+    //                 ->whereHas('roles', function ($query) {
+    //                     $query->where('name', 'providers');
+    //                 })
+    //                 ->pluck('id')
+    //                 ->toArray();
+    
+    //             // Ensure Alphamead is always included and unique
+    //             if (!in_array($alphameadAccount, $distinctProviders)) {
+    //                 $distinctProviders[] = $alphameadAccount;
+    //             }
+    
+    //             if (empty($distinctProviders)) { 
+    //                 return get_error_response('No provider found!', ['error' => 'No service provider found nearby']);
+    //             }
+    
+    //             $validatedData['featured_providers_id'] = $distinctProviders;
+    //         }
+    
+    //         DB::beginTransaction();
+    //         try {
+    //             $serviceRequest = ServiceRequest::create($validatedData);
+    
+    //             // charge user for assessment fees
+    //             $user = auth()->user();
+    
+    //             // Validate default currency and role
+    //             $currency = get_default_currency($user->id);
+    //             $role = $user->current_role;
+    
+    //             // Locate wallet
+    //             $wallet = Wallet::where(['user_id' => $user->id, 'currency' => $currency, 'role' => $role])->first();
+    //             $wallet1 = $user->getWallet($currency ?? 'ngn');
+    
+    //             $isPaySuccessfull = $wallet1->withdrawal(floatval(get_settings_value('assessment_fee', 500) * 100), [
+    //                 "description" => "Assessment fee for Service request order."
+    //             ]);
+
+    //             if($isPaySuccessfull) {
+    //                 $serviceRequest->update([
+    //                     "request_status" => "Pending",
+    //                     "assesment_fee_paid" => true
+    //                 ]);
+    //             }
+    
+    //             // Commit transaction if everything is successful
+    //             DB::commit();
+    //             $user->notify(new ServiceRequestSuccessful($serviceRequest));
+    //             return get_success_response($serviceRequest, "Request created successfully", 201);
+    //         } catch (\Exception $e) {
+    //             DB::rollBack();
+    //             return get_error_response("Transaction failed", ['error' => $e->getMessage()]);
+    //         }
+    //     }
+    
+    //     return get_error_response("Only one service request can be placed per minute", ['error' => "Only one service request can be placed per minute"]);
+    // }
+
     public function store(Request $request)
     {
         $key = 'rate_limit_' . ($request->user()?->id ?: $request->ip()); // Unique key per user or IP
         $maxAttempts = 1; // Limit: 1 requests
         $decayMinutes = 1; // Time frame: 1 minute
-        // Check if 'read_by' column exists, if not, add it (This should be done in a migration)
-    
-    
+
         if (!RateLimiter::tooManyAttempts($key, $maxAttempts)) {
-    
+
             // Record the attempt
             RateLimiter::hit($key, $decayMinutes * 60); // Convert minutes to seconds
-    
+
             $validate = Validator::make($request->all(), [
                 'property_id' => 'required|exists:properties,id',
                 'service_category_id' => 'nullable|exists:categories,id',
@@ -76,7 +202,7 @@ class ServiceRequestController extends Controller
                 "alternative_date" => "sometimes",
                 "alternative_time" => "sometimes"
             ]);
-    
+
             if ($validate->fails()) {
                 return get_error_response("Validation Error", $validate->errors()->toArray());
             }
@@ -86,17 +212,17 @@ class ServiceRequestController extends Controller
             $validatedData['request_status'] = "Pending";
             $validatedData['problem_images'] = $request->problem_images;
             $alphameadAccount = get_settings_value('alphamaed_service_account_id', 'a599fd50-15b4-4db5-a839-9e722aea226d');
-    
+
             if ($request->use_featured_providers) {
                 $validatedData['featured_providers_id'] = $request->featured_providers_id;
             } else {
                 $propertyId = $request->property_id;
                 $property = Property::findOrFail($propertyId);
                 $radiusLimitMeters = $this->radiusLimitKm * 1000;
-    
+
                 $latitude = $property->latitude;
                 $longitude = $property->longitude;
-    
+
                 // Get nearby providers
                 $providers = BusinessOfficeAddress::query()
                     ->select(
@@ -116,7 +242,7 @@ class ServiceRequestController extends Controller
                     ->take(5)
                     ->pluck('user_id')
                     ->toArray(); // Convert collection to array
-    
+
                 // Ensure only provider users
                 $distinctProviders = User::whereIn('id', $providers)
                     ->whereHas('roles', function ($query) {
@@ -124,34 +250,34 @@ class ServiceRequestController extends Controller
                     })
                     ->pluck('id')
                     ->toArray();
-    
+
                 // Ensure Alphamead is always included and unique
                 if (!in_array($alphameadAccount, $distinctProviders)) {
                     $distinctProviders[] = $alphameadAccount;
                 }
-    
+
                 if (empty($distinctProviders)) { 
                     return get_error_response('No provider found!', ['error' => 'No service provider found nearby']);
                 }
-    
+
                 $validatedData['featured_providers_id'] = $distinctProviders;
             }
-    
+
             DB::beginTransaction();
             try {
                 $serviceRequest = ServiceRequest::create($validatedData);
-    
+
                 // charge user for assessment fees
                 $user = auth()->user();
-    
+
                 // Validate default currency and role
                 $currency = get_default_currency($user->id);
                 $role = $user->current_role;
-    
+
                 // Locate wallet
                 $wallet = Wallet::where(['user_id' => $user->id, 'currency' => $currency, 'role' => $role])->first();
                 $wallet1 = $user->getWallet($currency ?? 'ngn');
-    
+
                 $isPaySuccessfull = $wallet1->withdrawal(floatval(get_settings_value('assessment_fee', 500) * 100), [
                     "description" => "Assessment fee for Service request order."
                 ]);
@@ -162,17 +288,28 @@ class ServiceRequestController extends Controller
                         "assesment_fee_paid" => true
                     ]);
                 }
-    
+
+                // Get the list of artisans to notify
+                $artisans = User::whereIn('id', $serviceRequest->featured_providers_id)
+                    ->whereHas('roles', function ($query) {
+                        $query->where('name', 'providers');
+                    })
+                    ->get();
+
+                // Notify each artisan
+                foreach ($artisans as $artisan) {
+                    $artisan->notify(new NewRequestNotification($serviceRequest));
+                }
+
                 // Commit transaction if everything is successful
                 DB::commit();
-                $user->notify(new ServiceRequestSuccessful($serviceRequest));
                 return get_success_response($serviceRequest, "Request created successfully", 201);
             } catch (\Exception $e) {
                 DB::rollBack();
                 return get_error_response("Transaction failed", ['error' => $e->getMessage()]);
             }
         }
-    
+
         return get_error_response("Only one service request can be placed per minute", ['error' => "Only one service request can be placed per minute"]);
     }
     
