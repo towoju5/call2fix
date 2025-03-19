@@ -18,11 +18,13 @@ use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
 use Towoju5\Wallet\Models\Wallet;
 use Towoju5\Wallet\Traits\HasWallets;
+use Laravelcm\Subscriptions\Traits\HasPlanSubscriptions;
+
 
 class User extends Authenticatable
 {
     use HasFactory, HasApiTokens, Notifiable, HasWallets, SoftDeletes, TwoFactorAuthenticatable;
-    use Referrable, HasRoles, SoftDeletes, HasPlans;
+    use Referrable, HasRoles, SoftDeletes, HasPlans, HasPlanSubscriptions;
 
 
 
