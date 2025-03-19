@@ -116,7 +116,7 @@ class ChartController extends Controller
     public function wallets()
     {
         $filter = request()->get('filter', '7d');
-        $data = $this->getFilteredData(new Wallet, $filter);
+        $data = $this->getFilteredData(new \Towoju5\Wallet\Models\WalletTransaction(), $filter, false);
         return get_success_response($data);
     }
 
