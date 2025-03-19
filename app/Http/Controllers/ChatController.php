@@ -27,7 +27,7 @@ class ChatController extends Controller
 
     public function index()
     {
-        $chats = Auth::user()->chats()->with('participants', 'lastChat')->latest()->where('_account_type', active_role())->get();
+        $chats = Auth::user()->chats()->with('participants', 'lastChat')->latest()->where('chats._account_type', active_role())->get();
         return get_success_response($chats);
     }
 
