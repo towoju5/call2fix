@@ -119,8 +119,11 @@ class PlanController extends Controller
 
             $user = User::find(auth()->id());
             $plan = PlanModel::find($planId);
-            if ($user->planSubscription($plan->name)->cancel(true)) {
-                return get_success_response([], "Subscription plan was canceled successful");
+            if ($plan) {
+                $subscription = $user->planSubscription($plan->name);
+                if($subscription && $subscription->cancel(true)) {
+                    return get_success_response([], "Subscription plan was canceled successful");
+                }
             }
 
             return get_error_response($plan->getMessage(), ['error', "Unable to change subscription plan"], 400);
