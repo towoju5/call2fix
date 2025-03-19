@@ -12,7 +12,7 @@ use Illuminate\Http\Request;
 use Towoju5\Wallet\Models\Wallet;
 use Carbon\Carbon;
 
-class ChartController extends Controller
+class ex_ChartController extends Controller
 {
     public function getFilteredData($model, $filter, $hasUserColumn=true)
     {
@@ -85,7 +85,7 @@ class ChartController extends Controller
 
             foreach ($data as $date => $count) {
                 $date = Carbon::createFromFormat('Y-m-d', $date);
-                $weekNumber = floor($date->diffInWeeks($startDate->startOfWeek())) + 1;
+                $weekNumber = $date->diffInWeeks($startDate->startOfWeek()) + 1;
                 $weekLabel = 'w' . $weekNumber;
                 $allDates[$weekLabel] += $count;
             }
@@ -223,4 +223,6 @@ class ChartController extends Controller
             'total_artisans' => $artisans ?? 0
         ]);
     }
+
+
 }
