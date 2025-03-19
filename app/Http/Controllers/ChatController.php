@@ -20,7 +20,7 @@ class ChatController extends Controller
         // Check if 'read_by' column exists, if not, add it (This should be done in a migration)
         if (!Schema::hasColumn('chats', '_account_type')) {
             Schema::table('chats', function (Blueprint $table) {
-                $table->json('_account_type')->nullable();
+                $table->string('_account_type')->nullable();
             });
         }
     }
