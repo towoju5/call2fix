@@ -7,12 +7,23 @@ use App\Models\Faqs;
 use Illuminate\Http\Request;
 use Mail;
 use Validator;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
 
 class FaqsController extends Controller
 {
+    public function __construct()
+    {
+        if(!Schema::hasColumn('faqs', 'account_type')) {
+            Schema::table('faqs', function(Blueprint $table) {
+                $table->string('account_type')->nullable();
+            });
+        }
+    }
+
     public function index()
     {
-        $faqs = Faqs::get();
+        $faqs = Faqs::where('account_type', active_role)->get();
         return get_success_response($faqs);
     }
 
@@ -27,6 +38,7 @@ class FaqsController extends Controller
 
         $validator = Validator::make($request->all(), [
             'subject' => 'required|string|max:255',
+            'account_type' => 'required',
             'message' => 'required|string'
         ]);
 
