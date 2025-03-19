@@ -9,7 +9,7 @@ class Chat extends BaseModel
 {
     use HasFactory;
 
-    protected $fillable = ['name'];
+    protected $fillable = ['name', '_account_type'];
 
     public function messages()
     {
