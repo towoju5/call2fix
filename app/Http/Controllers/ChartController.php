@@ -122,10 +122,14 @@ class ChartController extends Controller
 
     public function wallet_transactions()
     {
-        $filter = request()->get('filter', '7d');
-        $query = new \Towoju5\Wallet\Models\WalletTransaction();
-        $data = $this->getFilteredData($query, $filter, false);
-        return get_success_response($data);
+        try {
+            $filter = request()->get('filter', '7d');
+            $query = new \Towoju5\Wallet\Models\WalletTransaction();
+            $data = $this->getFilteredData($query, $filter, false);
+            return get_success_response($data);
+        } catch (\Throwable $th) {
+            return get_error_response($th->getMessage());
+        }
     }
 
     public function service_requests()
