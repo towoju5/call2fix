@@ -125,49 +125,7 @@ class ChartController extends Controller
         $filter = request()->get('filter', '7d');
         $query = new \Towoju5\Wallet\Models\WalletTransaction();
         $data = $this->getFilteredData($query, $filter, false);
-        $startDate = now();
-        $endDate = now();
-    
-        // Determine the start and end date based on the filter
-        switch ($filter) {
-            case '7d':
-                $startDate = now()->subDays(6); // Start 6 days ago, including today
-                break;
-            case '4w':
-                $startDate = now()->subWeeks(3)->startOfWeek(); // Start from the beginning of 3 weeks ago
-                break;
-            case '3m':
-                $startDate = now()->subMonths(2)->startOfMonth(); // Start from the beginning of 2 months ago
-                break;
-            case '1y':
-                $startDate = now()->subYear()->startOfYear(); // Start from the beginning of the year one year ago
-                break;
-            default:
-                $startDate = now()->subDays(6); // Default to 7 days, including today
-        }
-
-        $data = $query->whereBetween('created_at', [$startDate, $endDate])
-            ->selectRaw("DATE_FORMAT(created_at, '%Y-%m-%d') as date, COUNT(*) as count")
-            ->groupBy('date')
-            ->orderBy('date')
-            ->get()
-            ->pluck('count', 'date')
-            ->toArray();
-        // Ensure all days of the week are present in the result with default 0 for missing days
-                $daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-                $allDays = array_fill_keys($daysOfWeek, 0);
-                foreach ($data as $day => $count) {
-                    $allDays[$day] = $count;
-                }
-            
-                // Return the result in the correct order
-                $orderedResult = [];
-                foreach ($daysOfWeek as $day) {
-                    $orderedResult[$day] = $allDays[$day];
-                }
-            
-        return get_success_response($orderedResult);
-        // return get_success_response($data);
+        return get_success_response($data);
     }
 
     public function service_requests()
