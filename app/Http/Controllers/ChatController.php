@@ -27,6 +27,12 @@ class ChatController extends Controller
 
     public function index()
     {
+        // Check if 'read_by' column exists, if not, add it (This should be done in a migration)
+        if (!Schema::hasColumn('chats', '_account_type')) {
+            Schema::table('chats', function (Blueprint $table) {
+                $table->string('_account_type')->nullable();
+            });
+        }
         $chats = Auth::user()->chats()->with('participants', 'lastChat')->latest()->where('chats._account_type', active_role())->get();
         return get_success_response($chats);
     }
