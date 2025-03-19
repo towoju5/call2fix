@@ -118,7 +118,7 @@ class PlanController extends Controller
         try {
 
             $user = User::find(auth()->id());
-            return $plan = PlanModel::find($planId);
+            $plan = PlanModel::find($planId);
             if ($user->planSubscription($plan->name)->cancel(true)) {
                 return get_success_response([], "Subscription plan was canceled successful");
             }
