@@ -199,6 +199,7 @@ Route::middleware(['api'])->domain(env('API_URL'))->prefix('v1')->group(function
             Route::get('{planId}/features', [PlanController::class, 'planFeatures'])->name('plans.features');
             Route::post('{planId}/subscribe', [PlanController::class, 'subscribe'])->name('plans.subscribe');
             Route::post('{planId}/change', [PlanController::class, 'changePlan'])->name('plans.change');
+            Route::post('{planId}/cancel', [PlanController::class, 'changePlan'])->name('plans.cancelPlan');
         });
 
         Route::group(['middleware' => ['auth', 'check.plan.limits']], function () {

@@ -119,9 +119,6 @@ class PlanController extends Controller
 
             $user = User::find(auth()->id());
             $plan = Plan::find($planId);
-
-            // charge the customer
-            $wallet = $user->getWallet('ngn');
         
             if ($user->planSubscription($plan->name)->cancel()) {
                 return get_success_response([], "Subscription plan was canceled successful");
