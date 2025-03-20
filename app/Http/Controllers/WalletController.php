@@ -125,15 +125,15 @@ class WalletController extends Controller
         $amount = $request->amount;
         $withdrawal_fee = get_settings_value('withdrawal_fee', 0);
         $finalAmountDue = $amount + $withdrawal_fee;
-        if ($wallet->balance < $finalAmountDue) {
+        if ($wallet->balance < floatval($finalAmountDue * 100)) {
             return get_error_response('Insufficient funds', ['error' => 'Insufficient funds']);
         }
 
         try {
             $transaction = [];
             // $transaction = $wallet->withdraw($amount, 'ngn', $request->toArray());
-            $transaction[] = $wallet->withdrawal($amount,  ['description' => "Withdrawal to bank account - {$request->bank_id}", "narration" => $request->narration ?? null]);
-            $transaction[] = $wallet->withdrawal($withdrawal_fee, ['description' => "Withdrawal Fee - {$request->bank_id}", "narration" => "Charges for withdrawal to bank account - {$request->bank_id}"]);
+            $transaction[] = $wallet->withdrawal($amount*100,  ['description' => "Withdrawal to bank account - {$request->bank_id}", "narration" => $request->narration ?? null]);
+            $transaction[] = $wallet->withdrawal($withdrawal_fee*100, ['description' => "Withdrawal Fee - {$request->bank_id}", "narration" => "Charges for withdrawal to bank account - {$request->bank_id}"]);
 
             // send request to paystack for withdrawal
             $paystack = new PaystackServices();
@@ -143,6 +143,7 @@ class WalletController extends Controller
                 "narration" => $amount,
             ];
             $processWithdrawal = $paystack->initiateTransfer($payoutObject);
+            return response()->json($processWithdrawal);
             return get_success_response($transaction, 'Withdrawal successful');
         } catch (\Exception $e) {
             return get_error_response($e->getMessage());

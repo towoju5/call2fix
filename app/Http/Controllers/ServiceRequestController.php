@@ -47,135 +47,7 @@ class ServiceRequestController extends Controller
         $serviceRequests = ServiceRequestModel::with('reworkMessages', 'service_provider', 'invited_artisan')->whereJsonContains('featured_providers_id', [auth()->id()])->latest()->get();
         return get_success_response($serviceRequests);
     }
-
-    // public function store(Request $request)
-    // {
-    //     $key = 'rate_limit_' . ($request->user()?->id ?: $request->ip()); // Unique key per user or IP
-    //     $maxAttempts = 1; // Limit: 1 requests
-    //     $decayMinutes = 1; // Time frame: 1 minute
-    //     // Check if 'read_by' column exists, if not, add it (This should be done in a migration)
     
-    
-    //     if (!RateLimiter::tooManyAttempts($key, $maxAttempts)) {
-    
-    //         // Record the attempt
-    //         RateLimiter::hit($key, $decayMinutes * 60); // Convert minutes to seconds
-    
-    //         $validate = Validator::make($request->all(), [
-    //             'property_id' => 'required|exists:properties,id',
-    //             'service_category_id' => 'nullable|exists:categories,id',
-    //             'service_id' => 'nullable|exists:services,id',
-    //             'problem_title' => 'required|string|max:255',
-    //             'problem_description' => 'required|string',
-    //             'inspection_time' => 'required',
-    //             'inspection_date' => 'required|date',
-    //             'problem_images' => 'nullable|array|max:5',
-    //             'use_featured_providers' => 'boolean',
-    //             'featured_providers_id' => 'nullable|array',
-    //             'department_id' => 'nullable|exists:departments,id',
-    //             "alternative_date" => "sometimes",
-    //             "alternative_time" => "sometimes"
-    //         ]);
-    
-    //         if ($validate->fails()) {
-    //             return get_error_response("Validation Error", $validate->errors()->toArray());
-    //         }
-
-    //         $validatedData = $validate->validated();
-    //         $validatedData['user_id'] = auth()->id();
-    //         $validatedData['request_status'] = "Pending";
-    //         $validatedData['problem_images'] = $request->problem_images;
-    //         $alphameadAccount = get_settings_value('alphamaed_service_account_id', 'a599fd50-15b4-4db5-a839-9e722aea226d');
-    
-    //         if ($request->use_featured_providers) {
-    //             $validatedData['featured_providers_id'] = $request->featured_providers_id;
-    //         } else {
-    //             $propertyId = $request->property_id;
-    //             $property = Property::findOrFail($propertyId);
-    //             $radiusLimitMeters = $this->radiusLimitKm * 1000;
-    
-    //             $latitude = $property->latitude;
-    //             $longitude = $property->longitude;
-    
-    //             // Get nearby providers
-    //             $providers = BusinessOfficeAddress::query()
-    //                 ->select(
-    //                     'user_id',
-    //                     DB::raw("
-    //                         ST_Distance_Sphere(
-    //                             point(longitude, latitude),
-    //                             point(?, ?)
-    //                         ) as distance
-    //                     ")
-    //                 )
-    //                 ->setBindings([$longitude, $latitude])
-    //                 ->having('distance', '<=', $radiusLimitMeters)
-    //                 ->orderBy('distance')
-    //                 ->groupBy('user_id')
-    //                 ->where('user_id', '!=', auth()->id())
-    //                 ->take(5)
-    //                 ->pluck('user_id')
-    //                 ->toArray(); // Convert collection to array
-    
-    //             // Ensure only provider users
-    //             $distinctProviders = User::whereIn('id', $providers)
-    //                 ->whereHas('roles', function ($query) {
-    //                     $query->where('name', 'providers');
-    //                 })
-    //                 ->pluck('id')
-    //                 ->toArray();
-    
-    //             // Ensure Alphamead is always included and unique
-    //             if (!in_array($alphameadAccount, $distinctProviders)) {
-    //                 $distinctProviders[] = $alphameadAccount;
-    //             }
-    
-    //             if (empty($distinctProviders)) { 
-    //                 return get_error_response('No provider found!', ['error' => 'No service provider found nearby']);
-    //             }
-    
-    //             $validatedData['featured_providers_id'] = $distinctProviders;
-    //         }
-    
-    //         DB::beginTransaction();
-    //         try {
-    //             $serviceRequest = ServiceRequest::create($validatedData);
-    
-    //             // charge user for assessment fees
-    //             $user = auth()->user();
-    
-    //             // Validate default currency and role
-    //             $currency = get_default_currency($user->id);
-    //             $role = $user->current_role;
-    
-    //             // Locate wallet
-    //             $wallet = Wallet::where(['user_id' => $user->id, 'currency' => $currency, 'role' => $role])->first();
-    //             $wallet1 = $user->getWallet($currency ?? 'ngn');
-    
-    //             $isPaySuccessfull = $wallet1->withdrawal(floatval(get_settings_value('assessment_fee', 500) * 100), [
-    //                 "description" => "Assessment fee for Service request order."
-    //             ]);
-
-    //             if($isPaySuccessfull) {
-    //                 $serviceRequest->update([
-    //                     "request_status" => "Pending",
-    //                     "assesment_fee_paid" => true
-    //                 ]);
-    //             }
-    
-    //             // Commit transaction if everything is successful
-    //             DB::commit();
-    //             $user->notify(new ServiceRequestSuccessful($serviceRequest));
-    //             return get_success_response($serviceRequest, "Request created successfully", 201);
-    //         } catch (\Exception $e) {
-    //             DB::rollBack();
-    //             return get_error_response("Transaction failed", ['error' => $e->getMessage()]);
-    //         }
-    //     }
-    
-    //     return get_error_response("Only one service request can be placed per minute", ['error' => "Only one service request can be placed per minute"]);
-    // }
-
     public function store(Request $request)
     {
         $key = 'rate_limit_' . ($request->user()?->id ?: $request->ip()); // Unique key per user or IP
@@ -393,11 +265,6 @@ class ServiceRequestController extends Controller
     public function updateStatus(Request $request, $requestId)
     {
         try {
-            if (!Schema::hasColumn('service_requests', 'request_status')) {
-                Schema::table('service_requests', function (Blueprint $table) {
-                    $table->string('request_status')->change();
-                });
-            }
             // Fetch the service request with auth checks
             $authId = auth()->id();
             $serviceRequest = ServiceRequestModel::whereId($requestId)->first();
@@ -412,61 +279,97 @@ class ServiceRequestController extends Controller
                 return get_error_response("Service request not found", ["error" => "Service request not found"]);
             }
 
-            // Fetch enum values directly from the database schema
-            // $table = $serviceRequest->getTable();
-            // $column = 'request_status';
-            // $validStatuses = $this->getEnumValues($table, $column);
-
-            // // Validate the status input
-            // $validatedData = $request->validate([
-            //     'status' => ['required', function ($attribute, $value, $fail) use ($validStatuses) {
-            //         // Match input to enum values case-insensitively
-            //         if (!in_array(strtolower($value), array_map('strtolower', $validStatuses))) {
-            //             $fail("The selected $attribute is invalid.");
-            //         }
-            //     }],
-            // ]);
-
-            // // Convert to the correct case as stored in the enum
-            // $inputStatus = strtolower($validatedData['status']);
-            // $finalStatus = $validStatuses[array_search($inputStatus, array_map('strtolower', $validStatuses))];
-
             $finalStatus = $request->status;
 
             // Update the status in the database
             $update = $serviceRequest->update(['request_status' => $finalStatus]);
 
+            // if ($update && $finalStatus === 'Close Request') {
+            //     // Get provider and artisan details
+            //     $provider = User::find($serviceRequest->approved_providers_id);
+            //     $artisan = User::find($serviceRequest->approved_artisan_id);
+
+            //     if (!$provider || !$artisan) {
+            //         return get_error_response("Provider or artisan not found", ["error" => "Provider or artisan missing"]);
+            //     }
+
+            //     // Calculate artisan earnings
+            //     $providerEarnings = floatval($serviceRequest->amount);
+            //     $artisanPercentage = floatval($artisan->payment_plan); // Fixed or percentage
+            //     $artisanEarning = floatval($artisan->payment_amount);
+
+            //     if (strtolower($artisan->payment_plan) === 'percentage') {
+            //         $artisanEarning = ($providerEarnings / 100) * $artisanPercentage;
+            //     }
+
+            //     // Credit wallets
+            //     $provider->getWallet('ngn')->deposit(
+            //         $providerEarnings - $artisanEarning,
+            //         ["description" => $serviceRequest->problem_title]
+            //     );
+
+            //     $artisan->getWallet('ngn')->deposit(
+            //         $artisanEarning,
+            //         ["description" => $serviceRequest->problem_title]
+            //     );
+
+            //     return get_success_response($serviceRequest, "Service Request status updated successfully");
+            // }
             if ($update && $finalStatus === 'Close Request') {
-                // Get provider and artisan details
-                $provider = User::find($serviceRequest->approved_providers_id);
-                $artisan = User::find($serviceRequest->approved_artisan_id);
-
-                if (!$provider || !$artisan) {
-                    return get_error_response("Provider or artisan not found", ["error" => "Provider or artisan missing"]);
+                DB::beginTransaction();
+                try {
+                    $serviceRequest = ServiceRequestModel::findOrFail($requestId);
+                    $apportionment = $this->aportionment($serviceRequest);
+    
+                    // Create PaymentApportionment record
+                    PaymentApportionment::create([
+                        'service_request_id' => $serviceRequest->id,
+                        'subtotal' => $apportionment['subtotal'],
+                        'service_provider_earnings' => $apportionment['service_provider_earnings'],
+                        'call2fix_management_fee' => $apportionment['call2fix_management_fee'],
+                        'call2fix_earnings' => $apportionment['call2fix_earnings'],
+                        'warranty_retention' => $apportionment['warranty_retention'],
+                        'artisan_earnings' => $apportionment['artisan_earnings'],
+                    ]);
+    
+                    // Credit Service Provider
+                    $provider = User::find($serviceRequest->approved_providers_id);
+                    if ($provider) {
+                        $provider->getWallet('ngn')->deposit(
+                            $apportionment['service_provider_earnings'] * 100,
+                            ["description" => "Earnings from Service Request #{$serviceRequest->id}"]
+                        );
+                    }
+    
+                    // Credit Artisan
+                    if ($serviceRequest->approved_artisan_id) {
+                        $artisan = User::find($serviceRequest->approved_artisan_id);
+                        if ($artisan) {
+                            $artisan->getWallet('ngn')->deposit(
+                                $apportionment['artisan_earnings'] * 100,
+                                ["description" => "Earnings from Service Request #{$serviceRequest->id}"]
+                            );
+                        }
+                    }
+    
+                    // Credit Call2Fix
+                    $call2fixUserId = get_settings_value('call2fix_user_id'); // Implement this function
+                    $call2fixUser = User::find($call2fixUserId);
+                    if ($call2fixUser) {
+                        $call2fixUser->getWallet('ngn')->deposit(
+                            $apportionment['call2fix_earnings'] * 100,
+                            ["description" => "Earnings from Service Request #{$serviceRequest->id}"]
+                        );
+                    }
+    
+                    DB::commit();
+                    return get_success_response($serviceRequest, "Service Request closed successfully");
+                } catch (\Exception $e) {
+                    DB::rollBack();
+                    return get_error_response("Payment processing failed", ['error' => $e->getMessage()], 500);
                 }
-
-                // Calculate artisan earnings
-                $providerEarnings = floatval($serviceRequest->amount);
-                $artisanPercentage = floatval($artisan->payment_plan); // Fixed or percentage
-                $artisanEarning = floatval($artisan->payment_amount);
-
-                if (strtolower($artisan->payment_plan) === 'percentage') {
-                    $artisanEarning = ($providerEarnings / 100) * $artisanPercentage;
-                }
-
-                // Credit wallets
-                $provider->getWallet('ngn')->deposit(
-                    $providerEarnings - $artisanEarning,
-                    ["description" => $serviceRequest->problem_title]
-                );
-
-                $artisan->getWallet('ngn')->deposit(
-                    $artisanEarning,
-                    ["description" => $serviceRequest->problem_title]
-                );
-
-                return get_success_response($serviceRequest, "Service Request status updated successfully");
             }
+    
 
             return get_success_response($serviceRequest, "Service Request status updated successfully");
         } catch (\Illuminate\Validation\ValidationException $e) {
@@ -843,5 +746,45 @@ class ServiceRequestController extends Controller
         } catch (\Throwable $th) {
             return get_error_response(['error' => $th->getMessage()]);
         }
+    }
+
+    private function aportionment(ServiceRequestModel $serviceRequest)
+    {
+        $subtotal = $serviceRequest->subtotal; // Ensure this field exists in your ServiceRequestModel
+
+        // Calculate Call2Fix components
+        $managementFee = min(0.15 * $subtotal, 100000);
+        $call2fixEarnings = 0.10 * $subtotal + $managementFee;
+
+        // Calculate Warranty Retention
+        $warrantyRetention = 0.10 * $subtotal;
+
+        // Calculate Service Provider's base earnings
+        $serviceProviderEarningsBase = 0.80 * $subtotal;
+
+        // Calculate Artisan's earnings
+        $artisanEarnings = 0;
+        if ($serviceRequest->approved_artisan_id) {
+            $artisan = User::find($serviceRequest->approved_artisan_id);
+            if ($artisan) {
+                if ($artisan->payment_plan === 'percentage') {
+                    $artisanEarnings = ($serviceProviderEarningsBase / 100) * $artisan->payment_amount;
+                } else {
+                    $artisanEarnings = $artisan->payment_amount;
+                }
+            }
+        }
+
+        // Final Service Provider earnings after artisan split
+        $serviceProviderFinalEarnings = $serviceProviderEarningsBase - $artisanEarnings;
+
+        return [
+            'subtotal' => $subtotal,
+            'service_provider_earnings' => $serviceProviderFinalEarnings,
+            'call2fix_management_fee' => $managementFee,
+            'call2fix_earnings' => $call2fixEarnings,
+            'warranty_retention' => $warrantyRetention,
+            'artisan_earnings' => $artisanEarnings,
+        ];
     }
 }
