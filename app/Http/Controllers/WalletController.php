@@ -172,7 +172,7 @@ class WalletController extends Controller
                 // Initiate Paystack transfer
                 $paystack = new PaystackServices();
                 $payoutObject = [
-                    'amount' => $amount * 100, // In cents
+                    'amount' => $amount, // In cents
                     'recipient' => $account->account_reference,
                     'narration' => $request->narration ?? 'Personal Use'
                 ];
