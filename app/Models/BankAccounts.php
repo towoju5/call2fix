@@ -24,6 +24,7 @@ class BankAccounts extends BaseModel
         'bank_code',
         'provider_response',
         'provider_name',
+        'account_reference',
         'account_type' // deposit or withdrawal
     ];
 
