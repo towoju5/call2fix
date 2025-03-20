@@ -118,6 +118,7 @@ class WalletController extends Controller
         $_where = [
             "id" => $request->bank_id,
             'user_id' => $user->id,
+            "account_type" => "withdrawal",
         ];
         $account = BankAccounts::where($_where)->first();
         if (!$account) {
