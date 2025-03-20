@@ -156,17 +156,17 @@ class PaystackServices
         $request = request();
         $payload = [
             'source' => "balance",
-            'amount' => $data['amount'],
+            'amount' => ceil($data['amount']),
             'reference' => generate_uuid(),
             'recipient' => $data['recipient'],
             'reason' => $data['narration'] ?? $request->narration,
         ];
 
-        Log::info("payload for payout request is", ['payload' => $payload]);
-
         $response = Http::withHeaders([
             'Authorization' => 'Bearer ' . $this->paystackSecretKey,
         ])->post($url, $payload);
+
+        Log::info("payload for payout request is", ['payload' => $payload, 'response' => $response]);
 
         if ($response->successful()) {
             return ['success' => true, 'data' => $response->json()['data']];
