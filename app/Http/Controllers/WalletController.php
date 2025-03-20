@@ -139,15 +139,15 @@ class WalletController extends Controller
             // Get user's wallet
             $wallet = $user->getWallet($walletType);
 
-            // Check withdrawal limits
-            $dailyLimit = get_settings_value('daily_withdrawal_limit', 1000000); // Default 1,000,000 NGN
-            $userWithdrawals = Withdrawal::where('user_id', $user->id)
-                ->whereDate('created_at', today())
-                ->sum('amount');
+            // // Check withdrawal limits
+            // $dailyLimit = get_settings_value('daily_withdrawal_limit', 1000000); // Default 1,000,000 NGN
+            // $userWithdrawals = Withdrawal::where('user_id', $user->id)
+            //     ->whereDate('created_at', today())
+            //     ->sum('amount');
 
-            if (($userWithdrawals + $amount) > $dailyLimit) {
-                return get_error_response("Daily withdrawal limit exceeded", ['error' => "Daily withdrawal limit exceeded"]);
-            }
+            // if (($userWithdrawals + $amount) > $dailyLimit) {
+            //     return get_error_response("Daily withdrawal limit exceeded", ['error' => "Daily withdrawal limit exceeded"]);
+            // }
 
             // Check wallet balance
             if ($wallet->balance < $finalAmountDue) {
