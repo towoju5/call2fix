@@ -196,14 +196,14 @@ class WalletController extends Controller
                 }
 
                 // Create withdrawal record
-                Withdrawal::create([
-                    'user_id' => $user->id,
-                    'bank_id' => $bank_id,
-                    'amount' => $amount,
-                    'fee' => $withdrawal_fee,
-                    'status' => 'completed',
-                    'transaction_reference' => $paystackResponse['data']['reference']
-                ]);
+                // Withdrawal::create([
+                //     'user_id' => $user->id,
+                //     'bank_id' => $bank_id,
+                //     'amount' => $amount,
+                //     'fee' => $withdrawal_fee,
+                //     'status' => 'completed',
+                //     'transaction_reference' => $paystackResponse['data']['reference']
+                // ]);
 
                 DB::commit();
 
