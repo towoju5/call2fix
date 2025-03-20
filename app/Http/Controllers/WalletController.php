@@ -14,6 +14,9 @@ use Towoju5\Wallet\Services\WalletService;
 use Unicodeveloper\Paystack\Facades\Paystack;
 // use Towoju5\LaravelWallet\Services\CurrencyExchangeService;
 use Towoju5\Wallet\Services\CurrencyExchangeService;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
 
 class WalletController extends Controller
 {
@@ -116,9 +119,12 @@ class WalletController extends Controller
             "id" => $request->bank_id,
             'user_id' => $user->id,
         ];
-        
-        if (!BankAccounts::where($_where)->exists()) {
+        $account = BankAccounts::where($_where)->first();
+        if (!$account) {
             return get_error_response("Invalid bank account ID provided");
+        }
+        if(!$account_reference = $account->account_reference) {
+            return get_error_response("Please remove and re-add withdrawal information", ['error' => "Please remove and re-add withdrawal information"]);
         }
         
         $wallet = $user->getWallet($walletType);
@@ -139,11 +145,13 @@ class WalletController extends Controller
             $paystack = new PaystackServices();
             $payoutObject = [
                 "amount" => $amount,
-                "recipient" => $amount,
+                "recipient" => $account_reference,
                 "narration" => $amount,
             ];
             $processWithdrawal = $paystack->initiateTransfer($payoutObject);
-            return response()->json($processWithdrawal);
+            if($processWithdrawal['success'] == false) {
+                return get_error_response($processWithdrawal['message'], ['error' => $processWithdrawal['message']]);
+            }
             return get_success_response($transaction, 'Withdrawal successful');
         } catch (\Exception $e) {
             return get_error_response($e->getMessage());
@@ -330,11 +338,40 @@ class WalletController extends Controller
             $validate['user_id'] = auth()->id();
             $validate['account_type'] = 'withdrawal';
 
+            // create the account as a paystack recipient
+            $paystack_secret_key = get_settings_value('paystack_secret_key');
+            if(!isset($paystack_secret_key) || empty($paystack_secret_key)) {
+                return get_error_response("Unable to process withdrawal, please contact support", ['error' => "Unable to process withdrawal, please contact support"]);
+            }
+            $response = Http::withHeaders([
+                'Authorization' => 'Bearer '.$paystack_secret_key,
+                'Content-Type' => 'application/json',
+            ])->post('https://api.paystack.co/transferrecipient', [
+                'type' => 'nuban',
+                'name' => $validate['account_name'],
+                'account_number' => $validate['account_number'],
+                'bank_code' => $validate['bank_code'],
+                'currency' => 'NGN'
+            ]);
+
+            // To get the response body
+            $responseBody = $response->json();
+            if($responseBody["status"] != true){
+                return get_error_response($responseBody["message"], ['error' => $responseBody["message"]]);
+            }
+
+            if (!Schema::hasColumn('bank_accounts', 'account_reference')) {
+                Schema::table('bank_accounts', function (Blueprint $table) {
+                    $table->string('account_reference')->nullable();
+                });
+            }
+
             if (
                 $account = BankAccounts::updateOrCreate(
                     [
                         "account_number" => $validate["account_number"],
-                        "bank_code" => $validate["bank_code"]
+                        "bank_code" => $validate["bank_code"],
+                        "account_reference" => $responseBody['data']['recipient_code']
                     ],
                     $validate
                 )
