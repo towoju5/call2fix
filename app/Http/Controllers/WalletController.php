@@ -123,7 +123,7 @@ class WalletController extends Controller
         if (!$account) {
             return get_error_response("Invalid bank account ID provided");
         }
-        if(!$account_reference = $account->account_reference) {
+        if(!isset($account->account_reference)) {
             return get_error_response("Please remove and re-add withdrawal information", ['error' => "Please remove and re-add withdrawal information"]);
         }
         
@@ -145,9 +145,10 @@ class WalletController extends Controller
             $paystack = new PaystackServices();
             $payoutObject = [
                 "amount" => $amount,
-                "recipient" => $account_reference,
+                "recipient" => $account->account_reference,
                 "narration" => $amount,
             ];
+            return response()->json($payoutObject);
             $processWithdrawal = $paystack->initiateTransfer($payoutObject);
             if($processWithdrawal['success'] == false) {
                 return get_error_response($processWithdrawal['message'], ['error' => $processWithdrawal['message']]);
