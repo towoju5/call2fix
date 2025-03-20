@@ -206,12 +206,16 @@ class WalletController extends Controller
                 // ]);
 
                 DB::commit();
+                $resp = $paystackResponse['data'];
+                if($paystackResponse['success'] == true) {
+                    $resp = [
+                        "amount" => $paystackResponse['data']['amount'],
+                        "currency" => $paystackResponse['data']['currency'],
+                        "payout_status" => $paystackResponse['data']['status'],
+                    ];
+                }
 
-                return get_success_response(
-                    [
-                        'transactions' => $withdrawalTransactions,
-                        'paystack_response' => $paystackResponse
-                    ],
+                return get_success_response($resp,
                     'Withdrawal initiated successfully'
                 );
             } catch (\Exception $e) {
