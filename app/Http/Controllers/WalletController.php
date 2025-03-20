@@ -172,7 +172,7 @@ class WalletController extends Controller
                 // Initiate Paystack transfer
                 $paystack = new PaystackServices();
                 $payoutObject = [
-                    'amount' => $amount, // In cents
+                    'amount' => $amount * 100, // In cents
                     'recipient' => $account->account_reference,
                     'narration' => $request->narration ?? 'Personal Use'
                 ];
@@ -195,15 +195,32 @@ class WalletController extends Controller
                     );
                 }
 
+                if (!Schema::hasTable('withdrawals')) {
+                    // Create the table
+                    Schema::create('withdrawals', function (Blueprint $table) {
+                        $table->id();
+                        $table->foreignId('user_id')->constrained()->onDelete('cascade');
+                        $table->foreignId('bank_id')->constrained('bank_accounts')->onDelete('cascade');
+                        $table->decimal('amount', 16, 2);
+                        $table->decimal('fee', 16, 2)->default(0);
+                        $table->string('status')->default('pending');
+                        $table->string('transaction_reference')->nullable();
+                        $table->json('meta')->nullable();
+                        $table->softDeletes();
+                        $table->timestamps();
+                    });
+                }
+                
                 // Create withdrawal record
-                // Withdrawal::create([
-                //     'user_id' => $user->id,
-                //     'bank_id' => $bank_id,
-                //     'amount' => $amount,
-                //     'fee' => $withdrawal_fee,
-                //     'status' => 'completed',
-                //     'transaction_reference' => $paystackResponse['data']['reference']
-                // ]);
+                Withdrawal::create([
+                    'user_id' => $user->id,
+                    'bank_id' => $bank_id,
+                    'amount' => $amount,
+                    'fee' => $withdrawal_fee,
+                    'status' => 'completed',
+                    'transaction_reference' => $paystackResponse['data']['reference'],
+                    'meta' => array_merge(['gateway_response' => $paystackResponse], ['wallet_record' => $withdrawalTransactions], ['payout_payload' => $payoutObject])
+                ]);
 
                 DB::commit();
                 $resp = $paystackResponse['data'];
