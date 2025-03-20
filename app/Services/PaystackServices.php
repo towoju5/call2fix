@@ -162,6 +162,8 @@ class PaystackServices
             'reason' => $data['narration'] ?? $request->narration,
         ];
 
+        Log::info("payload for payout request is", ['payload' => $payload]);
+
         $response = Http::withHeaders([
             'Authorization' => 'Bearer ' . $this->paystackSecretKey,
         ])->post($url, $payload);
