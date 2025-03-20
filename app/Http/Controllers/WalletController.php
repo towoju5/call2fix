@@ -118,7 +118,7 @@ class WalletController extends Controller
         $_where = [
             "id" => $request->bank_id,
             'user_id' => $user->id,
-            "account_type" => "withdrawal",
+            // "account_type" => "withdrawal",
         ];
         $account = BankAccounts::where($_where)->first();
         if (!$account) {
@@ -145,9 +145,9 @@ class WalletController extends Controller
             // send request to paystack for withdrawal
             $paystack = new PaystackServices();
             $payoutObject = [
-                "amount" => $amount,
+                "amount" => $amount * 100,
                 "recipient" => $account->account_reference,
-                "narration" => $amount,
+                "narration" => $request->narration ?? "Personal Use",
             ];
             // return response()->json($payoutObject);
             $processWithdrawal = $paystack->initiateTransfer($payoutObject);
