@@ -157,6 +157,7 @@ class PaystackServices
         $payload = [
             'source' => "balance",
             'amount' => $data['amount'],
+            'reference' => generate_uuid(),
             'recipient' => $data['recipient'],
             'reason' => $data['narration'] ?? $request->narration,
         ];

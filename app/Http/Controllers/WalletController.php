@@ -148,9 +148,12 @@ class WalletController extends Controller
                 "recipient" => $account->account_reference,
                 "narration" => $amount,
             ];
-            return response()->json($payoutObject);
+            // return response()->json($payoutObject);
             $processWithdrawal = $paystack->initiateTransfer($payoutObject);
             if($processWithdrawal['success'] == false) {
+                // refund customer
+                $transaction[] = $wallet->deposit($amount*100,  ['description' => "Withdrawal refund  - {$request->bank_id}", "narration" => $request->narration ?? null]);
+                $transaction[] = $wallet->deposit($withdrawal_fee*100, ['description' => "Withdrawal Fee  refund- {$request->bank_id}", "narration" => "Charges for withdrawal to bank account - {$request->bank_id}"]);
                 return get_error_response($processWithdrawal['message'], ['error' => $processWithdrawal['message']]);
             }
             return get_success_response($transaction, 'Withdrawal successful');
