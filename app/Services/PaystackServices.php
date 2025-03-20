@@ -18,7 +18,7 @@ class PaystackServices
 
     public function __construct()
     {
-        $this->paystackSecretKey = getenv("PAYSTACK_SECRET_KEY");
+        $this->paystackSecretKey = get_settings_value('paystack_secret_key');
     }
 
     private function ensureCustomerId(User $user)
