@@ -220,7 +220,7 @@
             </div>
 
             <div class="row">
-                <div class="col-lg-12">
+                <div class="col-lg-12 mb-4">
                     <div class="card">
                         <div class="card-body">
                             <form action="{{ route('admin.wallet.transaction') }}" method="POST" class="d-flex gap-2 align-items-center">
@@ -228,7 +228,7 @@
 
                                 <input type="hidden" name="user_id" value="{{ $user->id }}">
 
-                                <div class="form-group">
+                                <div class="row mb-3 form-group">
                                     <label for="_account_type">Account Type</label>
                                     <select name="_account_type" class="form-control" required>
                                         @foreach($user->roles as $role)
@@ -237,17 +237,17 @@
                                     </select>
                                 </div>
 
-                                <div class="form-group">
+                                <div class="row mb-3 form-group">
                                     <label for="amount">Amount</label>
                                     <input type="number" name="amount" class="form-control" required>
                                 </div>
 
-                                <div class="form-group">
+                                <div class="row mb-3 form-group">
                                     <label for="naration">Narration</label>
                                     <input type="text" name="naration" class="form-control" required>
                                 </div>
 
-                                <div class="form-group">
+                                <div class="row mb-3 form-group">
                                     <label for="transaction_type">Transaction Type</label>
                                     <select name="transaction_type" class="form-control" required>
                                         <option value="credit">Credit</option>
