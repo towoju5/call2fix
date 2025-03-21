@@ -48,7 +48,7 @@ class UsersController extends Controller
         
         $my_wallet = Wallet::where([
             'user_id' => $user->id,
-        ])->first();
+        ])->get();
 
         return view('admin.users.show', compact('user', 'my_wallet', 'transactions', 'serviceRequests', 'products', 'orders', 'wallets', 'properties', 'bankAccount', 'business_info'));
     }
