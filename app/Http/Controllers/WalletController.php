@@ -196,6 +196,12 @@ class WalletController extends Controller
                     );
                 }
 
+                if (!Schema::hasColumn('withdrawals', '_account_type')) {
+                    Schema::table('withdrawals', function (Blueprint $table) {
+                        $table->string('_account_type')->nullable();
+                    });
+                }
+
                 if (!Schema::hasTable('withdrawals')) {
                     // Create the table
                     Schema::create('withdrawals', function (Blueprint $table) {
