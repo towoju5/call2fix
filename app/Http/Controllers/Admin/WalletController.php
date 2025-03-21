@@ -27,7 +27,7 @@ class WalletController extends Controller
         }
 
         // find user wallet where _account_type
-        $wallet = Wallet::where(['user_id' => $request->user_id, '_account_type' => $request->_account_type])->first();
+        $wallet = Wallet::where(['user_id' => $request->user_id, 'role' => $request->_account_type])->first();
         if($wallet) {
             $wallet->deposit($amount * 100, [
                 "description" => $request->naration,
@@ -58,7 +58,7 @@ class WalletController extends Controller
         }
 
         // find user wallet where _account_type
-        $wallet = Wallet::where(['user_id' => $request->user_id, '_account_type' => $request->_account_type])->first();
+        $wallet = Wallet::where(['user_id' => $request->user_id, 'role' => $request->_account_type])->first();
         if($wallet) {
             $wallet->withdrawal($amount * 100, [
                 "description" => $request->naration,
@@ -91,7 +91,7 @@ class WalletController extends Controller
 
         $wallet = Wallet::where([
             'user_id' => $request->user_id,
-            '_account_type' => $request->_account_type
+            'role' => $request->_account_type
         ])->first();
 
         if (!$wallet) {
