@@ -202,6 +202,7 @@
                                 <tr>
                                     <th>ID</th>
                                     <th>Curreny</th>
+                                    <th>Acc. Type</th>
                                     <th>Balance</th>
                                 </tr>
                             </thead>
@@ -210,6 +211,7 @@
                                 <tr>
                                     <td>{{ $wallet->id }}</td>
                                     <td>{{ strtoupper($wallet->currency) }}</td>
+                                    <td>{{ ucfirst($wallet->role) }}</td>
                                     <td>{{ $wallet->meta['meta']['symbol'].number_format($wallet->balance, 2) }}</td>
                                 </tr>
                                 @endforeach
