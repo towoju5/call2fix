@@ -206,7 +206,7 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach ($wallets as $wallet)
+                                @foreach ($my_wallet as $wallet)
                                 <tr>
                                     <td>{{ $wallet->id }}</td>
                                     <td>{{ strtoupper($wallet->currency) }}</td>
@@ -219,7 +219,7 @@
                 </div>
             </div>
 
-            <div class="col-lg-12 mb-4">
+            <div class="col-lg-12 my-4">
                 <div class="card">
                     <div class="card-body">
                         <form action="{{ route('admin.wallet.transaction') }}" method="POST">

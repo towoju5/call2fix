@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Imports\UsersImport;
 use Validator;
+use Towoju5\Wallet\Models\Wallet;
 
 class UsersController extends Controller
 {
@@ -45,19 +46,9 @@ class UsersController extends Controller
         $bankAccount = $user->bankAccount()->latest()->take(10)->get();
         $business_info = $user->business_info()->latest()->take(10)->get();
         
-
-        // return [
-        //     "transactions" => $transactions,
-        //     "serviceRequests" => $serviceRequests,
-        //     "products" => $products,
-        //     "orders" => $orders,
-        //     "wallets" => $wallets,
-        //     "properties" => $properties,
-        //     "artisans" => $artisans,
-        //     "bankAccount" => $bankAccount,
-        //     "business_info" => $business_info,
-        //     "user" => $user
-        // ];
+        $my_wallet = Wallet::where([
+            'user_id' => $user->id,
+        ])->first();
 
         return view('admin.users.show', compact('user', 'transactions', 'serviceRequests', 'products', 'orders', 'wallets', 'properties', 'bankAccount', 'business_info'));
     }
