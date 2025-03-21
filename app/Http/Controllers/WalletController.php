@@ -106,13 +106,13 @@ class WalletController extends Controller
     public function withdraw(Request $request, $walletType)
     {
         $validator = Validator::make($request->all(), [
-            'amount' => 'required|numeric|min:100',
+            'amount' => 'required|numeric|min:1',
             'bank_id' => 'required|string|exists:bank_accounts,id',
             'narration' => 'nullable|string|max:255'
         ]);
     
         if ($validator->fails()) {
-            return get_error_response("Validation Error", $validator->errors()->all());
+            return get_error_response("Validation Error", $validator->errors());
         }
     
         try {
