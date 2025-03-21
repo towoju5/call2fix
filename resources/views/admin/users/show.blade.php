@@ -222,13 +222,13 @@
             <div class="col-lg-12 mb-4">
                 <div class="card">
                     <div class="card-body">
-                        <form action="{{ route('admin.wallet.transaction') }}" method="POST" class="d-flex gap-2 align-items-center">
+                        <form action="{{ route('admin.wallet.transaction') }}" method="POST">
                             @csrf
 
                             <input type="hidden" name="user_id" value="{{ $user->id }}">
 
-                            <div class="row mb-3 form-group">
-                                <label for="_account_type">Account Type</label>
+                            <div class="mb-3">
+                                <label for="_account_type" class="form-label">Account Type</label>
                                 <select name="_account_type" class="form-control" required>
                                     @foreach($user->roles as $role)
                                         <option value="{{ $role->name }}">{{ ucfirst($role->name) }}</option>
@@ -236,18 +236,18 @@
                                 </select>
                             </div>
 
-                            <div class="row mb-3 form-group">
-                                <label for="amount">Amount</label>
+                            <div class="mb-3">
+                                <label for="amount" class="form-label">Amount</label>
                                 <input type="number" name="amount" class="form-control" required>
                             </div>
 
-                            <div class="row mb-3 form-group">
-                                <label for="naration">Narration</label>
+                            <div class="mb-3">
+                                <label for="naration" class="form-label">Narration</label>
                                 <input type="text" name="naration" class="form-control" required>
                             </div>
 
-                            <div class="row mb-3 form-group">
-                                <label for="transaction_type">Transaction Type</label>
+                            <div class="mb-3">
+                                <label for="transaction_type" class="form-label">Transaction Type</label>
                                 <select name="transaction_type" class="form-control" required>
                                     <option value="credit">Credit</option>
                                     <option value="debit">Debit</option>
@@ -259,6 +259,7 @@
                     </div>
                 </div>
             </div>
+
         </div>
     </div>
 </div>
