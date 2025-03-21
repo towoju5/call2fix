@@ -189,7 +189,7 @@ class WalletController extends Controller
                     // Update withdrawal status to "failed"
                     $withdrawal->update([
                         'status' => 'failed',
-                        'meta' => array_merge($withdrawal->meta, ['gateway_response' => $paystackResponse])
+                        'meta' => array_merge(['meta' => $withdrawal->meta], ['gateway_response' => $paystackResponse])
                     ]);
     
                     DB::rollBack();
@@ -203,7 +203,7 @@ class WalletController extends Controller
                 $withdrawal->update([
                     'status' => 'completed',
                     'transaction_reference' => $paystackResponse['data']['reference'],
-                    'meta' => array_merge($withdrawal->meta, [
+                    'meta' => array_merge(['meta' => $withdrawal->meta], [
                         'gateway_response' => $paystackResponse,
                         'wallet_record' => [$withdrawalTransaction, $feeTransaction],
                         'payout_payload' => $payoutObject
