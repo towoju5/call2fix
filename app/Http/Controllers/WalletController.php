@@ -8,6 +8,7 @@ use App\Services\PaystackServices;
 use DB;
 use Illuminate\Http\Request;
 use App\Models\User;
+use App\Models\Withdrawal;
 use Bavix\Wallet\Models\Wallet;
 use Illuminate\Support\Facades\Validator;
 use Towoju5\Wallet\Services\WalletService;
