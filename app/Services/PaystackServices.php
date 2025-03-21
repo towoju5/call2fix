@@ -153,7 +153,7 @@ class PaystackServices
     public function initiateTransfer($data)
     {
         try {
-            $url = config('paystack.base_url') . '/transfer';
+            $url = $this->paystackBaseUrl . '/transfer';
             $payload = [
                 'source' => "balance",
                 'amount' => ceil($data['amount']),
