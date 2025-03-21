@@ -17,7 +17,7 @@ use App\Http\Controllers\Admin\SubscriptionsController;
 use App\Http\Controllers\AdminController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\UsersController;
-
+use App\Http\Controllers\Admin\WalletController;
 
 
 
@@ -60,6 +60,11 @@ Route::domain(env('ADMIN_URL'))->group(function () {
         });
 
         
+        Route::prefix('wallet')->group(function () {
+            Route::post('fund-customer', [WalletController::class, 'creditUser'])->name('wallet.fund');
+            Route::post('debit-customer', [WalletController::class, 'debitUser'])->name('wallet.debit');
+            Route::post('/wallet/transaction', [WalletController::class, 'processWalletTransaction'])->name('wallet.transaction');
+        });
 
         Route::group(['prefix' => 'service-requests', 'as' => 'service-requests.'], function () {
             Route::get('/', [ServiceRequestController::class, 'index'])->name('index');
