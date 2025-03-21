@@ -149,31 +149,36 @@ class PaystackServices
 
         return response()->json(['message' => 'Webhook processed']);
     }
-
+    
     public function initiateTransfer($data)
     {
-        $url = $this->paystackBaseUrl . '/transfer';
-        $request = request();
-        $payload = [
-            'source' => "balance",
-            'amount' => ceil($data['amount']),
-            'reference' => generate_uuid(),
-            'recipient' => $data['recipient'],
-            'reason' => $data['narration'] ?? $request->narration,
-        ];
-
-        $response = Http::withHeaders([
-            'Authorization' => 'Bearer ' . $this->paystackSecretKey,
-        ])->post($url, $payload);
-
-        Log::info("payload for payout request is", ['payload' => $payload, 'response' => $response]);
-
-        if ($response->successful()) {
-            return ['success' => true, 'data' => $response->json()['data']];
+        try {
+            $url = config('paystack.base_url') . '/transfer';
+            $payload = [
+                'source' => "balance",
+                'amount' => ceil($data['amount']),
+                'reference' => generate_uuid(),
+                'recipient' => $data['recipient'],
+                'reason' => $data['narration'] ?? 'Fund Transfer',
+            ];
+    
+            $response = Http::withHeaders([
+                'Authorization' => 'Bearer ' . config('paystack.secret_key'),
+            ])->post($url, $payload);
+    
+            Log::info("Paystack Payout Request", ['payload' => $payload, 'response' => $response->json()]);
+    
+            if ($response->successful()) {
+                return ['success' => true, 'data' => $response->json()['data']];
+            }
+    
+            return ['success' => false, 'message' => $response->json()['message'] ?? 'Transfer initiation failed'];
+        } catch (\Exception $e) {
+            Log::error("Paystack Transfer Error: " . $e->getMessage());
+            return ['success' => false, 'message' => 'An error occurred while processing the transfer'];
         }
-
-        return ['success' => false, 'message' => $response->json()['message'] ?? 'Transfer initiation failed'];
     }
+    
 
     public function handleSuccessfulCharge($data)
     {

@@ -105,159 +105,130 @@ class WalletController extends Controller
 
     public function withdraw(Request $request, $walletType)
     {
-        // Validate input parameters
         $validator = Validator::make($request->all(), [
             'amount' => 'required|numeric|min:100',
             'bank_id' => 'required|string|exists:bank_accounts,id',
             'narration' => 'nullable|string|max:255'
         ]);
-
+    
         if ($validator->fails()) {
             return get_error_response("Validation Error", $validator->errors()->all());
         }
-
+    
         try {
             $user = $request->user();
             $bank_id = $request->bank_id;
             $amount = $request->amount;
             $withdrawal_fee = get_settings_value('withdrawal_fee', 0);
             $finalAmountDue = ($amount + $withdrawal_fee) * 100; // Convert to cents
-
-            // Verify bank account ownership and status
+    
             $account = BankAccounts::where([
                 'id' => $bank_id,
                 'user_id' => $user->id,
             ])->first();
-
-            if (!$account) {
-                return get_error_response("Invalid or inactive bank account", ['error' => "Invalid or inactive bank account"]);
+    
+            if (!$account || empty($account->account_reference)) {
+                return get_error_response("Invalid bank account", ['error' => "Invalid or incomplete bank details"]);
             }
-
-            if (empty($account->account_reference)) {
-                return get_error_response("Incomplete bank details", ['error' => "Please update your bank details"]);
-            }
-
-            // Get user's wallet
+    
             $wallet = $user->getWallet($walletType);
-
-            // // Check withdrawal limits
-            // $dailyLimit = get_settings_value('daily_withdrawal_limit', 1000000); // Default 1,000,000 NGN
-            // $userWithdrawals = Withdrawal::where('user_id', $user->id)
-            //     ->whereDate('created_at', today())
-            //     ->sum('amount');
-
-            // if (($userWithdrawals + $amount) > $dailyLimit) {
-            //     return get_error_response("Daily withdrawal limit exceeded", ['error' => "Daily withdrawal limit exceeded"]);
-            // }
-
-            // Check wallet balance
             if ($wallet->balance < $finalAmountDue) {
-                return get_error_response("Insufficient funds", ['error' => "Insufficient funds for withdrawal"]);
+                return get_error_response("Insufficient funds", ['error' => "Not enough balance for withdrawal"]);
             }
-
+    
+            // Generate unique transaction reference
+            $transactionReference = generate_uuid();
+    
             DB::beginTransaction();
-
             try {
-                // Create withdrawal transactions
-                $withdrawalTransactions = [
-                    $wallet->withdrawal($amount * 100, [
-                        'description' => "Withdrawal to bank account - {$bank_id}",
-                        'narration' => $request->narration ?? 'Personal Use'
-                    ]),
-                    $wallet->withdrawal($withdrawal_fee * 100, [
-                        'description' => "Withdrawal Fee - {$bank_id}",
-                        'narration' => "Withdrawal fee for bank transfer"
-                    ])
-                ];
-
-                // Initiate Paystack transfer
+                // **Step 1: Log Withdrawal as Pending**
+                $withdrawal = Withdrawal::create([
+                    'user_id' => $user->id,
+                    'bank_id' => $bank_id,
+                    'amount' => $amount,
+                    'fee' => $withdrawal_fee,
+                    'status' => 'pending',
+                    'transaction_reference' => $transactionReference,
+                    'meta' => []
+                ]);
+    
+                // **Step 2: Deduct the Amount & Fee Separately**
+                $withdrawalTransaction = $wallet->withdraw($amount * 100, [
+                    'description' => "Withdrawal to bank - {$bank_id}",
+                    'narration' => $request->narration ?? 'Personal Use'
+                ]);
+    
+                $feeTransaction = $wallet->withdraw($withdrawal_fee * 100, [
+                    'description' => "Withdrawal Fee",
+                    'narration' => "Fee for bank transfer"
+                ]);
+    
+                // **Step 3: Call Paystack API**
                 $paystack = new PaystackServices();
                 $payoutObject = [
                     'amount' => $amount * 100, // In cents
                     'recipient' => $account->account_reference,
-                    'narration' => $request->narration ?? 'Personal Use'
+                    'narration' => $request->narration ?? 'Personal Use',
+                    'reference' => $transactionReference
                 ];
-
+    
                 $paystackResponse = $paystack->initiateTransfer($payoutObject);
-
+    
                 if (!$paystackResponse['success']) {
-                    // Reverse transactions if Paystack API fails
-                    foreach ($withdrawalTransactions as $transaction) {
-                        $wallet->deposit(abs($transaction['amount']), [
-                            'description' => "Refund for failed withdrawal",
-                            'narration' => "Refund for failed Paystack transfer"
-                        ]);
-                    }
-
+                    // **Step 4: Refund on Failure**
+                    $wallet->deposit($withdrawalTransaction->amount, [
+                        'description' => "Refund for failed withdrawal",
+                        'narration' => "Refund after failed Paystack transfer"
+                    ]);
+    
+                    $wallet->deposit($feeTransaction->amount, [
+                        'description' => "Refund for withdrawal fee",
+                        'narration' => "Reversal of withdrawal fee"
+                    ]);
+    
+                    // Update withdrawal status to "failed"
+                    $withdrawal->update([
+                        'status' => 'failed',
+                        'meta' => array_merge($withdrawal->meta, ['gateway_response' => $paystackResponse])
+                    ]);
+    
                     DB::rollBack();
                     return get_error_response(
                         "Withdrawal failed: " . $paystackResponse['message'],
                         ['error' => $paystackResponse['message']]
                     );
                 }
-
-                if (!Schema::hasColumn('withdrawals', '_account_type')) {
-                    Schema::table('withdrawals', function (Blueprint $table) {
-                        $table->string('_account_type')->nullable();
-                    });
-                }
-
-                if (!Schema::hasTable('withdrawals')) {
-                    // Create the table
-                    Schema::create('withdrawals', function (Blueprint $table) {
-                        $table->id();
-                        $table->foreignId('user_id')->constrained()->onDelete('cascade');
-                        $table->foreignId('bank_id')->constrained('bank_accounts')->onDelete('cascade');
-                        $table->decimal('amount', 16, 2);
-                        $table->decimal('fee', 16, 2)->default(0);
-                        $table->string('status')->default('pending');
-                        $table->string('transaction_reference')->nullable();
-                        $table->json('meta')->nullable();
-                        $table->softDeletes();
-                        $table->timestamps();
-                    });
-                }
-                
-                // Create withdrawal record
-                Withdrawal::create([
-                    'user_id' => $user->id,
-                    'bank_id' => $bank_id,
-                    'amount' => $amount,
-                    'fee' => $withdrawal_fee,
+    
+                // **Step 5: Update Withdrawal Status to Completed**
+                $withdrawal->update([
                     'status' => 'completed',
                     'transaction_reference' => $paystackResponse['data']['reference'],
-                    'meta' => array_merge(['gateway_response' => $paystackResponse], ['wallet_record' => $withdrawalTransactions], ['payout_payload' => $payoutObject])
+                    'meta' => array_merge($withdrawal->meta, [
+                        'gateway_response' => $paystackResponse,
+                        'wallet_record' => [$withdrawalTransaction, $feeTransaction],
+                        'payout_payload' => $payoutObject
+                    ])
                 ]);
-
+    
                 DB::commit();
-                $resp = $paystackResponse['data'];
-                if($paystackResponse['success'] == true) {
-                    $resp = [
-                        "amount" => $paystackResponse['data']['amount'],
-                        "currency" => $paystackResponse['data']['currency'],
-                        "payout_status" => $paystackResponse['data']['status'],
-                    ];
-                }
-
-                return get_success_response($resp,
-                    'Withdrawal initiated successfully'
-                );
+    
+                return get_success_response([
+                    "amount" => $paystackResponse['data']['amount'],
+                    "currency" => $paystackResponse['data']['currency'],
+                    "payout_status" => $paystackResponse['data']['status'],
+                ], 'Withdrawal initiated successfully');
+    
             } catch (\Exception $e) {
                 DB::rollBack();
                 logger('Withdrawal failed: ' . $e->getMessage());
-                return get_error_response(
-                    "Withdrawal processing failed",
-                    ['error' => "An error occurred during withdrawal processing"]
-                );
+                return get_error_response("An error occurred during withdrawal processing", ['error' => $e->getMessage()]);
             }
         } catch (\Exception $e) {
             logger('Withdrawal error: ' . $e->getMessage());
-            return get_error_response(
-                "Withdrawal failed",
-                ['error' => "An unexpected error occurred"]
-            );
+            return get_error_response("Withdrawal failed", ['error' => "An unexpected error occurred"]);
         }
     }
+    
 
     public function balance($walletType)
     {
