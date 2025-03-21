@@ -30,7 +30,7 @@ class WalletController extends Controller
         if($wallet) {
             $wallet->deposit($amount * 100, [
                 "description" => $request->naration,
-                "funded_by" => auth('admin')->user()
+                "funded_by" => auth('admin')->user(),
                 "is_admin" => true,
                 "date_time" => now()
             ]);
@@ -61,7 +61,7 @@ class WalletController extends Controller
         if($wallet) {
             $wallet->withdrawal($amount * 100, [
                 "description" => $request->naration,
-                "funded_by" => auth('admin')->user()
+                "funded_by" => auth('admin')->user(),
                 "is_admin" => true,
                 "date_time" => now()
             ]);
