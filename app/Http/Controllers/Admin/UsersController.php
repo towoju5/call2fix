@@ -50,7 +50,7 @@ class UsersController extends Controller
             'user_id' => $user->id,
         ])->first();
 
-        return view('admin.users.show', compact('user', 'transactions', 'serviceRequests', 'products', 'orders', 'wallets', 'properties', 'bankAccount', 'business_info'));
+        return view('admin.users.show', compact('user', 'my_wallet', 'transactions', 'serviceRequests', 'products', 'orders', 'wallets', 'properties', 'bankAccount', 'business_info'));
     }
 
 
