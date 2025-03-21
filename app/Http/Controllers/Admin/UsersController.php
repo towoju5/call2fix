@@ -33,6 +33,8 @@ class UsersController extends Controller
 
     public function show(User $user)
     {
+        $wallets = Towoju5\Wallet\Models\Wallet::all();
+        return response()->json($wallets);
         $transactions = $user->transactions()->latest()->take(10)->get();
         $serviceRequests = $user->serviceRequests()->latest()->take(10)->get();
         $products = $user->products()->latest()->take(10)->get();
