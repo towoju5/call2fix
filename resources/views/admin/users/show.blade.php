@@ -223,7 +223,7 @@
                 <div class="col-lg-12">
                     <div class="card">
                         <div class="card-body">
-                            <form action="{{ route('wallet.transaction') }}" method="POST" class="d-flex gap-2 align-items-center">
+                            <form action="{{ route('admin.wallet.transaction') }}" method="POST" class="d-flex gap-2 align-items-center">
                                 @csrf
 
                                 <input type="hidden" name="user_id" value="{{ $user->id }}">
