@@ -163,7 +163,7 @@ class PaystackServices
             ];
     
             $response = Http::withHeaders([
-                'Authorization' => 'Bearer ' . config('paystack.secret_key'),
+                'Authorization' => 'Bearer '. $this->paystackSecretKey,
             ])->post($url, $payload);
     
             Log::info("Paystack Payout Request", ['payload' => $payload, 'response' => $response->json()]);
