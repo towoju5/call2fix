@@ -29,26 +29,6 @@ class ServiceRequestController extends Controller
     protected $radiusLimitKm;
     public function __construct()
     {
-        if (!Schema::hasTable('payment_apportionments')) {
-            Schema::create('payment_apportionments', function (Blueprint $table) {
-                $table->id();
-                $table->uuid('service_request_id');
-                $table->decimal('subtotal', 16, 2);
-                $table->decimal('service_provider_earnings', 16, 2);
-                $table->decimal('call2fix_management_fee', 16, 2);
-                $table->decimal('call2fix_earnings', 16, 2);
-                $table->decimal('warranty_retention', 16, 2);
-                $table->decimal('artisan_earnings', 16, 2);
-                $table->timestamps();
-                $table->softDeletes();
-        
-                // Add foreign key constraint
-                $table->foreign('service_request_id')
-                      ->references('id')
-                      ->on('service_requests')
-                      ->onDelete('cascade');
-            });
-        }
         $this->radiusLimitKm = get_settings_value('max_provider_radius') ?? 30;
     }
 
@@ -766,7 +746,7 @@ class ServiceRequestController extends Controller
 
     private function aportionment(ServiceRequestModel $serviceRequest)
     {
-        $subtotal = $serviceRequest->subtotal; // Ensure this field exists in your ServiceRequestModel
+        $subtotal = $serviceRequest->total_cost; // Ensure this field exists in your ServiceRequestModel
 
         // Calculate Call2Fix components
         $managementFee = min(0.15 * $subtotal, 100000);
