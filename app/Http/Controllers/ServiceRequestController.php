@@ -743,6 +743,7 @@ class ServiceRequestController extends Controller
                 ], 'Payment successful');
             }
         } catch (\Throwable $th) {
+            Log::debug("Transaction failed_1: ", ['error' => $th->getMessage()]);
             return get_error_response(['error' => $th->getMessage()]);
         }
     }
