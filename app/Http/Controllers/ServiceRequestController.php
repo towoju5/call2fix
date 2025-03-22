@@ -19,6 +19,7 @@ use App\Notifications\PaymentStatusUpdated;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Towoju5\Wallet\Models\Wallet;
+use App\Notifications\NewRequestNotification;
 use App\Notifications\ServiceRequest\ServiceRequestSuccessful;
 use App\Notifications\ServiceRequest\ServiceRequestNegotiated;
 use Illuminate\Database\Schema\Blueprint;
