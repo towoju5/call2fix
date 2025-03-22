@@ -29,6 +29,20 @@ class ServiceRequestController extends Controller
     protected $radiusLimitKm;
     public function __construct()
     {
+        if(!Schema::hasTable('payment_apportionments')) {
+            Schema::create('payment_apportionments', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('service_request_id')->constrained()->onDelete('cascade');
+                $table->decimal('subtotal', 16, 2);
+                $table->decimal('service_provider_earnings', 16, 2);
+                $table->decimal('call2fix_management_fee', 16, 2);
+                $table->decimal('call2fix_earnings', 16, 2);
+                $table->decimal('warranty_retention', 16, 2);
+                $table->decimal('artisan_earnings', 16, 2);
+                $table->timestamps();
+                $table->softDeletes();
+            });
+        }
         $this->radiusLimitKm = get_settings_value('max_provider_radius') ?? 30;
     }
 
@@ -268,12 +282,6 @@ class ServiceRequestController extends Controller
             // Fetch the service request with auth checks
             $authId = auth()->id();
             $serviceRequest = ServiceRequestModel::whereId($requestId)->first();
-            //     where(function ($query) use ($authId) {
-            //     $query->where('user_id', $authId)
-            //           ->orWhere('approved_providers_id', $authId)
-            //           ->orWhereIn('featured_providers_id', $authId)
-            //           ->orWhere('approved_artisan_id', $authId);
-            // })->
 
             if (!$serviceRequest) {
                 return get_error_response("Service request not found", ["error" => "Service request not found"]);
@@ -717,6 +725,7 @@ class ServiceRequestController extends Controller
             if (!$serviceRequest) {
                 return get_error_response("Service request not found", ["error" => "Service request not found"], 404);
             }
+            
             // check if the service request is already paid for
             if ($serviceRequest->request_status == "Payment Confirmed") {
                 return get_error_response("Service request already paid for", ["error" => "Service request already paid for"], 400);
@@ -734,6 +743,7 @@ class ServiceRequestController extends Controller
 
             if ($transaction && $wallet) {
                 $serviceRequest->update([
+                    "total_cost" => $total_cost,
                     "approved_artisan_id" => $request->artisan_id,
                     "request_status" => "Payment Confirmed"
                 ]);
