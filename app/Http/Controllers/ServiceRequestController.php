@@ -29,10 +29,10 @@ class ServiceRequestController extends Controller
     protected $radiusLimitKm;
     public function __construct()
     {
-        if(!Schema::hasTable('payment_apportionments')) {
+        if (!Schema::hasTable('payment_apportionments')) {
             Schema::create('payment_apportionments', function (Blueprint $table) {
                 $table->id();
-                $table->foreignId('service_request_id')->constrained()->onDelete('cascade');
+                $table->uuid('service_request_id');
                 $table->decimal('subtotal', 16, 2);
                 $table->decimal('service_provider_earnings', 16, 2);
                 $table->decimal('call2fix_management_fee', 16, 2);
@@ -41,6 +41,12 @@ class ServiceRequestController extends Controller
                 $table->decimal('artisan_earnings', 16, 2);
                 $table->timestamps();
                 $table->softDeletes();
+        
+                // Add foreign key constraint
+                $table->foreign('service_request_id')
+                      ->references('id')
+                      ->on('service_requests')
+                      ->onDelete('cascade');
             });
         }
         $this->radiusLimitKm = get_settings_value('max_provider_radius') ?? 30;
