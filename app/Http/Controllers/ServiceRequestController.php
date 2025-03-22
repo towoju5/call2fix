@@ -787,8 +787,7 @@ class ServiceRequestController extends Controller
 
         // Final Service Provider earnings after artisan split
         $serviceProviderFinalEarnings = $serviceProviderEarningsBase - $artisanEarnings;
-
-        return [
+        $apportionments = [
             'subtotal' => $subtotal,
             'service_provider_earnings' => $serviceProviderFinalEarnings,
             'call2fix_management_fee' => $managementFee,
@@ -796,5 +795,7 @@ class ServiceRequestController extends Controller
             'warranty_retention' => $warrantyRetention,
             'artisan_earnings' => $artisanEarnings,
         ];
+        Log::debug("Hello world: ", ['apportionments' => $apportionments]);
+        return $apportionments;
     }
 }
