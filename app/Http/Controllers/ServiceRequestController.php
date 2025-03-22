@@ -179,7 +179,7 @@ class ServiceRequestController extends Controller
                 DB::commit();
                 return get_success_response($serviceRequest, "Request created successfully", 201);
             } catch (\Exception $e) {
-                Log::debug("Transaction failed: ", ['error' => $e->getMessage()]);
+                Log::debug("Transaction failed: ", ['error' => $e->getMessage(), 'trace' => $e->getTrace()]);
                 DB::rollBack();
                 return get_error_response("Transaction failed", ['error' => $e->getMessage()]);
             }
