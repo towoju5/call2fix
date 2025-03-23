@@ -515,6 +515,12 @@ class ServiceRequestController extends Controller
             ]);
 
             $serviceRequest = ServiceRequest::whereId($requestId)->first();
+            
+            $serviceRequest->update([
+                "total_cost" => $request->price,
+                "formatted_price" => number_format($request->price, 4, '.', ''),
+            ]);
+
             if($serviceRequest) {
                 $user = User::whereId($serviceRequest->user_id)->first();
                 $provider = User::whereId($request->provider_id)->first();
