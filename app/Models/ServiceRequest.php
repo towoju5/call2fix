@@ -25,7 +25,8 @@ class ServiceRequest extends BaseModel
         'request_status',    // 'Draft','Pending','Processing','Bidding In Progress','Quote Accepted','Awaiting Payment','Payment Confirmed','On Hold','Work In Progress','Cancelled','Completed','Overdue','Closed','Rejected','Rework issued'
         'department_id',
         'approved_providers_id',
-        'approved_artisan_id'
+        'approved_artisan_id',
+        'total_cost'
     ];
 
     protected $casts = [
