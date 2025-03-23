@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\ServiceRequestModel as ServiceRequest;
 use App\Models\User;
 use App\Models\CheckIn;
+use App\Models\SubmittedQuotes;
 use Illuminate\Http\Request;
 
 class CheckInOutController extends Controller
