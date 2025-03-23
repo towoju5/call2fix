@@ -14,7 +14,7 @@ class TaskController extends Controller
     public function index()
     {
         try {
-            $tasks = ServiceRequestModel::where('request_status', 'Work In Progress')
+            $tasks = ServiceRequestModel::where('request_status', 'Work In Progress')->where('request_status', 'Awaiting Approval')
                         ->where('approved_artisan_id', auth()->id())
                         ->with('service_provider', 'serviceCategory', 'submittedQuotes')->get();
             return get_success_response($tasks, "All tasks retrieved successfully");
