@@ -286,7 +286,7 @@ class ServiceRequestController extends Controller
                 DB::beginTransaction();
                 try {
                     $serviceRequest = ServiceRequestModel::findOrFail($requestId);
-                    $apportionment = $this->apportionment($serviceRequest); // Corrected method name
+                    $apportionment = $this->aportionment($serviceRequest); // Corrected method name
 
                     // Create PaymentApportionment record
                     PaymentApportionment::create([
