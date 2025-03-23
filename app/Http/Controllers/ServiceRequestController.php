@@ -398,6 +398,16 @@ class ServiceRequestController extends Controller
                 $request->save();
             });
             $quote = SubmittedQuotes::whereId($quoteId)->where('request_id', $requestId)->first();
+            $amountDue = $quote->total_charges;
+
+            if(!empty($quote->negotiations)) {
+                $negotiations = $quote->negotiations;
+                foreach ($negotiations as $negotiation) {
+                    if(strtolower($negotiation->status) == "accepted"){
+                        $amountDue = $negotiation->price;
+                    }
+                }
+            }
 
             $acceptedRequest = $requests->firstWhere('id', $quoteId);
             if ($acceptedRequest) {
@@ -410,6 +420,7 @@ class ServiceRequestController extends Controller
 
                 if ($service_request) {
                     $service_request->update([
+                        "total_cost" => $quote->total_charges,
                         "request_status" => "Quote Accepted",
                         "approved_providers_id" => $quote->provider_id,
                         "approved_artisan_id" => $artisan->artisan_id ?? null
