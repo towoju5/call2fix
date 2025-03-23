@@ -310,7 +310,7 @@ class ServiceProviderController extends Controller
                 return get_error_response("Validation failed", $validate->errors());
             }
 
-            // Check if quote already submitted
+            // Check if quote already submitted    
             // if (SubmittedQuotes::where(["provider_id" => auth()->id(), "request_id" => $request->request_id])->exists()) {
             //     return get_error_response("You have already submitted a quote for this request", ["error" => "You have already submitted a quote for this request"]);
             // }

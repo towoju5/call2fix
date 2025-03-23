@@ -396,6 +396,7 @@ class ServiceRequestController extends Controller
                 $request->status = ($request->id == $quoteId) ? "accepted" : "rejected";
                 $request->save();
             });
+            $quote = SubmittedQuotes::whereId($quoteId)->where('request_id', $requestId)->first();
 
             $acceptedRequest = $requests->firstWhere('id', $quoteId);
             if ($acceptedRequest) {
@@ -403,11 +404,11 @@ class ServiceRequestController extends Controller
                 // retrieve the assigned artisan and add to the service request
                 $artisan = ArtisanCanSubmitQuote::where([
                     "request_id" => $requestId,
-                    "service_provider_id" => $service_request->approved_providers_id,
+                    "service_provider_id" => $quote->provider_id,
                 ])->latest()->first();
                 if ($service_request) {
                     $service_request->request_status = "Quote Accepted";
-                    $service_request->approved_providers_id = $acceptedRequest->provider_id;
+                    $service_request->approved_providers_id = $quote->provider_id;
                     $service_request->approved_artisan_id = $artisan->artisan_id ?? null;
 
                     if ($service_request->save()) {
@@ -728,7 +729,7 @@ class ServiceRequestController extends Controller
                 ]);
 
                 $provider = User::find($serviceRequest->approved_providers_id);
-                $provider->notify(new CustomNotification("Payment confirmed", "Payment confirmed."));
+                // $provider->notify(new CustomNotification("Payment confirmed", "Payment confirmed."));
                 // return success data with the transaction and service request data  
                 return get_success_response([
                     'transaction' => $transaction,
