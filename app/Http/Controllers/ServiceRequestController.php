@@ -308,7 +308,7 @@ class ServiceRequestController extends Controller
                     }
                     $providerDeposit = $provider->getWallet('ngn')->deposit(
                         $apportionment['service_provider_earnings'] * 100,
-                        ["description" => "Earnings from Service Request #{$serviceRequest->id}"]
+                        ["description" => $serviceRequest->problem_title]
                     );
 
                     if (!$providerDeposit) {
@@ -325,7 +325,7 @@ class ServiceRequestController extends Controller
                         }
                         $artisanDeposit = $artisan->getWallet('ngn')->deposit(
                             $apportionment['artisan_earnings'] * 100,
-                            ["description" => "Earnings from Service Request #{$serviceRequest->id}"]
+                            ["description" => $serviceRequest->problem_title]
                         );
                         if (!$artisanDeposit) {
                             return get_error_response('Failed to deposit into artisan wallet');
@@ -341,7 +341,7 @@ class ServiceRequestController extends Controller
                     // }
                     // $call2fixDeposit = $call2fixUser->getWallet('ngn')->deposit(
                     //     $apportionment['call2fix_earnings'] * 100,
-                    //     ["description" => "Earnings from Service Request #{$serviceRequest->id}"]
+                    //     ["description" => $serviceRequest->problem_title]
                     // );
                     // if (!$call2fixDeposit) {
                     //     return get_error_response('Failed to deposit into Call2Fix wallet');
