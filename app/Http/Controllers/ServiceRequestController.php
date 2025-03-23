@@ -420,7 +420,7 @@ class ServiceRequestController extends Controller
 
                 if ($service_request) {
                     $service_request->update([
-                        "total_cost" => $quote->total_charges,
+                        "total_cost" => $amountDue,
                         "request_status" => "Quote Accepted",
                         "approved_providers_id" => $quote->provider_id,
                         "approved_artisan_id" => $artisan->artisan_id ?? null
