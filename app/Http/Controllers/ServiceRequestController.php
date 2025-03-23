@@ -396,9 +396,9 @@ class ServiceRequestController extends Controller
                 $request->status = ($request->id == $quoteId) ? "accepted" : "rejected";
                 $request->save();
             });
-            return $quote = SubmittedQuotes::whereId($quoteId)->where('request_id', $requestId)->first();
+            $quote = SubmittedQuotes::whereId($quoteId)->where('request_id', $requestId)->first();
 
-            $acceptedRequest = $requests->firstWhere('id', $quoteId);
+            return $acceptedRequest = $requests->firstWhere('id', $quoteId);
             if ($acceptedRequest) {
                 $service_request = ServiceRequest::whereId($requestId)->first();
                 // retrieve the assigned artisan and add to the service request
@@ -407,9 +407,11 @@ class ServiceRequestController extends Controller
                     "service_provider_id" => $quote->provider_id,
                 ])->latest()->first();
                 if ($service_request) {
-                    $service_request->request_status = "Quote Accepted";
-                    $service_request->approved_providers_id = $quote->provider_id;
-                    $service_request->approved_artisan_id = $artisan->artisan_id ?? null;
+                    $serviceRequest->update([
+                        "request_status" => "Quote Accepted",
+                        "approved_providers_id" => $quote->provider_id,
+                        "approved_artisan_id" => $artisan->artisan_id ?? null
+                    ]);
 
                     if ($service_request->save()) {
                         // $service_request->save();
