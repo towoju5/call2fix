@@ -19,6 +19,7 @@ use Validator;
 use App\Notifications\NewArtisanAddedNotification;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use App\Notifications\CustomNotification;
 
 
 class ServiceProviderController extends Controller
@@ -355,7 +356,12 @@ class ServiceProviderController extends Controller
             );
 
             // $createQuote->items()->save($request->items);
-
+            // get customer who created service request
+            $serviceRequest = ServiceRequest::whereId($request->request_id)->first();
+            if($serviceRequest) {
+                $customer = User::find($serviceRequest->user_id);
+                $customer->notify(new CustomNotification("Quote submitted by provider", "Quote submitted by provider."));
+            }
             return get_success_response($createQuote, "Quote submitted successfully");
 
         } catch (\Throwable $th) {

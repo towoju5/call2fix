@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Order;
 use App\Models\OrderModel;
 use App\Models\Product;
+use App\Notifications\CustomNotification;
 use App\Notifications\Order\OrderPlacedSuccessfully;
 use App\Services\KwikDeliveryService;
 use Illuminate\Http\Request;
@@ -110,7 +111,9 @@ class OrderController extends Controller
 
             // Notify the user
             if ($order) {
-                $user->notify(new OrderPlacedSuccessfully($order));
+                // notify seller
+                $seller = User::whereId($product->user_id)->first();
+                $seller->notify(new CustomNotification('New order from a customer', "New order from a customer"));
                 return get_success_response($order, "Order placed successfully", 201);
             }
 
@@ -255,6 +258,8 @@ class OrderController extends Controller
                     return ['error' => 'Insufficient Balance'];
                 }
                 
+                $seller = User::find($order->seller_id);
+                $seller->notify(new CustomNotification('Order closed by customer', 'Order closed by customer'));
                 return get_success_response($order, "Order canceled successfully", 200);
             }
 

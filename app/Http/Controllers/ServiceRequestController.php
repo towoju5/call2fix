@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Notifications\CustomNotification;
 use Log;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Support\Facades\RateLimiter;
@@ -281,43 +282,12 @@ class ServiceRequestController extends Controller
             // Update the status in the database
             $update = $serviceRequest->update(['request_status' => $finalStatus]);
 
-            // if ($update && $finalStatus === 'Close Request') {
-            //     // Get provider and artisan details
-            //     $provider = User::find($serviceRequest->approved_providers_id);
-            //     $artisan = User::find($serviceRequest->approved_artisan_id);
-
-            //     if (!$provider || !$artisan) {
-            //         return get_error_response("Provider or artisan not found", ["error" => "Provider or artisan missing"]);
-            //     }
-
-            //     // Calculate artisan earnings
-            //     $providerEarnings = floatval($serviceRequest->amount);
-            //     $artisanPercentage = floatval($artisan->payment_plan); // Fixed or percentage
-            //     $artisanEarning = floatval($artisan->payment_amount);
-
-            //     if (strtolower($artisan->payment_plan) === 'percentage') {
-            //         $artisanEarning = ($providerEarnings / 100) * $artisanPercentage;
-            //     }
-
-            //     // Credit wallets
-            //     $provider->getWallet('ngn')->deposit(
-            //         $providerEarnings - $artisanEarning,
-            //         ["description" => $serviceRequest->problem_title]
-            //     );
-
-            //     $artisan->getWallet('ngn')->deposit(
-            //         $artisanEarning,
-            //         ["description" => $serviceRequest->problem_title]
-            //     );
-
-            //     return get_success_response($serviceRequest, "Service Request status updated successfully");
-            // }
             if ($update && $finalStatus === 'Close Request') {
                 DB::beginTransaction();
                 try {
                     $serviceRequest = ServiceRequestModel::findOrFail($requestId);
-                    $apportionment = $this->aportionment($serviceRequest);
-    
+                    $apportionment = $this->apportionment($serviceRequest); // Corrected method name
+
                     // Create PaymentApportionment record
                     PaymentApportionment::create([
                         'service_request_id' => $serviceRequest->id,
@@ -328,51 +298,67 @@ class ServiceRequestController extends Controller
                         'warranty_retention' => $apportionment['warranty_retention'],
                         'artisan_earnings' => $apportionment['artisan_earnings'],
                     ]);
-    
+
                     // Credit Service Provider
                     $provider = User::find($serviceRequest->approved_providers_id);
-                    if ($provider) {
-                        $provider->getWallet('ngn')->deposit(
-                            $apportionment['service_provider_earnings'] * 100,
-                            ["description" => "Earnings from Service Request #{$serviceRequest->id}"]
-                        );
+                    if (!$provider) {
+                        return get_error_response('Provider not found');
                     }
-    
+                    $providerDeposit = $provider->getWallet('ngn')->deposit(
+                        $apportionment['service_provider_earnings'] * 100,
+                        ["description" => "Earnings from Service Request #{$serviceRequest->id}"]
+                    );
+
+                    if (!$providerDeposit) {
+                        return get_error_response('Failed to deposit into provider wallet');
+                    }
+                    
+                    $provider->notify(new CustomNotification('Wallet credited', "Your wallet has been credited with {$apportionment['service_provider_earnings']}."));
+
                     // Credit Artisan
                     if ($serviceRequest->approved_artisan_id) {
                         $artisan = User::find($serviceRequest->approved_artisan_id);
-                        if ($artisan) {
-                            $artisan->getWallet('ngn')->deposit(
-                                $apportionment['artisan_earnings'] * 100,
-                                ["description" => "Earnings from Service Request #{$serviceRequest->id}"]
-                            );
+                        if (!$artisan) {
+                            return get_error_response('Artisan not found');
                         }
-                    }
-    
-                    // Credit Call2Fix
-                    $call2fixUserId = get_settings_value('call2fix_user_id'); // Implement this function
-                    $call2fixUser = User::find($call2fixUserId);
-                    if ($call2fixUser) {
-                        $call2fixUser->getWallet('ngn')->deposit(
-                            $apportionment['call2fix_earnings'] * 100,
+                        $artisanDeposit = $artisan->getWallet('ngn')->deposit(
+                            $apportionment['artisan_earnings'] * 100,
                             ["description" => "Earnings from Service Request #{$serviceRequest->id}"]
                         );
+                        if (!$artisanDeposit) {
+                            return get_error_response('Failed to deposit into artisan wallet');
+                        }
+                        $artisan->notify(new CustomNotification('Wallet credited', "Your wallet has been credited with {$apportionment['artisan_earnings']}."));
                     }
-    
+
+                    // Credit Call2Fix
+                    $call2fixUserId = get_settings_value('call2fix_user_id');
+                    $call2fixUser = User::find($call2fixUserId);
+                    if (!$call2fixUser) {
+                        return get_error_response('Call2Fix user not found');
+                    }
+                    $call2fixDeposit = $call2fixUser->getWallet('ngn')->deposit(
+                        $apportionment['call2fix_earnings'] * 100,
+                        ["description" => "Earnings from Service Request #{$serviceRequest->id}"]
+                    );
+                    if (!$call2fixDeposit) {
+                        return get_error_response('Failed to deposit into Call2Fix wallet');
+                    }
+                    $call2fixUser->notify(new CustomNotification('Wallet credited', "Your wallet has been credited with {$apportionment['call2fix_earnings']}."));
+
                     DB::commit();
                     return get_success_response($serviceRequest, "Service Request closed successfully");
                 } catch (\Exception $e) {
                     DB::rollBack();
-                    return get_error_response("Payment processing failed", ['error' => $e->getMessage()], 500);
+                    return get_error_response("Payment processing failed: " . $e->getMessage(), ['error' => $e->getMessage()], 500);
                 }
             }
-    
 
             return get_success_response($serviceRequest, "Service Request status updated successfully");
         } catch (\Illuminate\Validation\ValidationException $e) {
             return get_error_response("Invalid status provided", $e->errors(), 422);
         } catch (\Exception $e) {
-            return get_error_response("An error occurred while updating the status", ['error' => $e->getMessage()], 500);
+            return get_error_response("An error occurred while updating the status: " . $e->getMessage(), ['error' => $e->getMessage()], 500);
         }
     }
 
@@ -511,7 +497,9 @@ class ServiceRequestController extends Controller
             $serviceRequest = ServiceRequest::whereId($requestId)->first();
             if($serviceRequest) {
                 $user = User::whereId($serviceRequest->user_id)->first();
-                if($user) {
+                $provider = User::whereId($request->provider_id)->first();
+                if($provider) {
+                    $provider->notify(new CustomNotification("Quote Negotiated by customer", "Quote Negotiated by customer."));
                     // $user->notify(new ServiceRequestNegotiated($serviceRequest));
                 }
             }
@@ -585,6 +573,8 @@ class ServiceRequestController extends Controller
                     DB::rollBack();
                     return get_error_response("Provider or Customer not found", ["error" => "User not found"], 404);
                 }
+                $finalStatus = ucfirst($request->status);
+                $customer->notify(new CustomNotification("Negotiation {$finalStatus} by Provider", "Negotiation {$finalStatus} by Provider."));
 
                 // Retrieve the service request
                 $serviceRequest = ServiceRequestModel::findOrFail($negotiation->request_id);
@@ -684,7 +674,7 @@ class ServiceRequestController extends Controller
 
         // Check if the result is empty
         if (empty($result)) {
-            throw new \Exception("Column '$column' does not exist in table '$table' or is not an ENUM type.");
+            return get_error_response("Column '$column' does not exist in table '$table' or is not an ENUM type.");
         }
 
         $type = $result[0]->Type; // Safely access the first result
@@ -692,7 +682,7 @@ class ServiceRequestController extends Controller
         preg_match('/enum\((.*)\)/', $type, $matches);
 
         if (!isset($matches[1])) {
-            throw new \Exception("The column '$column' is not of ENUM type.");
+            return get_error_response("The column '$column' is not of ENUM type.");
         }
 
         $enumValues = array_map(function ($value) {
@@ -736,7 +726,10 @@ class ServiceRequestController extends Controller
                     "approved_artisan_id" => $request->artisan_id,
                     "request_status" => "Payment Confirmed"
                 ]);
-                // return success data with the transaction and service request data
+
+                $provider = User::find($serviceRequest->approved_providers_id);
+                $provider->notify(new CustomNotification("Payment confirmed", "Payment confirmed."));
+                // return success data with the transaction and service request data  
                 return get_success_response([
                     'transaction' => $transaction,
                     'service_request' => $serviceRequest

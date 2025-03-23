@@ -633,5 +633,4 @@ class WalletController extends Controller
             return get_error_response('Something went wrong', ['error' => $th->getMessage()], 500);
         }
     }
-    
 }

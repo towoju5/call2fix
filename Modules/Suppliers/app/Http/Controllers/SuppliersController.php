@@ -5,6 +5,7 @@ namespace Modules\Suppliers\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\KwikDeliveryController;
 use App\Models\Order;
+use App\Notifications\CustomNotification;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -120,6 +121,7 @@ class SuppliersController extends Controller
                 'accept' => OrderModel::STATUSES[7], // 'ACCEPTED'
                 'reject' => OrderModel::STATUSES[9], // 'CANCEL'
             ];
+            $buyer = User::find($order->user_id);
 
             if($request->status === "reject") {
 
@@ -134,11 +136,16 @@ class SuppliersController extends Controller
                 if(!$wallet->withdrawal($order->total_price * 100, ["description" => "Order refund for ORDER ID: {$order->id}", "Order placement refunded"])){
                     return ['error' => 'Insufficient Balance'];
                 }
+
+                $buyer->notify(new CustomNotification('Order rejected by Supplier', 'Order rejected by Supplier'));
             }
 
             $order->status = $statusMapping[$request->status]; // Store as string
 
             if ($order->save()) {
+                if(strtolower($request->status) === 'accept'){
+                    $buyer->notify(new CustomNotification('Order accepted by Supplier', 'Order accepted by Supplier'));
+                }
                 if (strtolower($request->status) === 'accept' && $order->product->delivery_type === 'home_delivery') {
                     // Create delivery request on behalf of the seller on Kwik Delivery
                     $kwik = new KwikDeliveryController();

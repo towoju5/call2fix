@@ -12,7 +12,14 @@ class CheckInOutController extends Controller
     {
         $user = auth()->user();
         $req = ServiceRequest::whereId($requestId)->first();
-        // return get_success_response($req);
+        // get service request customer
+        $customer = User::whereId($req->user_id)->first();
+        $provider = User::whereId($req->approved_provider_id)->first();
+        
+        $quote = SubmittedQuotes::where([
+            'request_id' => $req->id,
+            'check_in_time' => $req->approved_provider_id
+        ])->first();
 
         // Handle case where Service Request is not found
         if(!$req) {
@@ -33,6 +40,15 @@ class CheckInOutController extends Controller
                     'check_out_time' => now(),
                     'achievements' => $achievements, // Add achievements to the check-out
                 ]);
+
+                $customer->notify(new CustomNotification("Artisan check out", "Artisan check out."));
+                $provider->notify(new CustomNotification("Artisan checkings are completed.", "Artisan checkings are completed."));
+                
+                if ($todayCheckIn = $req->checkIns()->whereNotNull('check_in_time')->count() >= (int)$quote->sla_duration){
+                    $req->update([
+                        "request_status" => "Completed"
+                    ]);
+                }
 
                 // Check-out success message
                 return get_success_response([
@@ -64,6 +80,7 @@ class CheckInOutController extends Controller
                 'expected_work' => $expectedWork, // Add expected work note at check-in
             ]);
 
+            $customer->notify(new CustomNotification("Artisan check-in", "Artisan check-in."));
             // Check-in success message
             return get_success_response([
                 'message' => 'You have successfully checked in.',

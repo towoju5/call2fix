@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Chat;
 use App\Models\Message;
 use App\Events\NewMessage;
+use App\Notifications\CustomNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Validator;
@@ -59,11 +60,10 @@ class ChatController extends Controller
         // Broadcast the message to the Ably channel
         broadcast(new NewMessage($message, $user))->toOthers();
         
-        $notifiables = $chat->participants;
+        $notifiables = $chat->participants();
 
-        foreach ($notifiables as $k => $u) {
-            $response = fcm("New chat Message", $request->content, $u->device_id);
-            \Log::channel('chat')->info("New fcm message response", ['response' => $response]);
+        foreach ($notifiables as $notify) {
+            $notify->notify(new CustomNotification("New message from another user", 'New message from another user'));
         }
 
         return get_success_response($message->load('user'));

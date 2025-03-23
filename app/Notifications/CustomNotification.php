@@ -7,16 +7,17 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class ReworkIssued extends Notification
+class CustomNotification extends Notification
 {
     use Queueable;
 
     /**
      * Create a new notification instance.
      */
-    public function __construct()
+    public function __construct($title, $body)
     {
-        //
+        $this->title = $title;
+        $this->body = $body;
     }
 
     /**
@@ -34,10 +35,12 @@ class ReworkIssued extends Notification
      */
     public function toMail(object $notifiable): MailMessage
     {
+        //send fcm notification
+        fcm($this->title, $this->body, $notifiable->device_id);
+
         return (new MailMessage)
-                    ->line('The introduction to the notification.')
-                    ->action('Notification Action', url('/'))
-                    ->line('Thank you for using our application!');
+                    ->line($this->body)
+                    ->line('Team Call2Fix');
     }
 
     /**
@@ -48,8 +51,9 @@ class ReworkIssued extends Notification
     public function toArray(object $notifiable): array
     {
         return [
-            'title' => 'Rework issued',
-            'message' => 'Rework has been issued on one of your projects, please check your project list'
+            'title' => $this->title,
+            'message' => $this->body
         ];
     }
 }
+

@@ -36,6 +36,7 @@ class ReworkIssuedNotification extends Notification
      */
     public function toMail(object $notifiable): MailMessage
     {
+        fcm("Rework issued", "A Rework has been issued for a task you (or your artisan) worked on", $notifiable->device_id);
         return (new MailMessage)
             ->subject('Rework Issued for Service Request #' . $this->serviceRequest->id)
             ->line('A rework has been issued for your service request.')
@@ -53,7 +54,7 @@ class ReworkIssuedNotification extends Notification
     public function toArray(object $notifiable): array
     {
         return [
-            'title' => "A Rework has been issued for a task you (or your artisan) worked on",
+            'title' => "Rework issued",
             'message' => "A rework has been issued for your service request. Service Title: {$this->serviceRequest->title} and Service Description: {$this->serviceRequest->description}",
         ];
     }
