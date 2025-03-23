@@ -60,11 +60,11 @@ class CheckInOutController extends Controller
                 $provider->notify(new CustomNotification("Artisan checkings are completed.", "Artisan checkings are completed."));
             }
     
-            // if ($req->checkIns()->whereNotNull('check_in_time')->count() >= (int) $quote->sla_duration) {
-            //     $req->update([
-            //         "request_status" => "Completed"
-            //     ]);
-            // }
+            if ($req->checkIns()->whereNotNull('check_in_time')->count() >= (int) $quote->sla_duration) {
+                $req->update([
+                    "request_status" => "Completed"
+                ]);
+            }
     
             return get_success_response([
                 'message' => 'You have successfully checked out.',
