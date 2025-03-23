@@ -406,6 +406,7 @@ class ServiceRequestController extends Controller
                     "request_id" => $requestId,
                     "service_provider_id" => $quote->provider_id,
                 ])->latest()->first();
+                
                 if ($service_request) {
                     $service_request->update([
                         "request_status" => "Quote Accepted",

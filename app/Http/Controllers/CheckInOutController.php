@@ -21,13 +21,13 @@ class CheckInOutController extends Controller
         \Log::info("service request object", ['service_request' => $req]);
         // get service request customer
         $customer = User::whereId($req->user_id)->first();
-        $provider = User::whereId($req->approved_provider_id)->first();
+        $provider = User::whereId($req->approved_providers_id)->first();
 
         return response()->json(['provider' => $provider, 'customer' => $customer]);
         
         $quote = SubmittedQuotes::where([
             'request_id' => $req->id,
-            'provider_id' => $req->approved_provider_id
+            'provider_id' => $req->approved_providers_id
         ])->first();
 
         // Handle case where Service Request is not found
