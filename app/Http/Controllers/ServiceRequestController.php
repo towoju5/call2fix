@@ -282,7 +282,7 @@ class ServiceRequestController extends Controller
             // Update the status in the database
             $update = $serviceRequest->update(['request_status' => $finalStatus]);
 
-            if ($update && $finalStatus === 'Close Request') {
+            if ($update && $finalStatus === 'Closed') {
                 DB::beginTransaction();
                 try {
                     $serviceRequest = ServiceRequestModel::findOrFail($requestId);
@@ -406,7 +406,7 @@ class ServiceRequestController extends Controller
                     "request_id" => $requestId,
                     "service_provider_id" => $quote->provider_id,
                 ])->latest()->first();
-                
+
                 if ($service_request) {
                     $service_request->update([
                         "request_status" => "Quote Accepted",
