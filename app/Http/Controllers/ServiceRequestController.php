@@ -576,6 +576,17 @@ class ServiceRequestController extends Controller
                 'id' => $negotiation->submitted_quote_id
             ])->first();
 
+            $amountDue = $quote->total_charges;
+
+            if(!empty($quote->negotiations)) {
+                $negotiations = $quote->negotiations;
+                foreach ($negotiations as $negotiation) {
+                    if(strtolower($negotiation->status) == "accepted"){
+                        $amountDue = $negotiation->price;
+                    }
+                }
+            }
+
             if ($quote) {
                 // Update quote price
                 DB::table('submitted_quotes')->where('id', $quote->id)
@@ -606,6 +617,8 @@ class ServiceRequestController extends Controller
 
                 // Update request status to "Payment Confirmed"
                 $serviceRequest->request_status = "Payment Confirmed";
+
+                $serviceRequest->total_cost = $amountDue;
                 $customer->notify(new PaymentStatusUpdated('Payment Confirmed', $negotiation));
 
                 if (!$serviceRequest->save()) {
