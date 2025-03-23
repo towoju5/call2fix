@@ -797,7 +797,7 @@ class ServiceRequestController extends Controller
         // Calculate Artisan's earnings
         $artisanEarnings = 0;
         if ($serviceRequest->approved_artisan_id) {
-            $artisan = User::find($serviceRequest->approved_artisan_id);
+            $artisan = Artisans::where('artisan_id', $serviceRequest->approved_artisan_id)->first();
             if ($artisan) {
                 if ($artisan->payment_plan === 'percentage') {
                     $artisanEarnings = ($serviceProviderEarningsBase / 100) * $artisan->payment_amount;
@@ -815,7 +815,7 @@ class ServiceRequestController extends Controller
             'call2fix_management_fee' => $managementFee,
             'call2fix_earnings' => $call2fixEarnings,
             'warranty_retention' => $warrantyRetention,
-            'artisan_earnings' => $artisanEarnings,
+            'artisan_earnings' => $artisanEarnings ?? 0,
         ];
         Log::debug("Hello world: ", ['apportionments' => $apportionments]);
         return $apportionments;
