@@ -13,6 +13,7 @@ use App\Models\ServiceRequest;
 use App\Models\ServiceRequestModel;
 use App\Models\SubmittedQuotes;
 use App\Models\User;
+use App\Models\Artisans;
 use App\Models\PaymentApportionment;
 use App\Models\ArtisanCanSubmitQuote;
 use Illuminate\Http\Request;
