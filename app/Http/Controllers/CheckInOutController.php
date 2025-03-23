@@ -24,7 +24,7 @@ class CheckInOutController extends Controller
         
         $quote = SubmittedQuotes::where([
             'request_id' => $req->id,
-            // 'check_in_time' => $req->approved_provider_id
+            'provider_id' => $req->approved_provider_id
         ])->first();
 
         // Handle case where Service Request is not found
