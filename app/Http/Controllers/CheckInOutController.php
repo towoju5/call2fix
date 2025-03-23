@@ -62,7 +62,7 @@ class CheckInOutController extends Controller
     
             if ($req->checkIns()->whereNotNull('check_in_time')->count() >= (int) $quote->sla_duration) {
                 $req->update([
-                    "request_status" => "Completed"
+                    "request_status" => "Awaiting Approval"
                 ]);
             }
     
