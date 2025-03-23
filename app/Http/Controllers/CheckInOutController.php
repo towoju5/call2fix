@@ -12,6 +12,7 @@ class CheckInOutController extends Controller
     {
         $user = auth()->user();
         $req = ServiceRequest::whereId($requestId)->first();
+        \Log::info("service request object", ['service_request' => $req]);
         // get service request customer
         $customer = User::whereId($req->user_id)->first();
         $provider = User::whereId($req->approved_provider_id)->first();
