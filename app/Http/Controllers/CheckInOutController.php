@@ -22,6 +22,8 @@ class CheckInOutController extends Controller
         // get service request customer
         $customer = User::whereId($req->user_id)->first();
         $provider = User::whereId($req->approved_provider_id)->first();
+
+        return response()->json(['provider' => $provider, 'customer' => $customer]);
         
         $quote = SubmittedQuotes::where([
             'request_id' => $req->id,
