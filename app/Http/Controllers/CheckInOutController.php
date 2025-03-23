@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Models\CheckIn;
 use App\Models\SubmittedQuotes;
 use Illuminate\Http\Request;
+use App\Notifications\CustomNotification;
 
 class CheckInOutController extends Controller
 {
