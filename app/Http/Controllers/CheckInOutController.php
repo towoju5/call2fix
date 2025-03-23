@@ -13,6 +13,9 @@ class CheckInOutController extends Controller
     {
         $user = auth()->user();
         $req = ServiceRequest::whereId($requestId)->first();
+        if(!$req) {
+            return get_error_response("service request with provided ID not found", ['error' => "service request with provided ID not found"]);
+        }
         \Log::info("service request object", ['service_request' => $req]);
         // get service request customer
         $customer = User::whereId($req->user_id)->first();
