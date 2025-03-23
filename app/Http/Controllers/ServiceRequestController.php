@@ -396,7 +396,7 @@ class ServiceRequestController extends Controller
                 $request->status = ($request->id == $quoteId) ? "accepted" : "rejected";
                 $request->save();
             });
-            $quote = SubmittedQuotes::whereId($quoteId)->where('request_id', $requestId)->first();
+            return $quote = SubmittedQuotes::whereId($quoteId)->where('request_id', $requestId)->first();
 
             $acceptedRequest = $requests->firstWhere('id', $quoteId);
             if ($acceptedRequest) {
