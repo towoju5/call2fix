@@ -333,19 +333,19 @@ class ServiceRequestController extends Controller
                     }
 
                     // Credit Call2Fix
-                    $call2fixUserId = get_settings_value('call2fix_user_id');
-                    $call2fixUser = User::find($call2fixUserId);
-                    if (!$call2fixUser) {
-                        return get_error_response('Call2Fix user not found');
-                    }
-                    $call2fixDeposit = $call2fixUser->getWallet('ngn')->deposit(
-                        $apportionment['call2fix_earnings'] * 100,
-                        ["description" => "Earnings from Service Request #{$serviceRequest->id}"]
-                    );
-                    if (!$call2fixDeposit) {
-                        return get_error_response('Failed to deposit into Call2Fix wallet');
-                    }
-                    $call2fixUser->notify(new CustomNotification('Wallet credited', "Your wallet has been credited with {$apportionment['call2fix_earnings']}."));
+                    // $call2fixUserId = get_settings_value('call2fix_user_id');
+                    // $call2fixUser = User::find($call2fixUserId);
+                    // if (!$call2fixUser) {
+                    //     return get_error_response('Call2Fix user not found');
+                    // }
+                    // $call2fixDeposit = $call2fixUser->getWallet('ngn')->deposit(
+                    //     $apportionment['call2fix_earnings'] * 100,
+                    //     ["description" => "Earnings from Service Request #{$serviceRequest->id}"]
+                    // );
+                    // if (!$call2fixDeposit) {
+                    //     return get_error_response('Failed to deposit into Call2Fix wallet');
+                    // }
+                    // $call2fixUser->notify(new CustomNotification('Wallet credited', "Your wallet has been credited with {$apportionment['call2fix_earnings']}."));
 
                     DB::commit();
                     return get_success_response($serviceRequest, "Service Request closed successfully");
