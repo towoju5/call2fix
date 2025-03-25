@@ -142,7 +142,10 @@ class AuthController extends Controller
                 'User registered successfully'
             );
         } catch (\Exception $e) {
-            return get_error_response($e->getMessage(), ['error' => $e->getMessage(), 'trace' => $e->getTrace()]);
+            return get_error_response($e->getMessage(), [
+                'error' => $e->getMessage(),
+                'trace' => json_encode($e->getTrace()) // Convert trace to a string
+            ]);
         }
     }
 
