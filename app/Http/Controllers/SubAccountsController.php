@@ -19,9 +19,9 @@ class SubAccountsController extends Controller
 
     public function __construct()
     {
-        if (!Schema::hasColumn('users', 'department_description')) {
+        if (!Schema::hasColumn('users', 'description')) {
             Schema::table('users', function (Blueprint $table) {
-                $table->string('department_description')->nullable();
+                $table->string('description')->nullable();
             });
         }
         $this->sub = new SubAccounts();
@@ -73,7 +73,9 @@ class SubAccountsController extends Controller
             $name = explode(" ", $request->name);
             $data = $request->all();
             $user = $request->user();
+            $data['department_description'] = $request->description;
             unset($data['name']);
+            unset($data['description']);
             $data['first_name'] = $name[0];
             $data['parent_account_id'] = auth()->id();
             $data['last_name'] = isset($name[1]) ? implode(' ', array_slice($name, 1)) : $name[0];
@@ -83,7 +85,6 @@ class SubAccountsController extends Controller
             $data['username'] = explode("@", $request->email)[0].rand(1, 299);
             $data['main_account_role'] = $user->current_role;
             $data['sub_account_type'] = $user->sub_account_type;
-            $data['department_description'] = $request->description;
 
             $subAccount = User::create($data);
             Mail::to($subAccount->email)->send(new NewSubAccountMail($subAccount, $password));
