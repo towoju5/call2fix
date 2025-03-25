@@ -10,6 +10,8 @@ use Mail;
 use Str;
 use Validator;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
 
 class SubAccountsController extends Controller
 {
@@ -17,6 +19,11 @@ class SubAccountsController extends Controller
 
     public function __construct()
     {
+        if (!Schema::hasColumn('users', 'department_description')) {
+            Schema::table('users', function (Blueprint $table) {
+                $table->string('department_description')->nullable();
+            });
+        }
         $this->sub = new SubAccounts();
     }
 
@@ -55,6 +62,7 @@ class SubAccountsController extends Controller
             'phone' => 'required|string|regex:/^\+[1-9]\d{1,14}$/|max:20|unique:users',
             'email' => 'required|email|unique:users,email',
             'sub_account_type' => 'required|string',
+            "description" => "required_if:sub_account_type,department"
         ]);
 
         if ($validator->fails()) {
@@ -74,6 +82,8 @@ class SubAccountsController extends Controller
             $data['phone'] = $request->phone;
             $data['username'] = explode("@", $request->email)[0].rand(1, 299);
             $data['main_account_role'] = $user->current_role;
+            $data['sub_account_type'] = $user->sub_account_type;
+            $data['department_description'] = $request->description;
 
             $subAccount = User::create($data);
             Mail::to($subAccount->email)->send(new NewSubAccountMail($subAccount, $password));

@@ -15,7 +15,7 @@ class DepartmentController extends Controller
     {
         try {
             $user = auth()->user();
-            $departments = Department::get();
+            $departments = User::where(['parent_account_id' => $user->id, 'sub_account_type' => 'department'])->get();
             return get_success_response($departments, "Departments retrieved successfully");
         } catch (\Throwable $th) {
             return get_error_response($th->getMessage());
@@ -25,32 +25,43 @@ class DepartmentController extends Controller
 
     public function store(Request $request)
     {
+        $validator = Validator::make($request->all(), [
+            'name' => 'required|string',
+            'phone' => 'required|string|regex:/^\+[1-9]\d{1,14}$/|max:20|unique:users',
+            'email' => 'required|email|unique:users,email',
+            'sub_account_type' => 'required|string',
+            "description" => "required_if:sub_account_type,department"
+        ]);
+
+        if ($validator->fails()) {
+            return get_error_response("Validation failed", $validator->errors(), 422);
+        }
+
         try {
-            $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
-                'department_name' => 'required|string|max:255',
-            ]);
+            $name = explode(" ", $request->name);
+            $data = $request->all();
+            $user = $request->user();
+            unset($data['name']);
+            $data['first_name'] = $name[0];
+            $data['parent_account_id'] = auth()->id();
+            $data['last_name'] = isset($name[1]) ? implode(' ', array_slice($name, 1)) : $name[0];
+            $password = Str::random(12);
+            $data['password'] = bcrypt($password);
+            $data['phone'] = $request->phone;
+            $data['username'] = explode("@", $request->email)[0].rand(1, 299);
+            $data['main_account_role'] = $user->current_role;
+            $data['sub_account_type'] = $user->sub_account_type;
+            $data['department_description'] = $request->description;
 
-            if ($validator->fails()) {
-                return get_error_response($validator->errors()->first(), $validator->errors()->toArray(), 422);
-            }
+            $subAccount = User::create($data);
+            Mail::to($subAccount->email)->send(new NewSubAccountMail($subAccount, $password));
 
-            $user = auth()->user();
-            
-            if (!$user) {
-                return get_error_response('User not authenticated', [], 401);
-            }
-
-            $department = $user->createDepartment($request->department_name);
-
-            if (!$department) {
-                return get_error_response('Failed to create department', [], 500);
-            }
-
-            return get_success_response($department, 'Department created successfully.');
-        } catch (\Exception $e) {
-            return get_error_response('An error occurred while creating the department: ' . $e->getMessage(), [], 500);
+            return get_success_response($subAccount, "Sub account added successfully and password sent via email");
+        } catch (\Throwable $th) {
+            return get_error_response($th->getMessage(), ['error' => $th->getMessage()]);
         }
     }
+
     public function orders($departmentId)
     {
         try {
@@ -79,9 +90,9 @@ class DepartmentController extends Controller
             if (!$department) {
                 return get_error_response('Department wallet not found', ['error' => 'Department wallet not found!'], 404);
             }
-            $transactions = WalletTransaction::where('department_id', $department->id)->paginate(10);
-            $deposits = WalletTransaction::where('department_id', $department->id)->where('type', 'deposit')->sum('amount');
-            $spent = WalletTransaction::where('department_id', $department->id)->where('type', 'withdrawal')->sum('amount');
+            $transactions = WalletTransaction::where('user_id', $department->id)->paginate(10);
+            $deposits = WalletTransaction::where('user_id', $department->id)->where('type', 'deposit')->sum('amount');
+            $spent = WalletTransaction::where('user_id', $department->id)->where('type', 'withdrawal')->sum('amount');
             return get_success_response([
                 'total_deposit' => $deposits, 
                 'total_spent' => $spent, 
