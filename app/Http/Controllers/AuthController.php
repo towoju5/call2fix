@@ -103,7 +103,7 @@ class AuthController extends Controller
                 $user = User::create($userData);
 
                 if (!$user) {
-                    throw new \Exception('Failed to create user');
+                    return get_error_response('Failed to create user');
                 }
 
                 // Implement referral system if referred_by exists
@@ -130,7 +130,7 @@ class AuthController extends Controller
                     );
 
                     if (!$businessInfo) {
-                        throw new \Exception('Failed to create business info');
+                        return get_error_response('Failed to create business info');
                     }
                 }
 
@@ -142,7 +142,7 @@ class AuthController extends Controller
                 'User registered successfully'
             );
         } catch (\Exception $e) {
-            return get_error_response($e->getMessage(), ['error' => $e->getMessage()]);
+            return get_error_response($e->getMessage(), ['error' => $e->getMessage(), 'trace' => $e->getTrace()]);
         }
     }
 
@@ -250,7 +250,7 @@ class AuthController extends Controller
 
                 // Check if business creation failed
                 if (!$business) {
-                    throw new \Exception('Failed to create or update business info');
+                    return get_error_response('Failed to create or update business info');
                 }
 
                 // Implement referral system if referred_by exists
@@ -275,7 +275,7 @@ class AuthController extends Controller
                     ]);
 
                     if (!$businessInfo) {
-                        throw new \Exception('Failed to create business info for the account');
+                        return get_error_response('Failed to create business info for the account');
                     }
                 }
 
