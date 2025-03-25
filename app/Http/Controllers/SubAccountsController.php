@@ -76,7 +76,7 @@ class SubAccountsController extends Controller
             $data['main_account_role'] = $user->current_role;
 
             $subAccount = User::create($data);
-            Mail::to($subAccount->email)->send(new NewSubAccountMail($subAccount, $password));
+            // Mail::to($subAccount->email)->send(new NewSubAccountMail($subAccount, $password));
 
             return get_success_response($subAccount, "Sub account added successfully and password sent via email");
         } catch (\Throwable $th) {
