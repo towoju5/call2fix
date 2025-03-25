@@ -15,7 +15,7 @@ class DepartmentController extends Controller
     {
         try {
             $user = auth()->user();
-            $departments = Department::where('owner_id', $user->id)->get();
+            $departments = Department::get();
             return get_success_response($departments, "Departments retrieved successfully");
         } catch (\Throwable $th) {
             return get_error_response($th->getMessage());
