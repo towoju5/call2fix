@@ -26,9 +26,10 @@ if (!function_exists('get_error_response')) {
             'status' => false,
             'status_code' => $code,
             'message' => $message,
-            'errors' => $errors instanceof \Illuminate\Support\MessageBag ? $errors : new \Illuminate\Support\MessageBag($errors)
+            'errors' => $errors instanceof \Illuminate\Support\MessageBag ? $errors : new \Illuminate\Support\MessageBag((array) $errors)
         ], $code);
     }
+
 }
 
 if (!function_exists('active_role')) {
