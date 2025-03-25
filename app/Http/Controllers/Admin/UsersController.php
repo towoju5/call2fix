@@ -127,13 +127,11 @@ class UsersController extends Controller
         return response()->json($orders);
     }
 
-
-
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
             'first_name' => 'required|string|max:255',
-            'lastt_name' => 'required|string|max:255',
+            'last_name' => 'required|string|max:255',
             'email' => 'required_without:phone|string|email|max:255|unique:users',
             'phone' => 'required_without:email|string|max:20|unique:users',
             'account_type' => 'required|string|in:artisan,suppliers,providers,affiliate,private_account,corporate_account',

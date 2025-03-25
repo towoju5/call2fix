@@ -494,8 +494,8 @@ class AuthController extends Controller
                     $updateData['last_name'] = 'User';
                 }
             
-                if ($request->has('country_code')) {
-                    $updateData['country_code'] = str_replace("+", "", $request->country_code);
+                if ($request->has('country_code') && !empty($request->country_code)) {
+                    $updateData['country_dialing_code'] = str_replace("+", "", $request->country_code);
                 }
             
                 // Update or create the user
