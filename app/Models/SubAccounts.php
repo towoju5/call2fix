@@ -18,20 +18,20 @@ class SubAccounts extends Model
     // Define the relationship to the main account
     public function mainAccount()
     {
-        return $this->belongsTo(User::class, 'parent_account');
+        return $this->belongsTo(User::class, 'parent_account_id');
     }
 
     // Define the relationship to sub-accounts
     public function subAccounts()
     {
-        return $this->hasMany(User::class, 'parent_account');
+        return $this->hasMany(User::class, 'parent_account_id');
     }
 
     // Fetch sub-accounts for the current user based on role
     public function fetchSubAccountsByRole($role)
     {
         return User::where("main_account_role", $role)
-            ->where('parent_account', Auth::id())
+            ->where('parent_account_id', Auth::id())
             ->get();
     }
 
@@ -39,7 +39,7 @@ class SubAccounts extends Model
     public function fetchAccount($role, $subAccountId)
     {
         return User::where("main_account_role", $role)
-            ->where('parent_account', Auth::id())
+            ->where('parent_account_id', Auth::id())
             ->where('id', $subAccountId)
             ->first();
     }
