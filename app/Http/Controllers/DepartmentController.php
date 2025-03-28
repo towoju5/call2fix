@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Mail\NewSubAccountMail;
 use App\Models\Department;
+use App\Models\User;
 use App\Models\Order;
 use App\Models\ServiceRequest;
 // use App\Models\Wallet;
