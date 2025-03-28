@@ -79,7 +79,7 @@ class SubAccountsController extends Controller
             $data['first_name'] = $name[0];
             $data['parent_account_id'] = auth()->id();
             $data['last_name'] = isset($name[1]) ? implode(' ', array_slice($name, 1)) : $name[0];
-            $password = Str::random(12);
+            $password = "!".Str::random(12);
             $data['password'] = bcrypt($password);
             $data['phone'] = $request->phone;
             $data['username'] = explode("@", $request->email)[0].rand(1, 299);
