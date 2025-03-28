@@ -45,7 +45,7 @@ class WalletController extends Controller
                     ])->first();
                     if (!$bankAccount) {
                         // generate deposit account for customer
-                        return $accountInfo = $this->createPaystackVirtualAccount();
+                        $accountInfo = $this->createPaystackVirtualAccount();
 
                         if (isset($accountInfo['error'])) {
                             return get_error_response($accountInfo['error'], ['error' => 'Failed to create account']);
