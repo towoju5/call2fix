@@ -227,8 +227,7 @@ class WalletController extends Controller
             logger('Withdrawal error: ' . $e->getMessage());
             return get_error_response("Withdrawal failed", ['error' => "An unexpected error occurred"]);
         }
-    }
-    
+    }    
 
     public function balance($walletType)
     {
@@ -243,7 +242,8 @@ class WalletController extends Controller
         $validate = Validator::make($request->all(), [
             'amount' => 'required|numeric|min:1',
             'from_wallet' => 'required|string',
-            'to_wallet' => 'required|string'
+            'to_wallet' => 'required|string',
+            'user_id' => 'sometimes'
         ]);
     
         if ($validate->fails()) {
@@ -254,11 +254,16 @@ class WalletController extends Controller
         $fromWalletType = $request->from_wallet;
         $toWalletType = $request->to_wallet;
         $amount = $request->amount;
+        
+        if($request->has('user_id') && !empty($request->user_id)) {
+            $user = User::whereId($request->user_id)->first();
+            $toWalletType = "Department ID: {$request->user_id}";
+        }
     
         try {
     
             // Fetch wallets
-            $from = $user->getWallet($fromWalletType);
+            $from = auth()->user()->getWallet($fromWalletType);
             $to = $user->getWallet($toWalletType);
     
             if (!$from || !$to) {
@@ -553,7 +558,7 @@ class WalletController extends Controller
 
     private function processPaystack(string $endpoint, array $payload)
     {
-        $paystack_secret_key = get_settings_value('paystack_secret_key', 'sk_test_390011d63d233cad6838504b657721883bc096ec');
+        $paystack_secret_key = get_settings_value('paystack_secret_key');
         $url = "https://api.paystack.co/{$endpoint}";
             
         $fields_string = json_encode($payload);

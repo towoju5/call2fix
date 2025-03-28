@@ -15,7 +15,7 @@ class PropertyController extends Controller
     {
         try {
             $user = auth()->user();
-            $query = Property::whereUserId(auth()->id());
+            $query = Property::whereUserId(auth()->id())->where('_account_type', active_role());
     
             // Check if user has a parent account
             if ($user->parent_account_id) {

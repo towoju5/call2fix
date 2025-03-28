@@ -6,7 +6,8 @@ use App\Mail\NewSubAccountMail;
 use App\Models\Department;
 use App\Models\Order;
 use App\Models\ServiceRequest;
-use App\Models\Wallet;
+// use App\Models\Wallet;
+use Towoju5\Wallet\Models\Wallet;
 use App\Models\WalletTransaction;
 use Illuminate\Http\Request;
 
@@ -77,7 +78,7 @@ class DepartmentController extends Controller
     public function ServiceRequests($departmentId)
     {
         try {
-            $department = ServiceRequest::whereUserId($departmentId)->paginate(10);
+            $department = ServiceRequest::whereUserId($departmentId)->paginate(per_page());
             return get_success_response($department, 'Department orders retrieved successfully.');
         } catch (\Exception $e) {
             return get_error_response('An error occurred while fetching the department.', 500);
