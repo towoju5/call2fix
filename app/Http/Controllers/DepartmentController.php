@@ -92,13 +92,16 @@ class DepartmentController extends Controller
             if (!$department) {
                 return get_error_response('Department wallet not found', ['error' => 'Department wallet not found!'], 404);
             }
+            $history = Wallet::whereUserId($departmentId)->get();
             $transactions = WalletTransaction::where('user_id', $department->id)->paginate(10);
             $deposits = WalletTransaction::where('user_id', $department->id)->where('type', 'deposit')->sum('amount');
             $spent = WalletTransaction::where('user_id', $department->id)->where('type', 'withdrawal')->sum('amount');
             return get_success_response([
                 'total_deposit' => $deposits, 
                 'total_spent' => $spent, 
-                'wallet_history' => $department], 
+                'wallet_history' => $department,
+                'history' => $history
+            ], 
                 'Department orders retrieved successfully.');
         } catch (\Exception $e) {
             return get_error_response('An error occurred while fetching', ['error' => $e->getMessage()]);
