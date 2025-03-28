@@ -9,7 +9,8 @@ use DB;
 use Illuminate\Http\Request;
 use App\Models\User;
 use App\Models\Withdrawal;
-use Bavix\Wallet\Models\Wallet;
+// use Bavix\Wallet\Models\Wallet;
+use Towoju5\Wallet\Models\Wallet;
 use Illuminate\Support\Facades\Validator;
 use Towoju5\Wallet\Services\WalletService;
 use Unicodeveloper\Paystack\Facades\Paystack;
@@ -332,32 +333,32 @@ class WalletController extends Controller
             $user = User::whereId($user->parent_account_id)->first();
         }
 
-        $wallets = $user->my_wallets();
+        $wallets = Wallet::where('user_id', $user->id)->where('role', active_role())->get();
         if ($wallets->isEmpty() || count($wallets) < 1) {
             // generate wallet for user
             $mainWallet = $user->createWallet('ngn');
-            // $mainWallet = $user->createWallet([
-            //     'name' => 'Naira Wallet',
-            //     'slug' => 'ngn',
-            //     'meta' => [
-            //         'symbol' => '₦',
-            //         'code' => 'NGN',
-            //     ],
-            // ]);
+            $mainWallet = $user->createWallet([
+                'name' => 'Naira Wallet',
+                'slug' => 'ngn',
+                'meta' => [
+                    'symbol' => '₦',
+                    'code' => 'NGN',
+                ],
+            ]);
 
             if (!$mainWallet) {
                 return get_error_response('Failed to create main wallet');
             }
 
-            $bonusWallet = $user->createWallet('bonus');
-            // $bonusWallet = $user->createWallet([
-            //     'name' => 'Bonus Wallet',
-            //     'slug' => 'bonus',
-            //     'meta' => [
-            //         'symbol' => '₱',
-            //         'code' => 'bonus',
-            //     ]
-            // ]);
+            // $bonusWallet = $user->createWallet('bonus');
+            $bonusWallet = $user->createWallet([
+                'name' => 'Bonus Wallet',
+                'slug' => 'bonus',
+                'meta' => [
+                    'symbol' => '₱',
+                    'code' => 'bonus',
+                ]
+            ]);
 
             if (!$bonusWallet) {
                 return get_error_response('Failed to create bonus wallet');
