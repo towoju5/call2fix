@@ -92,19 +92,22 @@ class DepartmentController extends Controller
             if (!$department) {
                 return get_error_response('Department wallet not found', ['error' => 'Department wallet not found!'], 404);
             }
-            $history = Wallet::whereUserId($departmentId)->get();
-            $transactions = WalletTransaction::where('user_id', $department->id)->paginate(10);
-            $deposits = WalletTransaction::where('user_id', $department->id)->where('type', 'deposit')->sum('amount');
-            $spent = WalletTransaction::where('user_id', $department->id)->where('type', 'withdrawal')->sum('amount');
+
+            $transactions = $this->history($departmentId);
             return get_success_response([
-                'total_deposit' => $deposits, 
-                'total_spent' => $spent, 
-                'wallet_history' => $department,
-                'history' => $history
-            ], 
-                'Department orders retrieved successfully.');
+                'wallet' => $department,
+                'history' => $transactions
+            ], 'Department orders retrieved successfully.');
         } catch (\Exception $e) {
             return get_error_response('An error occurred while fetching', ['error' => $e->getMessage()]);
         }
+    }
+
+    private function history($uid)
+    {
+        $user = User::whereId($uid)->first();
+        $wallet = $user->getWallet($walletType ?? 'ngn');
+        $transactions = $wallet->transactions()->select('*')->where('_account_type', $user->current_role)->latest()->paginate(100); //->makeHidden();
+        return $transactions;
     }
 }
