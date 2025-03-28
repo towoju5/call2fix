@@ -88,7 +88,7 @@ class DepartmentController extends Controller
     public function walletHistory($departmentId)
     {
         try {
-            $department = Wallet::whereDepartmentId($departmentId)->where('is_department', true)->first();
+            $department = Wallet::whereUserId($departmentId)->where('currency', 'ngn')->first();
             if (!$department) {
                 return get_error_response('Department wallet not found', ['error' => 'Department wallet not found!'], 404);
             }
