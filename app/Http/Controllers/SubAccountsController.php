@@ -49,7 +49,8 @@ class SubAccountsController extends Controller
 
             // Attach wallets manually
             $accounts->each(function ($account) {
-                $account->wallets = $account->my_wallets();
+                $wallets = Wallet::where('user_id', $account->id)->get();
+                $account->wallets = $wallets;
             });
 
             return get_success_response($accounts, "Sub accounts retrieved successfully");

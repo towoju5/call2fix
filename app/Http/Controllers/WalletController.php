@@ -350,14 +350,14 @@ class WalletController extends Controller
             }
 
             $bonusWallet = $user->createWallet('bonus');
-            // $bonusWallet = $user->createWallet([
-            //     'name' => 'Bonus Wallet',
-            //     'slug' => 'bonus',
-            //     'meta' => [
-            //         'symbol' => '₱',
-            //         'code' => 'bonus',
-            //     ]
-            // ]);
+            $bonusWallet = $user->createWallet([
+                'name' => 'Bonus Wallet',
+                'slug' => 'bonus',
+                'meta' => [
+                    'symbol' => '₱',
+                    'code' => 'bonus',
+                ]
+            ]);
 
             if (!$bonusWallet) {
                 return get_error_response('Failed to create bonus wallet');
