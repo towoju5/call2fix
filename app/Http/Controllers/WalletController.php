@@ -312,12 +312,12 @@ class WalletController extends Controller
 
     public function transactions($walletType)
     {
-        $user = auth()->user();
+        $user = request()->userId ?? auth()->user();
 
         // Check if user has a parent account
-        if ($user->parent_account_id) {
-            $user = User::where('id', $user->parent_account_id);
-        }
+        // if ($user->parent_account_id) {
+        //     $user = User::where('id', $user->parent_account_id)->first();
+        // }
 
         $wallet = $user->getWallet($walletType ?? 'ngn');
         $transactions = $wallet->transactions()->select('*')->where('_account_type', $user->current_role)->latest()->paginate(20); //->makeHidden();
