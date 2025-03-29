@@ -310,16 +310,18 @@ class WalletController extends Controller
         }
     }
 
-    public function transactions($walletType)
+    public function transactions($walletType = 'ngn')
     {
-        $user = auth()->user();
+        $uid = request()->userId ?? auth()->id();
+        $user = User::whereId($uid)->first();
 
         // Check if user has a parent account
         if ($user->parent_account_id) {
             $user = User::where('id', $user->parent_account_id);
         }
 
-        $wallet = $user->getWallet($walletType ?? 'ngn');
+        // $wallet = $user->getWallet($walletType ?? 'ngn');
+        $wallet =  Wallet::where(['user_id' => $user->id, 'role' => $user->current_role, 'currency' => $walletType])->first();
         $transactions = $wallet->transactions()->select('*')->where('_account_type', $user->current_role)->latest()->paginate(20); //->makeHidden();
 
         return get_success_response($transactions, 'Transactions retrieved successfully');
