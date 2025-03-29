@@ -312,11 +312,11 @@ class WalletController extends Controller
 
     public function transactions($walletType)
     {
-        $user = request()->userId ?? auth()->user();
+        $user = request()->userId ?? auth()->id();
 
         // Check if user has a parent account
         // if ($user->parent_account_id) {
-        //     $user = User::where('id', $user->parent_account_id)->first();
+            $user = User::where('id', $user)->first();
         // }
 
         $wallet = $user->getWallet($walletType ?? 'ngn');
