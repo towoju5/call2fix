@@ -94,7 +94,7 @@ class DepartmentController extends Controller
                 return get_error_response('Department wallet not found', ['error' => 'Department wallet not found!'], 404);
             }
 
-            $transactions = WalletTransaction::whereUserId($departmentId)->latest()->limit(100)->get(); //$this->history($departmentId);
+            $transactions = WalletTransaction::where("wallet_id", $department->id)->latest()->limit(100)->get(); //$this->history($departmentId);
             return get_success_response([
                 'wallet' => $department,
                 'history' => $transactions
