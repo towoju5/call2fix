@@ -27,18 +27,37 @@ class SubAccountsController extends Controller
         $this->sub = new SubAccounts();
     }
 
+    // public function getSubAccounts(Request $request)
+    // {
+    //     try {
+    //         $accounts = User::where([
+    //             "parent_account_id" => auth()->id(),
+    //             "main_account_role" => $request->input('current_role', $request->user()->current_role)
+    //         ])->with('wallets')->limit(10)->get();
+    //         return get_success_response($accounts, "Sub accounts retrieved successfully");
+    //     } catch (\Throwable $th) {
+    //         return get_error_response($th->getMessage(), ['error' => $th->getMessage()]);
+    //     }
+    // }
     public function getSubAccounts(Request $request)
     {
         try {
             $accounts = User::where([
                 "parent_account_id" => auth()->id(),
                 "main_account_role" => $request->input('current_role', $request->user()->current_role)
-            ])->with('wallets')->limit(10)->get();
+            ])->limit(10)->get();
+
+            // Attach wallets manually
+            $accounts->each(function ($account) {
+                $account->wallets = $account->my_wallets();
+            });
+
             return get_success_response($accounts, "Sub accounts retrieved successfully");
         } catch (\Throwable $th) {
             return get_error_response($th->getMessage(), ['error' => $th->getMessage()]);
         }
     }
+
 
     public function fetchSubAccount($subAccountId)
     {
