@@ -584,7 +584,8 @@ class WalletController extends Controller
     public function withdrawalData($walletType)
     {
         try {
-            $user = auth()->user();
+            $userId = request()->userId ?? auth()->id();
+            $user = User::whereId($userId)->first();
             $wallet = $user->getWallet($walletType);
     
             // Get date ranges
