@@ -42,7 +42,10 @@ class SubAccountsController extends Controller
     public function getSubAccounts(Request $request)
     {
         try {
-            $accounts = User::limit(per_page(10))->get();
+            $accounts = User::where([
+                "parent_account_id" => auth()->id(),
+                "main_account_role" => $request->input('current_role', $request->user()->current_role)
+            ])->limit(per_page(10))->get();
 
             // Attach wallets manually
             $accounts->each(function ($account) {
