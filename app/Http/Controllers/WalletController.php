@@ -260,7 +260,7 @@ class WalletController extends Controller
             if (!$user) {
                 return get_error_response("User not found.", ['user_id' => $request->user_id]);
             }
-            $toWalletType = "Department ID: {$request->user_id}";
+            $toWalletType = "ngn"; //"Department ID: {$request->user_id}";
         }
 
         try {    
