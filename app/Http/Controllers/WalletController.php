@@ -243,66 +243,72 @@ class WalletController extends Controller
             'amount' => 'required|numeric|min:1',
             'from_wallet' => 'required|string',
             'to_wallet' => 'required|string',
-            'user_id' => 'sometimes'
+            'user_id' => 'sometimes|exists:users,id'
         ]);
-    
+
         if ($validate->fails()) {
             return get_error_response("Validation Error.", $validate->errors()->toArray());
         }
-    
+
         $user = $request->user();
         $fromWalletType = $request->from_wallet;
         $toWalletType = $request->to_wallet;
         $amount = $request->amount;
-        
+
         if($request->has('user_id') && !empty($request->user_id)) {
             $user = User::whereId($request->user_id)->first();
+            if (!$user) {
+                return get_error_response("User not found.", ['user_id' => $request->user_id]);
+            }
             $toWalletType = "Department ID: {$request->user_id}";
         }
-    
-        try {
-    
+
+        try {    
             // Fetch wallets
             $from = auth()->user()->getWallet($fromWalletType);
             $to = $user->getWallet($toWalletType);
-    
-            if (!$from || !$to) {
-                return get_error_response("Wallet not found.", [
-                    'from_wallet' => $fromWalletType,
-                    'to_wallet' => $toWalletType
-                ]);
+
+            if (!$from) {
+                return get_error_response("Sender wallet not found.", ['wallet' => $fromWalletType]);
             }
-    
+            if (!$to) {
+                return get_error_response("Receiver wallet not found.", ['wallet' => $toWalletType]);
+            }
+
+            if ($from->balance < $amount) {
+                return get_error_response("Insufficient funds.", ['balance' => $from->balance]);
+            }
+
             DB::beginTransaction();
-    
+
             // Perform transfer
             $from->withdrawal($amount, [
                 "description" => 'Wallet Transfer',
                 "details" => "Transfer from {$fromWalletType} to {$toWalletType}",
                 "amount" => $amount
             ]);
-    
+
             // If transferring from bonus wallet, apply the conversion ratio
-            if (strtolower($fromWalletType) === "bonus") {
-                $convertRatio = get_settings_value('claim_point_ratio');
-    
+            if (strtolower(trim($fromWalletType)) === "bonus") {
+                $convertRatio = get_settings_value('claim_point_ratio') ?? 1;
+
                 if (!is_numeric($convertRatio) || $convertRatio <= 0) {
                     return get_error_response("Invalid bonus point conversion ratio.", [
                         'claim_point_ratio' => 'The conversion ratio must be a positive number.'
                     ]);
                 }
-    
+
                 $amount = floatval($amount * $convertRatio); 
             }
-            
+
             $to->deposit($amount, [
                 "description" => 'Wallet Transfer',
                 "details" => "Transfer from {$fromWalletType} to {$toWalletType}",
                 "amount" => $amount
             ]);
-    
+
             DB::commit();
-    
+
             return get_success_response(['wallet' => [$from, $to]], 'Transfer successful');
         } catch (\Exception $e) {
             DB::rollBack();
