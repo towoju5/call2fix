@@ -41,5 +41,7 @@ class AppServiceProvider extends ServiceProvider
         //         WalletUpdatedEventInterface::class,
         //     ]
         // );
+
+        ModelsWallet::where('role', 'general')->delete();
     }
 }
