@@ -33,7 +33,7 @@ class SubAccountsController extends Controller
             $accounts = User::where([
                 "parent_account_id" => auth()->id(),
                 "main_account_role" => $request->input('current_role', $request->user()->current_role)
-            ])->limit(10)->get();
+            ])->with('wallets')->limit(10)->get();
             return get_success_response($accounts, "Sub accounts retrieved successfully");
         } catch (\Throwable $th) {
             return get_error_response($th->getMessage(), ['error' => $th->getMessage()]);
