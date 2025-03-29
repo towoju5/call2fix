@@ -18,7 +18,7 @@ class DepartmentController extends Controller
     {
         try {
             $user = auth()->user();
-            $departments = User::where(['parent_account_id' => $user->id, 'sub_account_type' => 'department'])->get();
+            $departments = User::where(['parent_account_id' => $user->id, 'sub_account_type' => 'department'])->with('wallets')->get();
             return get_success_response($departments, "Departments retrieved successfully");
         } catch (\Throwable $th) {
             return get_error_response($th->getMessage());
