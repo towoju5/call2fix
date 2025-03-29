@@ -310,20 +310,17 @@ class WalletController extends Controller
         }
     }
 
-    public function transactions($walletType = 'ngn')
+    public function transactions($walletType)
     {
-        $uid = request()->userId ?? auth()->id();
-        $user = User::whereId($uid)->first();
+        $user = auth()->user();
 
         // Check if user has a parent account
         if ($user->parent_account_id) {
             $user = User::where('id', $user->parent_account_id);
         }
 
-        // $wallet = $user->getWallet($walletType ?? 'ngn');
-        return $wallet =  Wallet::where(['user_id' => $user->id, 'role' => $user->current_role, 'currency' => $walletType])->first();
-        // $transactions = $wallet->transactions()->select('*')->where('_account_type', $user->current_role)->latest()->paginate(20); //->makeHidden();
-        $transactions = Towoju5\Wallet\Models::where('wallet_id', $wallet->id)->where('_account_type', $user->current_role)->latest()->paginate(20);
+        $wallet = $user->getWallet($walletType ?? 'ngn');
+        $transactions = $wallet->transactions()->select('*')->where('_account_type', $user->current_role)->latest()->paginate(20); //->makeHidden();
 
         return get_success_response($transactions, 'Transactions retrieved successfully');
     }
