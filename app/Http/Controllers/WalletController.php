@@ -258,7 +258,7 @@ class WalletController extends Controller
         $user = $request->user();
         $fromWalletType = $request->from_wallet;
         $toWalletType = $request->to_wallet;
-        $amount = $request->amount;
+        $amount = $request->amount * 100;
 
         if($request->has('user_id') && !empty($request->user_id)) {
             $user = User::whereId($request->user_id)->first();

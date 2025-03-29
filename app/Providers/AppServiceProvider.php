@@ -42,6 +42,5 @@ class AppServiceProvider extends ServiceProvider
         //     ]
         // );
 
-        ModelsWallet::where('role', 'general')->delete();
     }
 }
