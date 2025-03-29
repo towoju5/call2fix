@@ -22,11 +22,6 @@ use Illuminate\Support\Facades\Schema;
 
 class WalletController extends Controller
 {
-    public function __construct()
-    {
-        Wallet::where('role', 'general')->forceDelete();
-    }
-
     public function deposit(Request $request)
     {
         try {
@@ -306,7 +301,6 @@ class WalletController extends Controller
                 $amount = floatval($amount * $convertRatio); 
             }
 
-            Wallet::where('role', 'general')->forceDelete();
             $to->deposit($amount, [
                 "description" => 'Wallet Transfer',
                 "details" => "Transfer from {$fromWalletType} to {$toWalletType}",
