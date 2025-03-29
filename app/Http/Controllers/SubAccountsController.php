@@ -12,6 +12,7 @@ use Validator;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use Towoju5\Wallet\Models\Wallet;
 
 class SubAccountsController extends Controller
 {
