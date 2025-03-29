@@ -72,17 +72,17 @@ class DepartmentController extends Controller
             $department = Order::whereUserId($departmentId)->paginate(10);
             return get_success_response($department, 'Department orders retrieved successfully.');
         } catch (\Exception $e) {
-            return get_error_response('An error occurred while fetching the department.', 500);
+            return get_error_response('An error occurred while fetching data.', 500);
         }
     }
 
     public function ServiceRequests($departmentId)
     {
         try {
-            $department = ServiceRequest::whereUserId($departmentId)->paginate(per_page());
+            $department = ServiceRequest::whereUserId($departmentId)->limit()->get();
             return get_success_response($department, 'Department orders retrieved successfully.');
         } catch (\Exception $e) {
-            return get_error_response('An error occurred while fetching the department.', 500);
+            return get_error_response('An error occurred while fetching data.', 500);
         }
     }
 
