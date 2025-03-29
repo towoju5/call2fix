@@ -94,7 +94,7 @@ class DepartmentController extends Controller
                 return get_error_response('Department wallet not found', ['error' => 'Department wallet not found!'], 404);
             }
 
-            $transactions = $this->history($departmentId);
+            $transactions = WalletTransaction::whereUserId($departmentId)->latest()->limit(100)->get(); //$this->history($departmentId);
             return get_success_response([
                 'wallet' => $department,
                 'history' => $transactions
@@ -106,9 +106,9 @@ class DepartmentController extends Controller
 
     private function history($uid)
     {
-        $user = User::whereId($uid)->first();
+        $user = WalletTransaction::whereId($uid)->first();
         $wallet = $user->getWallet($walletType ?? 'ngn');
-        $transactions = $wallet->transactions()->select('*')->where('_account_type', $user->current_role)->latest()->paginate(100); //->makeHidden();
+        $transactions = $wallet->transactions()->select('*')->where('_account_type', $user->current_role)->get();
         return $transactions;
     }
 }
