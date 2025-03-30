@@ -79,7 +79,7 @@ class DepartmentController extends Controller
     public function ServiceRequests($departmentId)
     {
         try {
-            $department = ServiceRequest::whereUserId($departmentId)->limit()->get();
+            $department = ServiceRequest::whereUserId($departmentId)->limit(100)->get();
             return get_success_response($department, 'Department orders retrieved successfully.');
         } catch (\Exception $e) {
             return get_error_response('An error occurred while fetching data.', 500);
