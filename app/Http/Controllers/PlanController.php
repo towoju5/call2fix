@@ -17,6 +17,81 @@ class PlanController extends Controller
                 return get_error_response("No Plan Found!", ['error' => "Plans not found"], 404);
             }
 
+            $results = [];
+            $features = [];
+            foreach ($plans as $plan) {  
+                try {      
+                    if ($plan->id == 2) {
+                        $features = [
+                            ['name' => 'products', 'value' => 2],
+                            ['name' => 'service', 'value' => 2],
+                            ['name' => 'categories', 'value' => 2],
+                            ['name' => 'locations', 'value' => 2],
+                        ];
+
+                        foreach ($features as $feature) {
+                            $featureModels[] = new PlanFeatureModel([
+                                'name' => $feature['name'],
+                                'code' => $feature['name'],
+                                'description' => "Offering access to " . $feature['name'],
+                                'type' => 'limit',
+                                'limit' => $feature['value'],
+                                'metadata' => ['name' => $feature['name']], 
+                            ]);
+                        }
+            
+                        $plan->features()->saveMany($featureModels);
+                        $results[] = $plan->features();
+                    } elseif ($plan->id == 3) {
+                        $features = [
+                            ['name' => 'products', 'value' => 2],
+                            ['name' => 'service', 'value' => 2],
+                            ['name' => 'categories', 'value' => 2],
+                            ['name' => 'locations', 'value' => 2],
+                        ];
+
+                        foreach ($features as $feature) {
+                            $featureModels[] = new PlanFeatureModel([
+                                'name' => $feature['name'],
+                                'code' => $feature['name'],
+                                'description' => "Offering access to " . $feature['name'],
+                                'type' => 'limit',
+                                'limit' => $feature['value'],
+                                'metadata' => ['name' => $feature['name']], 
+                            ]);
+                        }
+                
+                        $plan->features()->saveMany($featureModels);
+                        $results[] = $plan->features();
+                    } elseif ($plan->id == 4) {
+                        $features = [
+                            ['name' => 'products', 'value' => -1],
+                            ['name' => 'service', 'value' => -1],
+                            ['name' => 'categories', 'value' => -1],
+                            ['name' => 'artisans', 'value' => -1],
+                            ['name' => 'locations', 'value' => 5],
+                        ];
+
+                        foreach ($features as $feature) {
+                            $featureModels[] = new PlanFeatureModel([
+                                'name' => $feature['name'],
+                                'code' => $feature['name'],
+                                'description' => "Offering access to " . $feature['name'],
+                                'type' => 'limit',
+                                'limit' => $feature['value'],
+                                'metadata' => ['name' => $feature['name']], 
+                            ]);
+                        }
+                
+                        $plan->features()->saveMany($featureModels);
+                        $results[] = $plan->features();
+                    }
+                    return response()->json(['message' => $results]);
+                } catch (\Throwable $th) {
+                    return response()->json(['message' => $th->getMessage()]);
+                }
+            }
+
             return get_success_response(['plans' => $plans, 'current_plan' => auth()->user()->activeSubscription()]);
         } catch (\Throwable $th) {
             return get_error_response($th->getMessage(), ["error" => $th->getMessage()], 400);

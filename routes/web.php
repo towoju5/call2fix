@@ -26,61 +26,8 @@ use Creatydev\Plans\Models\PlanFeatureModel;
 
 
 Route::get('/', function () {
-	$plans = PlanModel::all();
-	$results = [];
-	foreach ($plans as $plan) {
-		$features = [];
-
-		if ($plan->id == 2) {
-			$features = [
-				['name' => 'products', 'value' => 2],
-				['name' => 'service', 'value' => 2],
-				['name' => 'categories', 'value' => 2],
-				['name' => 'locations', 'value' => 2],
-			];
-		} elseif ($plan->id == 3) {
-			$features = [
-				['name' => 'products', 'value' => 2],
-				['name' => 'service', 'value' => 2],
-				['name' => 'categories', 'value' => 2],
-				['name' => 'locations', 'value' => 2],
-			];
-		} elseif ($plan->id == 4) {
-			$features = [
-				['name' => 'products', 'value' => -1],
-				['name' => 'service', 'value' => -1],
-				['name' => 'categories', 'value' => -1],
-				['name' => 'artisans', 'value' => -1],
-				['name' => 'locations', 'value' => 5],
-			];
-		}
-
-		try {
-			// if (!empty($features)) {
-				$featureModels = [];
-	
-				foreach ($features as $feature) {
-					$featureModels[] = new PlanFeatureModel([
-						'name' => $feature['name'],
-						'code' => $feature['name'],
-						'description' => "Offering access to " . $feature['name'],
-						'type' => 'limit',
-						'limit' => $feature['value'],
-						'metadata' => ['name' => $feature['name']], 
-					]);
-				}
-	
-				$plan->features()->saveMany($featureModels);
-				$results[] = $plan->features();
-				return response()->json(['message' => $results]);
-			// } else {
-			// 	return response()->json(['message' => "Error encountered"]);
-			// }
-		} catch (\Throwable $th) {
-			return response()->json(['message' => $th->getMessage()]);
-		}
-	}
-
+	$plans = PlanFeatureModel::all();
+	return response()->json($plans);
 	return view('welcome');
 });
 
