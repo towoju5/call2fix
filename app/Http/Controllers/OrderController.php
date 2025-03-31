@@ -227,14 +227,14 @@ class OrderController extends Controller
             }
 
             $orderStatus = [
-                'UPCOMING', 'STARTED', 'ENDED', 'FAILED', 'ARRIVED', 
+                'UPCOMING', 'STARTED', 'ENDED', 'FAILED', 'ARRIVED',
                 'UNASSIGNED', 'ACCEPTED', 'DECLINE', 'CANCEL', 'DELETED'
             ];
 
             // Ensure the status is compared as a string
             $currentStatus = strtoupper($order->status);
 
-            if (!in_array($currentStatus, $orderStatus)) {
+            if (in_array($currentStatus, $orderStatus)) {
                 return get_error_response("Order cannot be canceled.", [], 400);
             }
 

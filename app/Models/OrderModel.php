@@ -38,7 +38,7 @@ class OrderModel extends Model
     ];
 
     protected $hidden = [
-        'kwik_order_id',
+        // 'kwik_order_id',
     ];
 
 
