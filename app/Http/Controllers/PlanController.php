@@ -30,8 +30,10 @@ class PlanController extends Controller
             if (!$plan) {
                 return get_error_response("No Plan Found!", ['error' => "Plans not found"], 404);
             }
-            
-            return get_success_response($plan->features);
+            $user = auth()->user();
+            $subscription = $user->activeSubscription();
+            $features = $subscription->features()->get();
+            return get_success_response($features);
         } catch (\Throwable $th) {
             return get_error_response($th->getMessage(), ["error" => $th->getMessage()], 400);
         }
