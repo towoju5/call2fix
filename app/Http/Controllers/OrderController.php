@@ -147,7 +147,6 @@ class OrderController extends Controller
     {
         try {
             $orders = OrderModel::with('product', 'seller', 'user')->findOrFail($orderId);
-
             return get_success_response($orders, "Order retrieved successfully");
         } catch (ModelNotFoundException $e) {
             return get_error_response("Order not found", ['error' => "Order not found"], 404);
@@ -250,7 +249,7 @@ class OrderController extends Controller
                     return get_error_response("User wallet not found", ["error" => "User wallet not found"], 404);
                 }
 
-                if(!$wallet->withdrawal($order->total_price * 100, ["description" => "Order refund for ORDER ID: {$order->id}", "Order placement refunded"])){
+                if(!$wallet->deposit($order->total_price * 100, ["description" => "Order refund for ORDER ID: {$order->id}", "Order placement refunded"])){
                     return ['error' => 'Insufficient Balance'];
                 }
                 
