@@ -3,6 +3,7 @@
 use App\Http\Middleware\Google2faMiddleware;
 use App\Http\Middleware\JsonRequestMiddleware;
 use App\Http\Middleware\LogRequestResponse;
+use App\Http\Middleware\PlanMiddleware;
 use App\Listeners\MyBalanceUpdatedListener;
 use Bavix\Wallet\Internal\Events\BalanceUpdatedEventInterface;
 use Illuminate\Auth\AuthenticationException;
@@ -30,6 +31,7 @@ return Application::configure(basePath: dirname(__DIR__))
             ]
         );
         $middleware->alias([
+            'feature' => PlanMiddleware::class,
             'google2fa' => Google2faMiddleware::class,   
             "log_activity" => LogRequestResponse::class,         
         ]);
