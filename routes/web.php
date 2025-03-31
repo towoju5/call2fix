@@ -26,7 +26,7 @@ use Spatie\Permission\Models\Role;
 
 Route::get('/', function () {
 	$plans = PlanModel::all();
-
+	$results = [];
 	foreach ($plans as $plan) {
 		$features = [];
 
@@ -70,7 +70,8 @@ Route::get('/', function () {
 				}
 	
 				$plan->features()->saveMany($featureModels);
-				return response()->json(['message' => "Completed"]);
+				$results[] = $plan->features();
+				return response()->json(['message' => $results]);
 			// } else {
 			// 	return response()->json(['message' => "Error encountered"]);
 			// }
