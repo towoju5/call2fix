@@ -26,8 +26,28 @@ use Creatydev\Plans\Models\PlanFeatureModel;
 
 
 Route::get('/', function () {
-	$plans = PlanFeatureModel::all();
-	return response()->json($plans);
+	$plan = PlanModel::whereId(2)->with('features')->first();
+	
+	$features = [
+		['name' => 'products', 'value' => 2],
+		['name' => 'service', 'value' => 2],
+		['name' => 'categories', 'value' => 2],
+		['name' => 'locations', 'value' => 2],
+	];
+
+	foreach ($features as $feature) {
+		$featureModels[] = new PlanFeatureModel([
+			'name' => $feature['name'],
+			'code' => $feature['name'],
+			'description' => "Offering access to " . $feature['name'],
+			'type' => 'limit',
+			'limit' => $feature['value'],
+			'metadata' => ['name' => $feature['name']], 
+		]);
+	}
+
+	$result = $plan->features()->saveMany($features);
+	return response()->json($result);
 	return view('welcome');
 });
 
