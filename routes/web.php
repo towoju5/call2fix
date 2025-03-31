@@ -30,14 +30,7 @@ Route::get('/', function () {
 	foreach ($plans as $plan) {
 		$features = [];
 
-		if ($plan->id == 1) {
-			$features = [
-				['name' => 'products', 'value' => 2],
-				['name' => 'service', 'value' => 2],
-				['name' => 'categories', 'value' => 2],
-				['name' => 'locations', 'value' => 2],
-			];
-		} elseif ($plan->id == 2) {
+		if ($plan->id == 2) {
 			$features = [
 				['name' => 'products', 'value' => 2],
 				['name' => 'service', 'value' => 2],
@@ -45,6 +38,13 @@ Route::get('/', function () {
 				['name' => 'locations', 'value' => 2],
 			];
 		} elseif ($plan->id == 3) {
+			$features = [
+				['name' => 'products', 'value' => 2],
+				['name' => 'service', 'value' => 2],
+				['name' => 'categories', 'value' => 2],
+				['name' => 'locations', 'value' => 2],
+			];
+		} elseif ($plan->id == 4) {
 			$features = [
 				['name' => 'products', 'value' => -1],
 				['name' => 'service', 'value' => -1],
@@ -69,6 +69,9 @@ Route::get('/', function () {
 			}
 
 			$plan->features()->saveMany($featureModels);
+			return response()->json(['message' => "Completed"]);
+		} else {
+			return response()->json(['message' => "Error encountered"]);
 		}
 	}
 
