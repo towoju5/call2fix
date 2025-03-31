@@ -17,7 +17,7 @@ class PlanMiddleware
     public function handle(Request $request, Closure $next, $feature): Response
     {
         $user = $request->user();
-        if (!$user || !$user->subscribed()) {
+        if (!$user || !$user->hasActiveSubscription()) {
             return response()->json(['error' => 'Subscription required'], 403);
         }
 
