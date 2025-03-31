@@ -22,6 +22,7 @@ use Laravel\Telescope\Telescope;
 use LaravelDaily\LaravelCharts\Classes\LaravelChart;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
+use Creatydev\Plans\Models\PlanFeatureModel;
 
 
 Route::get('/', function () {

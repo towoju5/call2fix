@@ -12,7 +12,7 @@ class PlanController extends Controller
     public function index()
     {
         try {
-            $plans = PlanModel::all();
+            $plans = PlanModel::with('features')->get();
             if (!$plans) {
                 return get_error_response("No Plan Found!", ['error' => "Plans not found"], 404);
             }
