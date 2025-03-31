@@ -113,7 +113,7 @@ class OrderController extends Controller
             // Notify the user
             if ($order) {
                 // notify seller
-                $seller = User::whereId($product->user_id)->first();
+                $seller = User::whereId($product->seller_id)->first();
                 $seller->notify(new CustomNotification('New order from a customer', "New order from a customer"));
                 return get_success_response($order, "Order placed successfully", 201);
             }
