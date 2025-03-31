@@ -27,26 +27,40 @@ use Creatydev\Plans\Models\PlanFeatureModel;
 
 Route::get('/', function () {
 	$plan = PlanModel::whereId(2)->with('features')->first();
-	
-	$features = [
-		['name' => 'products', 'value' => 2],
-		['name' => 'service', 'value' => 2],
-		['name' => 'categories', 'value' => 2],
-		['name' => 'locations', 'value' => 2],
-	];
-
-	foreach ($features as $feature) {
-		$featureModels[] = new PlanFeatureModel([
-			'name' => $feature['name'],
-			'code' => $feature['name'],
-			'description' => "Offering access to " . $feature['name'],
-			'type' => 'limit',
-			'limit' => $feature['value'],
-			'metadata' => ['name' => $feature['name']], 
-		]);
-	}
-
-	$result = $plan->features()->saveMany($features);
+	$result = $plan->features()->saveMany([
+		new PlanFeatureModel ([
+			"name" => "products",
+			",code" => "products",
+			"description" => "Offering access to products",
+			"type" => "limit",
+			"limit" => 2,
+			"metadata" => ["name" => "products"]
+		]),
+		new PlanFeatureModel ([
+			"name" => "service",
+			"code" => "service",
+			"description" => "Offering access to service",
+			"type" => "limit",
+			"limit" => 2,
+			"metadata" => ["name" => "service"]
+		]),
+		new PlanFeatureModel ([
+			"name" => "categories",
+			"code" => "categories",
+			"description" => "Offering access to categories",
+			"type" => "limit",
+			"limit" => 2,
+			"metadata" => ["name" => "categories"]
+		]),
+		PlanFeatureModel( [
+			"name" => "locations",
+			"code" => "locations",
+			"description" => "Offering access to locations",
+			"type" => "limit",
+			"limit" => 2,
+			"metadata" => ["name" => "locations"]
+		]),
+	]);
 	return response()->json($result);
 	return view('welcome');
 });
