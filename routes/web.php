@@ -54,24 +54,28 @@ Route::get('/', function () {
 			];
 		}
 
-		if (!empty($features)) {
-			$featureModels = [];
-
-			foreach ($features as $feature) {
-				$featureModels[] = new PlanFeatureModel([
-					'name' => $feature['name'],
-					'code' => $feature['name'],
-					'description' => "Offering access to " . $feature['name'],
-					'type' => 'limit',
-					'limit' => $feature['value'],
-					'metadata' => ['name' => $feature['name']], 
-				]);
-			}
-
-			$plan->features()->saveMany($featureModels);
-			return response()->json(['message' => "Completed"]);
-		} else {
-			return response()->json(['message' => "Error encountered"]);
+		try {
+			// if (!empty($features)) {
+				$featureModels = [];
+	
+				foreach ($features as $feature) {
+					$featureModels[] = new PlanFeatureModel([
+						'name' => $feature['name'],
+						'code' => $feature['name'],
+						'description' => "Offering access to " . $feature['name'],
+						'type' => 'limit',
+						'limit' => $feature['value'],
+						'metadata' => ['name' => $feature['name']], 
+					]);
+				}
+	
+				$plan->features()->saveMany($featureModels);
+				return response()->json(['message' => "Completed"]);
+			// } else {
+			// 	return response()->json(['message' => "Error encountered"]);
+			// }
+		} catch (\Throwable $th) {
+			return response()->json(['message' => $th->getMessage()]);
 		}
 	}
 
