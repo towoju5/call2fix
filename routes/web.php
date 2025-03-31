@@ -25,6 +25,53 @@ use Spatie\Permission\Models\Role;
 
 
 Route::get('/', function () {
+	$plans = PlanModel::all();
+
+	foreach ($plans as $plan) {
+		$features = [];
+
+		if ($plan->id == 1) {
+			$features = [
+				['name' => 'products', 'value' => 2],
+				['name' => 'service', 'value' => 2],
+				['name' => 'categories', 'value' => 2],
+				['name' => 'locations', 'value' => 2],
+			];
+		} elseif ($plan->id == 2) {
+			$features = [
+				['name' => 'products', 'value' => 2],
+				['name' => 'service', 'value' => 2],
+				['name' => 'categories', 'value' => 2],
+				['name' => 'locations', 'value' => 2],
+			];
+		} elseif ($plan->id == 3) {
+			$features = [
+				['name' => 'products', 'value' => -1],
+				['name' => 'service', 'value' => -1],
+				['name' => 'categories', 'value' => -1],
+				['name' => 'artisans', 'value' => -1],
+				['name' => 'locations', 'value' => 5],
+			];
+		}
+
+		if (!empty($features)) {
+			$featureModels = [];
+
+			foreach ($features as $feature) {
+				$featureModels[] = new PlanFeatureModel([
+					'name' => $feature['name'],
+					'code' => $feature['name'],
+					'description' => "Offering access to " . $feature['name'],
+					'type' => 'limit',
+					'limit' => $feature['value'],
+					'metadata' => ['name' => $feature['name']], 
+				]);
+			}
+
+			$plan->features()->saveMany($featureModels);
+		}
+	}
+
 	return view('welcome');
 });
 
