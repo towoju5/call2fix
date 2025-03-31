@@ -109,7 +109,15 @@ class ServiceProviderController extends Controller
             if ($request->has('phone')) {
                 $userData['phone'] = str_replace(" ", "", $request->phone);
             }
-            
+
+            $user = auth()->user();
+            $officeAddresses = Artisans::where(['artisan_category' => $request->artisan_category, 'user_id' => $user->id])->count();
+            $subscription = $user->activeSubscription();
+            $allowedOfficeAddresses = $subscription->getRemainingOf('artisans');
+            if($officeAddresses > $allowedOfficeAddresses) {
+                return get_error_response('Feature limit reached', ['error' => 'Feature limit reached'], 403);
+            }
+
             // Add Artisan to user DB
             $artisanPassword = Str::random(8);
             $userData = [

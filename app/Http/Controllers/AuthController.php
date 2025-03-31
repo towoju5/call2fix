@@ -635,8 +635,6 @@ class AuthController extends Controller
     public function businessProfile(Request $request)
     {
         try {
-            $user = Auth::user();
-
             // Validate the input
             $validatedData = $request->validate([
                 'businessName' => 'required|string|max:255',
@@ -669,16 +667,27 @@ class AuthController extends Controller
                 'businessBankInfo' => $validatedData['businessBankInfo'],
             ];
 
+
+            $user = auth()->user();
+            $officeAddresses = $validatedData['officeAddress'] ?? [];
+            $subscription = $user->activeSubscription();
+            $allowedOfficeAddresses = $subscription->getRemainingOf('locations');
+            if(count($officeAddresses) > $allowedOfficeAddresses) {
+                return get_error_response('Feature limit reached', ['error' => 'Feature limit reached'], 403);
+            }
+
+
             $businessInfo = $user->business_info()->updateOrCreate(
                 ['user_id' => $user->id],
                 $businessInfoData
             );
 
+
+
             // Step 2: Handle multiple office addresses
-            $officeAddresses = $validatedData['officeAddress'] ?? [];
             foreach ($officeAddresses as $addressData) {
                 $user->business_office_address()->updateOrCreate(
-                    ['address' => $addressData['address']], // Match by address (or use `id` if available)
+                    ['address' => $addressData['address']],
                     [
                         'latitude' => $addressData['latitude'],
                         'longitude' => $addressData['longitude'],

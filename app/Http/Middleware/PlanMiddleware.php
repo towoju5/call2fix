@@ -26,14 +26,14 @@ class PlanMiddleware
         if ($user->hasActiveSubscription()) {
             $subscription = $user->activeSubscription();
             if($subscription->getRemainingOf($feature) > 0) {
-                $subscription->consumeFeature($feature, 5);
+                $subscription->consumeFeature($feature, 1);
+
+                return $next($request);
             } else {
                 return get_error_response('Feature limit reached', ['error' => 'Feature limit reached'], 403);
             }
         } else {
             return get_error_response("No active Subscription", ['error' => "User has no active subscription plan"]);
         }
-
-        return $next($request);
     }
 }

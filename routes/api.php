@@ -85,9 +85,9 @@ Route::middleware(['api'])->domain(env('API_URL'))->prefix('v1')->group(function
             Route::delete('accounts/{accountId}', [WalletController::class, 'deleteBankAccount']);
         });
 
-
         Route::get('top-products', [ProductController::class, 'topProducts']);
         Route::get('my-products', [ProductController::class, 'myProducts']);
+        Route::post('products', [ProductController::class, 'myProducts'])->middleware('feature:products');
         Route::apiResource('products', ProductController::class)->middleware('log_activity');
         Route::apiResource('property', PropertyController::class)->middleware('log_activity');
         Route::resource('categories', CategoryController::class);
