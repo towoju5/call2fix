@@ -119,7 +119,7 @@ class OrderController extends Controller
             }
 
         } catch (ModelNotFoundException $e) {
-            return get_error_response("Product not found", [], 404);
+            return get_error_response("Product not found", ['error' => "Product not found"], 404);
         } catch (\Exception $e) {
             // Log the actual error for debugging
             Log::error('Order placement failed error: ', ['error'=> $e->getMessage(), 'trace' => $e->getTrace()]);
@@ -155,7 +155,7 @@ class OrderController extends Controller
 
             return get_success_response($orders, "Order retrieved successfully");
         } catch (ModelNotFoundException $e) {
-            return get_error_response("Order not found", [], 404);
+            return get_error_response("Order not found", ['error' => "Order not found"], 404);
         } catch (\Exception $e) {
             \Log::error('Error retrieving order: ' . $e->getMessage());
             return get_error_response("Failed to retrieve order", ["error" => $e->getMessage()], 500);
@@ -205,7 +205,7 @@ class OrderController extends Controller
             $trackingDetails = $kwik->getJobDetails($order->kwik_order_id);
             return get_success_response($trackingDetails, "Order tracking details retrieved successfully");
         } catch (ModelNotFoundException $e) {
-            return get_error_response("Order not found", [], 404);
+            return get_error_response("Order not found", ['error' => "Order not found"], 404);
         } catch (\Exception $e) {
             \Log::error('Error tracking order: ' . $e->getMessage());
             return get_error_response("Failed to track order", ["error" => $e->getMessage()], 400);
