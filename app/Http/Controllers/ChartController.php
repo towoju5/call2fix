@@ -210,7 +210,7 @@ class ChartController extends Controller
             'products_buyable' => $buyable->count(),
             'products_rentable' => $rentable->count(),
             'buyable' =>  $getOrdersCount['buyable'],
-            'rentable' => $getOrdersCount['rentable']
+            'rentable' => $getOrdersCount['rentables']
         ]);
     }
 
