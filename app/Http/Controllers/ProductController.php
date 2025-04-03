@@ -7,6 +7,7 @@ use App\Services\ProductService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
+use Log;
 
 class ProductController extends Controller
 {
@@ -80,6 +81,7 @@ class ProductController extends Controller
     
             return get_success_response($product, "New Product added successfully", 201);
         } catch (\Exception $e) {
+            Log::debug("Error on adding product:", ['error' => $e->getMessage()]);
             return get_error_response($e->getMessage());
         }
     }
