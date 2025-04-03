@@ -27,12 +27,17 @@ class Artisans extends Model
         "bank_code",
         "account_number",
         "account_name",
-        "artisan_category"
+        "artisan_category",
+        "user_id"
     ];
 
     protected $casts = [
         "location" => "array",
         "artisan_category" => "array"
+    ];
+
+    protected $hidden = [
+        "user_id"
     ];
 
     // This assumes each artisan record has a single user relationship
