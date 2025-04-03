@@ -368,7 +368,7 @@ class WalletController extends Controller
             if (!$bonusWallet) {
                 return get_error_response('Failed to create bonus wallet');
             }
-            $wallets = $user->my_wallets();
+            $wallets = Wallet::where('user_id', $user->id)->where('role', active_role())->get();
         }
         return get_success_response($wallets, 'All wallets retrieved successfully');
     }
