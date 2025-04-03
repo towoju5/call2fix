@@ -101,6 +101,7 @@ class ServiceProviderController extends Controller
             }
 
             $validateData = $validator->validated();
+            $validateData['user_id'] = auth()->id();
             $validateData['service_provider_id'] = auth()->id();
 
             DB::beginTransaction(); // Start transaction
