@@ -15,7 +15,7 @@ class WebhookLogController extends Controller
 
     public function __construct()
     {
-        $this->paystackSecretKey = get_settings_value('paystack_secret_key', 'sk_test_390011d63d233cad6838504b657721883bc096ec');;
+        $this->paystackSecretKey = get_settings_value('paystack_secret_key');
     }
 
     public function paystackWebhook(Request $request)

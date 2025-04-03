@@ -192,13 +192,25 @@ class ChartController extends Controller
     public function products_count()
     {
         $totalProducts = Product::where('seller_id', auth()->id())->count();
-        $buyable = Product::where('is_leasable', false)->where('seller_id', auth()->id())->count();
-        $rentable = Product::where('is_leasable', true)->where('seller_id', auth()->id())->count();
+        $buyable = Product::where('is_leasable', false)->where('seller_id', auth()->id())->get();
+        $rentable = Product::where('is_leasable', true)->where('seller_id', auth()->id())->get();
+        
+        
+        $buyableIds = $buyable->pluck('id');  // Extract IDs of buyable products
+        $rentableIds = $rentable->pluck('id');  // Extract IDs of rentable products
+        
+        // Get the number of orders for each category
+        $getOrdersCount = [
+            'buyable' => Order::whereIn('product_id', $buyableIds)->count(),
+            'rentables' => Order::whereIn('product_id', $rentableIds)->count()
+        ];
 
         return get_success_response([
             'total_products' => $totalProducts,
-            'buyable' => $buyable,
-            'rentable' => $rentable,
+            'products_buyable' => $buyable->count(),
+            'products_rentable' => $rentable->count(),
+            'buyable' =>  $getOrdersCount['buyable'],
+            'rentable' => $getOrdersCount['rentable']
         ]);
     }
 
