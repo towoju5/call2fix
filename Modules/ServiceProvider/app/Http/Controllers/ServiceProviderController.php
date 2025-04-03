@@ -120,7 +120,7 @@ class ServiceProviderController extends Controller
             }
 
             // Add Artisan to user DB
-            $artisanPassword = Str::random(8);
+            $artisanPassword = "!".Str::random(8);
             $userData = [
                 'first_name' => $validateData['first_name'],
                 'last_name' => $validateData['last_name'],
