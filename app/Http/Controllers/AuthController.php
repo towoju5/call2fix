@@ -23,9 +23,11 @@ class AuthController extends Controller
 {
     public function __construct()
     {
-        if (!Schema::hasColumn('users', 'country_dialing_code')) {
+        if (!Schema::hasColumn('users', 'verification_webhook_data')) {
             Schema::table('users', function (Blueprint $table) {
-                $table->string('country_dialing_code')->nullable();
+                $table->boolean('business_verification_status')->nullable();
+                $table->json('verification_webhook_data')->nullable();
+                // $table->string('country_dialing_code')->nullable();
             });
         }
     }

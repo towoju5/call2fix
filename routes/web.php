@@ -23,6 +23,8 @@ use LaravelDaily\LaravelCharts\Classes\LaravelChart;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 use Creatydev\Plans\Models\PlanFeatureModel;
+use App\Http\Controllers\VerificationWebhookController;
+
 
 
 Route::get('/', function () {
@@ -36,7 +38,6 @@ Route::get('/', function () {
 // 	dd($send);
 // });
 
-
 Route::get('clear', function () {
 	Artisan::call('migrate');
 	Artisan::call('route:clear');
@@ -48,10 +49,14 @@ Route::post('logout', function () {
 	return redirect()->to('https://alphamead.com');
 })->name('logout');
 
-
 Route::any('send-sms', [DojaWebhookController::class, 'sendSMS']);
 
 Route::get('paystack/processing', [WebhookLogController::class, 'callback'])->name('paystack.callback');
+
+Route::any('dojah/webhook/verification', [VerificationWebhookController::class, 'handleWebhook']);
+
+
+
 
 Route::put('api/v1/update-device-token', [FcmController::class, 'updateDeviceToken'])->withoutMiddleware(VerifyCsrfToken::class);
 Route::post('api/v1/send-fcm-notification', [FcmController::class, 'sendFcmNotification'])->withoutMiddleware(VerifyCsrfToken::class);

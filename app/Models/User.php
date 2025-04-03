@@ -72,8 +72,9 @@ class User extends Authenticatable
         'password_reset_code',
         'virtual_account_number',
         'virtual_bank_name',
+        'verification_webhook_data',
         // 'parent_account_id',
-        // 'deleted_at'
+        'deleted_at'
     ];
 
     /**
@@ -88,7 +89,9 @@ class User extends Authenticatable
             'password' => 'hashed',
             'is_social' => 'boolean',
             'is_notification_enabled' => 'boolean',
-            'location' => 'array'
+            'location' => 'array',
+            'business_verification_status' => 'boolean',
+            'verification_webhook_data' => 'array'
         ];
     }
 
