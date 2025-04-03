@@ -201,8 +201,8 @@ class ChartController extends Controller
         
         // Get the number of orders for each category
         $getOrdersCount = [
-            'buyable' => Order::whereIn('product_id', $buyableIds)->count(),
-            'rentables' => Order::whereIn('product_id', $rentableIds)->count()
+            'buyable' => Order::where('status', 'closed')->whereIn('product_id', $buyableIds)->count(),
+            'rentables' => Order::where('status', 'closed')->whereIn('product_id', $rentableIds)->count()
         ];
 
         return get_success_response([
