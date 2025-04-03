@@ -82,7 +82,7 @@ class ServiceProviderController extends Controller
                 "first_name" => "required|string|max:255",
                 "last_name" => "required|string|max:255",
                 "email" => "required|email|unique:users,email",
-                "phone" => "required|string|max:20",
+                "phone" => "required|string|max:20|unique:artisans,phone",
                 "trade" => "required|string|max:255", // category the artisan is registered under - max.
                 "location" => "required|array|max:255", // locations service provider offers services.
                 "id_type" => "required|string|in:national_id,drivers_license,passport,voters_card",
