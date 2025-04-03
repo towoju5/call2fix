@@ -37,7 +37,8 @@ class Artisans extends Model
     ];
 
     protected $hidden = [
-        "user_id"
+        "user_id",
+        "location"
     ];
 
     // This assumes each artisan record has a single user relationship
