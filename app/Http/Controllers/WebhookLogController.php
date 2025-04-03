@@ -36,6 +36,7 @@ class WebhookLogController extends Controller
     public function handleWebhook(Request $request)
     {
         try {
+            Log::warning('Received Paystack webhook event', ['payload' => $request->all()]);
             // If the request is a GET request, just return the view
             if ($request->isMethod('get')) {
                 return view('paystack');
