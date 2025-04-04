@@ -98,10 +98,7 @@ class ProductController extends Controller
                 'name' => 'required|string|max:255',
                 'description' => 'required|string',
                 'price' => 'required_if:rentable_price,null|numeric|min:0',
-                'rentable_price' => 'required_if:price,null|array', // Changed to array for validation
-                // 'rentable_price.days' => 'nullable|numeric|min:0',
-                // 'rentable_price.weekly' => 'nullable|numeric|min:0',
-                // 'rentable_price.months' => 'nullable|numeric|min:0',
+                'rentable_price' => 'required_if:price,null|array', 
                 'category_id' => 'required|exists:categories,id',
                 'stock' => 'required|integer|min:0',
                 'sku' => 'required|string|unique:products,sku',
@@ -113,8 +110,6 @@ class ProductController extends Controller
                 'product_location' => 'required|string',
                 'product_longitude' => 'required|string',
                 'product_latitude' => 'required|string',
-                'product_image' => 'required|array',
-                'product_image.*' => 'required|url', // Validate each item in the array as a valid URL
             ]);
     
             if ($validator->fails()) {
