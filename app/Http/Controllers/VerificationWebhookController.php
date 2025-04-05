@@ -52,11 +52,11 @@ class VerificationWebhookController extends Controller
 
             Log::info('User and business verification data updated successfully.', ['email' => $email]);
 
-            return response()->json(['message' => 'User and business data updated successfully'], 200);
+            return get_success_response(['message' => 'User and business data updated successfully'], "'User and business data updated successfully'", 200);
 
         } catch (\Exception $e) {
             Log::error('Webhook processing failed: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
-            return response()->json(['message' => 'Internal Server Error'], 500);
+            return get_error_response($e->getMessage(), ['message' => 'Internal Server Error'], 500);
         }
     }
 }
