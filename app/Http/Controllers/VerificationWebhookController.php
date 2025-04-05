@@ -12,7 +12,7 @@ class VerificationWebhookController extends Controller
     {
         try {
             $webhookData = $request->all();
-
+            Log::info("Incoming webhook from Dojah: ", ["payload" => $webhookData]);
             $email = data_get($webhookData, 'data.email.data.email');
 
             if (!$email) {
