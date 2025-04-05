@@ -676,13 +676,10 @@ class AuthController extends Controller
                 return get_error_response('Feature limit reached', ['error' => 'Feature limit reached'], 403);
             }
 
-
             $businessInfo = $user->business_info()->updateOrCreate(
                 ['user_id' => $user->id],
                 $businessInfoData
             );
-
-
 
             // Step 2: Handle multiple office addresses
             foreach ($officeAddresses as $addressData) {
