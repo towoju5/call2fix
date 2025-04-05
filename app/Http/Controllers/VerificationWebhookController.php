@@ -33,10 +33,10 @@ class VerificationWebhookController extends Controller
                 'first_name' => data_get($bvnData, 'first_name') ?? $user->first_name,
                 'last_name' => data_get($bvnData, 'last_name') ?? $user->last_name,
                 'phone' => data_get($bvnData, 'phone_number1') ?? $user->phone,
-                'gender' => data_get($bvnData, 'gender') ?? $user->gender,
-                'date_of_birth' => data_get($bvnData, 'date_of_birth') ?? $user->date_of_birth,
-                'profile_picture' => data_get($bvnData, 'image_url') ?? $user->profile_picture,
-                'country' => data_get($webhookData, 'data.countries.data.country') ?? $user->country,
+                // 'gender' => data_get($bvnData, 'gender') ?? $user->gender,
+                // 'date_of_birth' => data_get($bvnData, 'date_of_birth') ?? $user->date_of_birth,
+                // 'profile_picture' => data_get($bvnData, 'image_url') ?? $user->profile_picture,
+                // 'country' => data_get($webhookData, 'data.countries.data.country') ?? $user->country,
                 'business_verification_status' => true,
                 'verification_webhook_data' => $webhookData
             ]);
