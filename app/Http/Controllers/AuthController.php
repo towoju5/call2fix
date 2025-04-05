@@ -637,22 +637,22 @@ class AuthController extends Controller
         try {
             // Validate the input
             $validatedData = $request->validate([
-                'businessName' => 'required|string|max:255',
-                'cacNumber' => 'required|string|max:50',
+                'businessName' => 'sometimes|string|max:255',
+                'cacNumber' => 'sometimes|string|max:50',
                 'businessCategory' => 'array|max:5', // Maximum 5 categories
                 'businessCategory.*' => 'string|max:100',
-                'businessDescription' => 'required|string',
-                'businessIdType' => 'required|string|max:50',
-                'businessIdNumber' => 'required|string|max:50',
-                'businessIdImage' => 'required|url',
-                'businessBankInfo.bank_name' => 'required|string|max:255',
-                'businessBankInfo.bank_code' => 'required|string|max:10',
-                'businessBankInfo.account_number' => 'required|string|max:20',
-                'businessBankInfo.account_name' => 'required|string|max:255',
+                'businessDescription' => 'sometimes|string',
+                'businessIdType' => 'sometimes|string|max:50',
+                'businessIdNumber' => 'sometimes|string|max:50',
+                'businessIdImage' => 'sometimes|url',
+                'businessBankInfo.bank_name' => 'sometimes|string|max:255',
+                'businessBankInfo.bank_code' => 'sometimes|string|max:10',
+                'businessBankInfo.account_number' => 'sometimes|string|max:20',
+                'businessBankInfo.account_name' => 'sometimes|string|max:255',
                 'officeAddress' => 'array',
-                'officeAddress.*.address' => 'required|string|max:255',
-                'officeAddress.*.latitude' => 'required|string|max:50',
-                'officeAddress.*.longitude' => 'required|string|max:50',
+                'officeAddress.*.address' => 'sometimes|string|max:255',
+                'officeAddress.*.latitude' => 'sometimes|string|max:50',
+                'officeAddress.*.longitude' => 'sometimes|string|max:50',
             ]);
 
             // Step 1: Handle business info update or create
