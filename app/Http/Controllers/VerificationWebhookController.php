@@ -28,10 +28,11 @@ class VerificationWebhookController extends Controller
             }
 
             $bvnData = data_get($webhookData, 'data.government_data.data.bvn.entity', []);
-
+            
             $user->update([
                 'first_name' => data_get($bvnData, 'first_name') ?? $user->first_name,
                 'last_name' => data_get($bvnData, 'last_name') ?? $user->last_name,
+                // 'phone' => data_get($bvnData, 'phone_number1') ?? $user->phone,
                 'business_verification_status' => true,
                 'verification_webhook_data' => $webhookData
             ]);
