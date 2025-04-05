@@ -387,7 +387,7 @@ class AuthController extends Controller
             });
         }
         // Update all fields except email and phone
-        $user->update($request->except(['email', 'phone']));
+        $user->update($request->except(['email']));
 
         return get_success_response(['user' => $user], 'Profile updated successfully');
     }
