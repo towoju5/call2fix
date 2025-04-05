@@ -53,7 +53,7 @@ Route::any('send-sms', [DojaWebhookController::class, 'sendSMS']);
 
 Route::get('paystack/processing', [WebhookLogController::class, 'callback'])->name('paystack.callback');
 
-Route::any('dojah/webhook/verification', [VerificationWebhookController::class, 'handleWebhook']);
+Route::any('dojah/webhook/verification', [VerificationWebhookController::class, 'handleWebhook'])->withoutMiddleware(VerifyCsrfToken::class);
 
 
 
