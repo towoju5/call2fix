@@ -32,11 +32,6 @@ class VerificationWebhookController extends Controller
             $user->update([
                 'first_name' => data_get($bvnData, 'first_name') ?? $user->first_name,
                 'last_name' => data_get($bvnData, 'last_name') ?? $user->last_name,
-                // 'phone' => data_get($bvnData, 'phone_number1') ?? $user->phone,
-                // 'gender' => data_get($bvnData, 'gender') ?? $user->gender,
-                // 'date_of_birth' => data_get($bvnData, 'date_of_birth') ?? $user->date_of_birth,
-                // 'profile_picture' => data_get($bvnData, 'image_url') ?? $user->profile_picture,
-                // 'country' => data_get($webhookData, 'data.countries.data.country') ?? $user->country,
                 'business_verification_status' => true,
                 'verification_webhook_data' => $webhookData
             ]);
@@ -44,7 +39,7 @@ class VerificationWebhookController extends Controller
             $businessData = data_get($webhookData, 'data.business_data', []);
 
             if (!empty($businessData)) {
-                $user->business()->updateOrCreate(
+                $user->business_info()->updateOrCreate(
                     ['user_id' => $user->id],
                     [
                         'businessName' => data_get($businessData, 'business_name') ?? optional($user->business)->businessName,
