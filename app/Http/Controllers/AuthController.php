@@ -235,7 +235,16 @@ class AuthController extends Controller
                 if (!$user) {
                     return get_error_response('Failed to create user');
                 }
-
+                
+                foreach($request->officeAddress as $address) {
+                    $user->officeAddress()->updateOrCreate([
+                        'user_id' => auth()->id(),
+                        'address' => $address->address,
+                        'latitude'  => $address->latitude,
+                        'longitude'  => $address->longitude
+                    );
+                }
+                
                 // Create or update the user's business info
                 $business = $user->business_info()->updateOrCreate([
                     'user_id' => $user->id,
