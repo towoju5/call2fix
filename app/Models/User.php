@@ -18,6 +18,7 @@ use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
 use Towoju5\Wallet\Models\Wallet;
 use Towoju5\Wallet\Traits\HasWallets;
+use App\Models\BusinessOfficeAddress;
 use Laravelcm\Subscriptions\Traits\HasPlanSubscriptions;
 
 
@@ -142,6 +143,10 @@ class User extends Authenticatable
     public function orders()
     {
         return $this->hasMany(Order::class);
+    }
+    
+    public function officeAddress() {
+        $this->hadMany(BusinessOfficeAddress::class)(
     }
 
     public function transactions()
