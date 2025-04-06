@@ -237,12 +237,12 @@ class AuthController extends Controller
                 }
                 
                 foreach($request->officeAddress as $address) {
-                    $user->officeAddress()->updateOrCreate([
+                    $user->business_office_address()->updateOrCreate([
                         'user_id' => auth()->id(),
                         'address' => $address->address,
                         'latitude'  => $address->latitude,
                         'longitude'  => $address->longitude
-                    );
+                    ]);
                 }
                 
                 // Create or update the user's business info
