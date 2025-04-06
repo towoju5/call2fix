@@ -190,13 +190,13 @@ class AuthController extends Controller
                 // 'referred_by' => 'sometimes',
                 "businessName" => "required|string",
                 "cacNumber" => "required|string",
-                "officeAddress" => "required|string",
-                "businessCategory" => "required|string",
+                "officeAddress" => "required",
+                "businessCategory" => "required",
                 "businessDescription" => "required|string",
                 "businessIdType" => "required|string",
                 "businessIdNumber" => "required|string",
                 "businessIdImage" => "required|string",
-                "businessBankInfo" => "required|string",
+                "businessBankInfo" => "required",
                 'country_code' => 'required|string|max:255',
             ]);
 
