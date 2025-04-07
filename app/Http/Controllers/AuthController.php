@@ -23,11 +23,11 @@ class AuthController extends Controller
 {
     public function __construct()
     {
-        if (Schema::hasColumn('users', 'business_verification_status')) {
-            Schema::table('users', function (Blueprint $table) {
-                $table->boolean('business_verification_status')->default(false)->change();
-            });
-        }
+        // if (Schema::hasColumn('users', 'business_verification_status')) {
+        //     Schema::table('users', function (Blueprint $table) {
+        //         $table->boolean('business_verification_status')->default(false)->change();
+        //     });
+        // }
     }
 
     public function register(Request $request)

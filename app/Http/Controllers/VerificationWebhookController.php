@@ -52,6 +52,8 @@ class VerificationWebhookController extends Controller
 
             Log::info('User and business verification data updated successfully.', ['email' => $email]);
 
+            $user->notify(new CustomNotification('Verification Completed', "Your profile verification has been completed successfully, please relogin into your account to proceed"));
+
             return get_success_response(['message' => 'User and business data updated successfully'], "'User and business data updated successfully'", 200);
 
         } catch (\Exception $e) {
