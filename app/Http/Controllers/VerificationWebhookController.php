@@ -27,16 +27,16 @@ class VerificationWebhookController extends Controller
                 Log::warning('User not found for email: ' . $email);
                 return response()->json(['message' => 'User not found'], 404);
             }
-            
-            $businessData = data_get($webhookData, 'data.business_data', []);
 
-            if (data_get($businessData, 'business_number') !== optional($user->business)->cacNumber) {
-                if ($user && $user->business) {
-                    $user->notify(new CustomNotification(
-                        "Verification Unsuccessful",
-                        "We were unable to verify your business due to a mismatch in the submitted registration number. Kindly review your provided details and try again. If the issue persists, please contact support for assistance."
-                    ));
-                }
+            $businessData = data_get($webhookData, 'data.business_data', []);
+            $business_number = data_get($businessData, 'business_number');
+            $cacNumber = optional($user->business)->cacNumber;
+
+            if ($business_number !== $cacNumber) {
+                $user->notify(new CustomNotification(
+                    "Verification Unsuccessful",
+                    "We were unable to verify your business due to a mismatch in the submitted registration number. Kindly review your provided details and try again. If the issue persists, please contact support for assistance."
+                ));
             
                 return false;
             }
