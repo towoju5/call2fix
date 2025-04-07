@@ -23,9 +23,9 @@ class AuthController extends Controller
 {
     public function __construct()
     {
-        if (Schema::hasColumn('business_office_addresses', 'is_active')) {
+        if (!Schema::hasColumn('business_office_addresses', 'is_active')) {
             Schema::table('business_office_addresses', function (Blueprint $table) {
-                $table->boolean('is_active')->default(false)->change();
+                $table->boolean('is_active')->default(false);
             });
         }
     }
