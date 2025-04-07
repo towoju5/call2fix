@@ -33,24 +33,16 @@ class AuthController extends Controller
     public function register(Request $request)
     {
         try {
-            switch ($request->account_type) {
-                case 'private_account':
-                    $accountType = "private_accounts";
-                    break;
+            // Normalize account type
+            $originalType = $request->account_type;
+            $accountTypeMap = [
+                'private_account' => 'private_accounts',
+                'co-operate_account' => 'co-operate_accounts',
+                'affiliate' => 'affiliates',
+            ];
+            $accountType = $accountTypeMap[$originalType] ?? $originalType;
 
-                case 'co-operate_account':
-                    $accountType = "co-operate_accounts";
-                    break;
-                
-                case 'affiliate':
-                    $accountType = "affiliates";
-                    break;
-                
-                default:
-                    $accountType = $request->account_type;
-                    break;
-            }
-
+            // Generate username if not present
             if (!$request->username) {
                 $request->merge([
                     'username' => explode('@', $request->email ?? $request->phone)[0] . rand(1, 99),
@@ -58,19 +50,41 @@ class AuthController extends Controller
                 ]);
             }
 
-            $validator = Validator::make($request->all(), [
+            // Common validation rules
+            $rules = [
                 'first_name' => 'required|string|max:255',
                 'last_name' => 'required|string|max:255',
                 'email' => 'required_without:phone|string|email|max:255|unique:users',
                 'phone' => 'required_without:email|string|regex:/^\+[1-9]\d{1,14}$/|max:20|unique:users',
-                'account_type' => 'required|string|in:co-operate_accounts,private_accounts,affiliates',
                 'device_id' => 'required|string|max:255',
                 'password' => 'required|string|min:8',
                 'username' => 'required|string|max:255|unique:users',
                 'profile_picture' => 'nullable|string',
-                // 'referred_by' => 'sometimes',
                 'country_code' => 'required|string|max:255',
-            ]);
+            ];
+
+            // Validation for account type
+            $businessAccountTypes = ['providers', 'suppliers'];
+            $normalAccountTypes = ['co-operate_accounts', 'private_accounts', 'affiliates'];
+
+            if (in_array($accountType, $businessAccountTypes)) {
+                $rules['account_type'] = 'required|string|in:' . implode(',', $businessAccountTypes);
+                $rules = array_merge($rules, [
+                    'businessName' => 'required|string',
+                    'cacNumber' => 'required|string',
+                    'officeAddress' => 'required|array',
+                    'businessCategory' => 'required|string',
+                    'businessDescription' => 'required|string',
+                    'businessIdType' => 'required|string',
+                    'businessIdNumber' => 'required|string',
+                    'businessIdImage' => 'required|string',
+                    'businessBankInfo' => 'required|array',
+                ]);
+            } else {
+                $rules['account_type'] = 'required|string|in:' . implode(',', $normalAccountTypes);
+            }
+
+            $validator = Validator::make($request->all(), $rules);
 
             if ($validator->fails()) {
                 Log::debug("Validation Error", ['error' => $validator->errors()]);
@@ -84,10 +98,10 @@ class AuthController extends Controller
                 'username' => $request->username,
                 'profile_picture' => $request->profile_picture,
                 'is_social' => false,
-                '_account_type' => $request->account_type,
+                'account_type' => $accountType,
                 'device_id' => $request->device_id,
-                'current_role' => $request->account_type,
-                'main_account_role' => $request->account_type,
+                'current_role' => $accountType,
+                'main_account_role' => $accountType,
                 'country_dialing_code' => str_replace("+", "", $request->country_code),
             ];
 
@@ -99,39 +113,59 @@ class AuthController extends Controller
                 $userData['phone'] = str_replace(" ", "", $request->phone);
             }
 
-            $user = DB::transaction(function () use ($userData, $request) {
+            $user = DB::transaction(function () use ($userData, $request, $accountType, $businessAccountTypes) {
                 $user = User::create($userData);
 
                 if (!$user) {
                     return get_error_response('Failed to create user');
                 }
 
-                // Implement referral system if referred_by exists
+                // Process referral
                 if ($request->has('referred_by')) {
-                    if ($request->has('referred_by')) {
-                        $this->process_referral($user, $request->referred_by, $request->account_type);
-                    }
+                    $this->process_referral($user, $request->referred_by, $accountType);
                 }
 
                 $user->getWallet('ngn');
                 $user->getWallet('bonus');
-                $user->assignRole($request->account_type);
+                $user->assignRole($accountType);
 
-                if (in_array($request->account_type, ['suppliers', 'providers', 'corporate_account', 'co-operate_accounts', 'private_accounts', 'affiliates'])) {
-                    $businessInfo = BusinessInfo::updateOrCreate(
+                // Business-specific registration
+                if (in_array($accountType, $businessAccountTypes)) {
+                    // Save multiple addresses
+                    foreach ($request->officeAddress as $address) {
+                        $user->business_office_address()->updateOrCreate([
+                            'user_id' => $user->id,
+                            'address' => $address['address'],
+                            'latitude' => $address['latitude'],
+                            'longitude' => $address['longitude'],
+                        ]);
+                    }
+
+                    // Save business info
+                    $user->business_info()->updateOrCreate([
+                        'user_id' => $user->id,
+                    ], $request->only([
+                        'businessName',
+                        'cacNumber',
+                        'officeAddress',
+                        'businessCategory',
+                        'businessDescription',
+                        'businessIdType',
+                        'businessIdNumber',
+                        'businessIdImage',
+                        'businessBankInfo'
+                    ]));
+                } elseif (in_array($accountType, array_merge($normalAccountTypes, ['co-operate_accounts']))) {
+                    BusinessInfo::updateOrCreate(
                         [
                             'user_id' => $user->id,
-                            '_account_type' => $request->account_type,
+                            '_account_type' => $accountType,
                         ],
                         [
                             'created_at' => now(),
                             'updated_at' => now(),
                         ]
                     );
-
-                    if (!$businessInfo) {
-                        return get_error_response('Failed to create business info');
-                    }
                 }
 
                 return $user;
@@ -142,166 +176,14 @@ class AuthController extends Controller
                 'User registered successfully'
             );
         } catch (\Exception $e) {
+            DB::rollBack();
             return get_error_response($e->getMessage(), [
                 'error' => $e->getMessage(),
-                'trace' => json_encode($e->getTrace()) // Convert trace to a string
+                'trace' => json_encode($e->getTrace())
             ]);
         }
     }
 
-    public function registerBis(Request $request)
-    {
-        try {
-            switch ($request->account_type) {
-                case 'private_account':
-                    $accountType = "private_accounts";
-                    break;
-
-                case 'co-operate_account':
-                    $accountType = "co-operate_accounts";
-                    break;
-                
-                case 'affiliate':
-                    $accountType = "affiliates";
-                    break;
-                
-                default:
-                    $accountType = $request->account_type;
-                    break;
-            }
-
-            if (!$request->username) {
-                $request->merge([
-                    'username' => explode('@', $request->email ?? $request->phone)[0] . rand(1, 99),
-                    'account_type' => $accountType,
-                ]);
-            }
-
-            $validator = Validator::make($request->all(), [
-                'first_name' => 'required|string|max:255',
-                'last_name' => 'required|string|max:255',
-                'email' => 'required_without:phone|string|email|max:255|unique:users',
-                'phone' => 'required_without:email|string|regex:/^\+[1-9]\d{1,14}$/|max:20|unique:users',
-                'account_type' => 'required|string|in:providers,suppliers',
-                'device_id' => 'required|string|max:255',
-                'password' => 'required|string|min:8',
-                'username' => 'required|string|max:255|unique:users',
-                'profile_picture' => 'nullable|string',
-                // 'referred_by' => 'sometimes',
-                "businessName" => "required|string",
-                "cacNumber" => "required|string",
-                "officeAddress" => "required",
-                "businessCategory" => "required",
-                "businessDescription" => "required|string",
-                "businessIdType" => "required|string",
-                "businessIdNumber" => "required|string",
-                "businessIdImage" => "required|string",
-                "businessBankInfo" => "required",
-                'country_code' => 'required|string|max:255',
-            ]);
-
-            if ($validator->fails()) {
-                Log::debug("Validation Error", ['error' => $validator->errors()]);
-                return get_error_response("Validation error", $validator->errors());
-            }
-
-            $userData = [
-                'first_name' => $request->first_name,
-                'last_name' => $request->last_name,
-                'password' => Hash::make($request->password),
-                'username' => $request->username,
-                'profile_picture' => $request->profile_picture,
-                'is_social' => false,
-                'account_type' => $request->account_type,
-                'device_id' => $request->device_id,
-                'current_role' => $request->account_type,
-                'main_account_role' => $request->account_type,
-                'country_dialing_code' => str_replace("+", "", $request->country_code),
-            ];
-
-            if ($request->has('email')) {
-                $userData['email'] = $request->email;
-            }
-
-            if ($request->has('phone')) {
-                $userData['phone'] = str_replace(" ", "", $request->phone);
-            }
-
-            // Start a database transaction to ensure atomicity
-            $user = DB::transaction(function () use ($userData, $request) {
-                // Create the user
-                $user = User::create($userData);
-
-                if (!$user) {
-                    return get_error_response('Failed to create user');
-                }
-                
-                foreach($request->officeAddress as $address) {
-                    $user->business_office_address()->updateOrCreate([
-                        'user_id' => auth()->id(),
-                        'address' => $address->address,
-                        'latitude'  => $address->latitude,
-                        'longitude'  => $address->longitude
-                    ]);
-                }
-                
-                // Create or update the user's business info
-                $business = $user->business_info()->updateOrCreate([
-                    'user_id' => $user->id,
-                ], $request->only([
-                    'businessName',
-                    'cacNumber',
-                    'officeAddress',
-                    'businessCategory',
-                    'businessDescription',
-                    'businessIdType',
-                    'businessIdNumber',
-                    'businessIdImage',
-                    'businessBankInfo'
-                ]));
-
-                // Check if business creation failed
-                if (!$business) {
-                    return get_error_response('Failed to create or update business info');
-                }
-
-                // Implement referral system if referred_by exists
-                if ($request->has('referred_by')) {
-                    if ($request->has('referred_by')) {
-                        $this->process_referral($user, $request->referred_by, $request->account_type);
-                    }
-                }
-
-                // Generate wallet balance for NGN and bonus
-                $user->getWallet('ngn');
-                $user->getWallet('bonus');
-
-                // Assign role to the user based on account type
-                $user->assignRole($request->account_type);
-
-                // If the account is a 'supplier', 'provider', or 'corporate_account', create business info
-                if (in_array($request->account_type, ['providers', 'suppliers'])) {
-                    $businessInfo = BusinessInfo::create([
-                        'user_id' => $user->id,
-                        'account_type' => $request->account_type,
-                    ]);
-
-                    if (!$businessInfo) {
-                        return get_error_response('Failed to create business info for the account');
-                    }
-                }
-
-                return $user;
-            });
-
-            // Return the success response with user data and wallets
-            return get_success_response(array_merge($user->toArray(), ['wallets' => $user->my_wallets()]), 'User registered successfully');
-        } catch (\Exception $e) {
-            // If any exception occurs, roll back the transaction and return error response
-            DB::rollBack();
-            return get_error_response($e->getMessage(), ['error' => $e->getMessage()]);
-        }
-    }
 
     public function login(Request $request)
     {
