@@ -73,7 +73,8 @@ class AuthController extends Controller
                     'businessName' => 'required|string',
                     'cacNumber' => 'required|string',
                     'officeAddress' => 'required|array',
-                    'businessCategory' => 'required|string',
+                    'businessCategory' => 'array|max:5', // Maximum 5 categories
+                    'businessCategory.*' => 'string|max:100',
                     'businessDescription' => 'required|string',
                     'businessIdType' => 'required|string',
                     'businessIdNumber' => 'required|string',
@@ -320,8 +321,12 @@ class AuthController extends Controller
                 $businessValidation = Validator::make($request->all(), [
                     "businessName" => "required|string",
                     "cacNumber" => "required|string",
-                    "officeAddress" => "required|string",
-                    "businessCategory" => "required|string",
+                    'officeAddress' => 'array',
+                    'officeAddress.*.address' => 'sometimes|string|max:255',
+                    'officeAddress.*.latitude' => 'sometimes|string|max:50',
+                    'officeAddress.*.longitude' => 'sometimes|string|max:50',
+                    'businessCategory' => 'array|max:5', // Maximum 5 categories
+                    'businessCategory.*' => 'string|max:100',
                     "businessDescription" => "required|string",
                     "businessIdType" => "required|string",
                     "businessIdNumber" => "required|string",
