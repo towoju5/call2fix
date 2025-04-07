@@ -73,7 +73,7 @@ class AuthController extends Controller
                     'businessName' => 'required|string',
                     'cacNumber' => 'required|string',
                     'officeAddress' => 'required|array',
-                    'businessCategory' => 'array|max:5', // Maximum 5 categories
+                    'businessCategory' => 'array|min:5|max:10', 
                     'businessCategory.*' => 'string|max:100',
                     'businessDescription' => 'required|string',
                     'businessIdType' => 'required|string',
@@ -325,7 +325,7 @@ class AuthController extends Controller
                     'officeAddress.*.address' => 'sometimes|string|max:255',
                     'officeAddress.*.latitude' => 'sometimes|string|max:50',
                     'officeAddress.*.longitude' => 'sometimes|string|max:50',
-                    'businessCategory' => 'array|max:5', // Maximum 5 categories
+                    'businessCategory' => 'array|min:5|max:10', 
                     'businessCategory.*' => 'string|max:100',
                     "businessDescription" => "required|string",
                     "businessIdType" => "required|string",
@@ -535,7 +535,7 @@ class AuthController extends Controller
             $validatedData = $request->validate([
                 'businessName' => 'sometimes|string|max:255',
                 'cacNumber' => 'sometimes|string|max:50',
-                'businessCategory' => 'array|max:5', // Maximum 5 categories
+                'businessCategory' => 'array|min:5|max:10', 
                 'businessCategory.*' => 'string|max:100',
                 'businessDescription' => 'sometimes|string',
                 'businessIdType' => 'sometimes|string|max:50',
