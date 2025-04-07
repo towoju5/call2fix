@@ -26,6 +26,6 @@ class BusinessInfo extends BaseModel
     protected $casts = [
         'businessBankInfo' => 'array',
         'businessCategory' => 'array',
-        // 'businessBankInfo' => 'array',
+        'officeAddress' => 'array',
     ];
 }

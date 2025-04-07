@@ -23,9 +23,9 @@ class AuthController extends Controller
 {
     public function __construct()
     {
-        if (!Schema::hasColumn('artisans', 'user_id')) {
-            Schema::table('artisans', function (Blueprint $table) {
-                $table->string('user_id')->nullable();
+        if (Schema::hasColumn('business_infos', 'officeAddress')) {
+            Schema::table('business_infos', function (Blueprint $table) {
+                $table->json('officeAddress')->nullable()->change();
             });
         }
     }
