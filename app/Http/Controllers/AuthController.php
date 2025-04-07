@@ -23,11 +23,11 @@ class AuthController extends Controller
 {
     public function __construct()
     {
-        if (Schema::hasColumn('business_infos', 'officeAddress')) {
-            Schema::table('business_infos', function (Blueprint $table) {
-                $table->json('officeAddress')->nullable()->change();
-            });
-        }
+        // if (Schema::hasColumn('business_infos', 'officeAddress')) {
+        //     Schema::table('business_infos', function (Blueprint $table) {
+        //         $table->json('officeAddress')->nullable()->change();
+        //     });
+        // }
     }
 
     public function register(Request $request)
