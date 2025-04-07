@@ -23,11 +23,11 @@ class AuthController extends Controller
 {
     public function __construct()
     {
-        // if (Schema::hasColumn('users', 'business_verification_status')) {
-        //     Schema::table('users', function (Blueprint $table) {
-        //         $table->boolean('business_verification_status')->default(false)->change();
-        //     });
-        // }
+        if (Schema::hasColumn('business_office_addresses', 'is_active')) {
+            Schema::table('business_office_addresses', function (Blueprint $table) {
+                $table->boolean('is_active')->default(false)->change();
+            });
+        }
     }
 
     public function register(Request $request)
@@ -564,13 +564,8 @@ class AuthController extends Controller
             ];
 
 
-            $user = auth()->user();
             $officeAddresses = $validatedData['officeAddress'] ?? [];
-            $subscription = $user->activeSubscription();
-            $allowedOfficeAddresses = $subscription->getRemainingOf('locations');
-            if(count($officeAddresses) > $allowedOfficeAddresses) {
-                return get_error_response('Feature limit reached', ['error' => 'Feature limit reached'], 403);
-            }
+            $user = auth()->user();
 
             $businessInfo = $user->business_info()->updateOrCreate(
                 ['user_id' => $user->id],
@@ -578,12 +573,17 @@ class AuthController extends Controller
             );
 
             // Step 2: Handle multiple office addresses
-            foreach ($officeAddresses as $addressData) {
+            foreach ($officeAddresses as $k => $addressData) {
+                $active = false;
+                if($k < 3) {
+                    $active = true;
+                }
                 $user->business_office_address()->updateOrCreate(
                     ['address' => $addressData['address']],
                     [
                         'latitude' => $addressData['latitude'],
                         'longitude' => $addressData['longitude'],
+                        "is_active" => $active
                     ]
                 );
             }
