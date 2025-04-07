@@ -39,6 +39,7 @@ class CustomNotification extends Notification
         fcm($this->title, $this->body, $notifiable->device_id);
 
         return (new MailMessage)
+                    ->subject($this->title)
                     ->line($this->body)
                     ->line('Team Call2Fix');
     }
