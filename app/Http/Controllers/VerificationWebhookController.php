@@ -33,7 +33,7 @@ class VerificationWebhookController extends Controller
             $cacNumber = optional($user->business)->cacNumber;
 
             if ($business_number !== $cacNumber) {
-                Log::info("RC number does not match {$business_number} is not the same as {$cacNumber}")
+                Log::info("RC number does not match {$business_number} is not the same as {$cacNumber}");
                 $user->notify(new CustomNotification(
                     "Verification Unsuccessful",
                     "We were unable to verify your business due to a mismatch in the submitted registration number. Kindly review your provided details and try again. If the issue persists, please contact support for assistance."
