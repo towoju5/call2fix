@@ -6,6 +6,7 @@ use App\Services\FirebaseService;
 use Creatydev\Plans\Models\PlanModel;
 use Google\Auth\Credentials\ServiceAccountCredentials;
 // use Storage;
+use Illuminate\Support\Str;
 
 if (!function_exists('get_success_response')) {
     function get_success_response($data, $message = 'Success', $code = 200)
@@ -149,14 +150,18 @@ if (!function_exists('get_settings_value')) {
     }
 }
 
+
 if (!function_exists('save_media')) {
     function save_media($file)
     {
         if (is_file($file)) {
-            // Store the file in the 'spaces' disk
+            // Generate a unique filename using timestamp and UUID
+            $timestamp = now()->timestamp;
+            $uuid = generate_uuid();
+            $extension = $file->getClientOriginalExtension();
+            $fileName = "{$timestamp}_{$uuid}.{$extension}";
 
-            // Define a unique file name and path
-            $fileName = uniqid() . '_' . $file->getClientOriginalName();
+            // Build the storage path with user ID
             $path = auth()->id() . '/' . $fileName;
 
             // Store the file in DigitalOcean Spaces
@@ -165,17 +170,14 @@ if (!function_exists('save_media')) {
                 'CacheControl' => 'max-age=31536000',
             ]);
 
-            if (!empty($path)) {
-                // Return the file URL
-                $url = Storage::disk('spaces')->url($path);
-
-                return $url;
-            }
+            // Return the public URL
+            return Storage::disk('spaces')->url($path);
         }
 
         return false;
     }
 }
+
 
 if (!function_exists('per_page')) {
     function per_page($perPage = 10) {
