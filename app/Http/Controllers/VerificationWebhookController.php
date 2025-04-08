@@ -30,7 +30,7 @@ class VerificationWebhookController extends Controller
 
             $businessData = data_get($webhookData, 'data.business_data', []);
             $business_number = data_get($businessData, 'business_number');
-            $cacNumber = optional($user->business)->cacNumber;
+            $cacNumber = optional($user->business_info)->cacNumber ?? $user->business_info->cacNumber;
 
             if ($business_number !== $cacNumber) {
                 Log::info("RC number does not match {$business_number} is not the same as {$cacNumber}");
@@ -54,13 +54,13 @@ class VerificationWebhookController extends Controller
 
 
             if (!empty($businessData)) {
-                $user->business_info()->updateOrCreate(
+                $user->business_info_info()->updateOrCreate(
                     ['user_id' => $user->id],
                     [
-                        'businessName' => data_get($businessData, 'business_name') ?? optional($user->business)->businessName,
-                        'cacNumber' => data_get($businessData, 'business_number') ?? optional($user->business)->cacNumber,
-                        'businessIdType' => data_get($webhookData, 'id_type') ?? optional($user->business)->businessIdType,
-                        'businessIdNumber' => data_get($webhookData, 'verification_value') ?? optional($user->business)->businessIdNumber,
+                        'businessName' => data_get($businessData, 'business_name') ?? optional($user->business_info)->businessName,
+                        'cacNumber' => data_get($businessData, 'business_number') ?? optional($user->business_info)->cacNumber,
+                        'businessIdType' => data_get($webhookData, 'id_type') ?? optional($user->business_info)->businessIdType,
+                        'businessIdNumber' => data_get($webhookData, 'verification_value') ?? optional($user->business_info)->businessIdNumber,
                     ]
                 );
             }

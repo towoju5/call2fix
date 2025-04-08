@@ -21,14 +21,12 @@ class BusinessOfficeAddress extends Model
 
     protected static function booted()
     {
-        // $subscription = $user->activeSubscription();
-        // $allowedOfficeAddresses = $subscription->getRemainingOf('locations');
-        // if(count($officeAddresses) > $allowedOfficeAddresses) {
-        //     return get_error_response('Feature limit reached', ['error' => 'Feature limit reached'], 403);
-        // }
+        $subscription = $this->user()->activeSubscription();
+        $allowedOfficeAddresses = $subscription->getRemainingOf('locations');
         // Automatically apply a global scope to only return active records
-        static::addGlobalScope('active', function (Builder $builder) {
+        static::addGlobalScope('active', function (Builder $builder) use ($allowedOfficeAddresses) {
             $builder->where('is_active', true);
+            $builder->limit($allowedOfficeAddresses);
         });
     }
 
