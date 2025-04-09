@@ -5,6 +5,7 @@ namespace Modules\Suppliers\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\KwikDeliveryController;
 use App\Models\Order;
+use App\Models\User;
 use App\Notifications\CustomNotification;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
