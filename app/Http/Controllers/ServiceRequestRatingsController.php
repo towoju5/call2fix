@@ -2,12 +2,26 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ServiceRequest;
 use App\Models\ServiceRequestRatings;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
 
 class ServiceRequestRatingsController extends Controller
 {
+    public function __construct()
+    {
+        // Check if 'read_by' column exists, if not, add it (This should be done in a migration)
+        if (!Schema::hasColumn('service_request_ratings', 'status')) {
+            Schema::table('service_request_ratings', function (Blueprint $table) {
+                $table->string('service_provider_id')->nullable();
+            });
+        }
+    }
+
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -49,9 +63,15 @@ class ServiceRequestRatingsController extends Controller
             return get_error_response("Validation Error", $validator->errors(), 422);
         }
 
+        $service = ServiceRequest::whereId($request->service_request_id)->first();
+        if(!$service) {
+            return get_error_response("Service request not found", ['error' => "Service request not found"]);
+        }
+
         $rating = ServiceRequestRatings::updateOrCreate([
             'service_request_id' => $request->service_request_id,
             'user_id' => auth()->id(),
+            'service_provider_id' => $service->approved_providers_id,
             'work_quality' => $request->work_quality,
             'timeliness' => $request->timeliness,
             'communication' => $request->communication,
@@ -80,10 +100,10 @@ class ServiceRequestRatingsController extends Controller
     public function averageRatingByUser($userId)
     {
         // Get all ratings submitted by the user
-        $ratings = ServiceRequestRatings::where('user_id', $userId)->get();
+        $ratings = ServiceRequestRatings::where('service_provider_id', $userId)->get();
 
         if ($ratings->isEmpty()) {
-            return get_error_response("No ratings found for this user", ['error' => 'User has no ratings'], 404);
+            return get_error_response("No ratings found for this user", ['error' => 'Service provider has no ratings'], 404);
         }
 
         $total = 0;
