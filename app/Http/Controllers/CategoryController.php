@@ -17,7 +17,7 @@ class CategoryController extends Controller
         // }
 
         try {
-            $categories = Category::with('services')->get();
+            $categories = Category::orderBy('category_name', 'asc')->with('services')->get();
             return get_success_response($categories, 'Categories fetched successfully.');
         } catch (\Exception $e) {
             return get_error_response('An error occurred while fetching categories.', ['error' => $e->getMessage()], 500);

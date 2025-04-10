@@ -253,13 +253,14 @@ class WalletController extends Controller
         $user = $request->user();
         $fromWalletType = $request->from_wallet;
         $toWalletType = $request->to_wallet;
-        $amount = $request->amount * 100;
+        $amount = $request->amount;
 
         if($request->has('user_id') && !empty($request->user_id)) {
             $user = User::whereId($request->user_id)->first();
             if (!$user) {
                 return get_error_response("User not found.", ['user_id' => $request->user_id]);
             }
+            $amount = $request->amount * 100;
             $toWalletType = "ngn"; //"Department ID: {$request->user_id}";
         }
 

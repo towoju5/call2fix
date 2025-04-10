@@ -61,7 +61,7 @@ class ProductService
         }
         
         // Fetch only active products
-        return $query->get();
+        return $query->where('_account_type', active_role())->get();
     }
 
     public function getProduct($id)
@@ -83,7 +83,7 @@ class ProductService
 
     public function getTopProducts()
     {
-        $products = Product::withCount('orders')->orderBy('orders_count', 'desc')->take(20)->get();
+        $products = Product::withCount('orders')->orderBy('orders_count', 'desc')->where('_account_type', active_role())->take(20)->get();
         return $products;
     }
 

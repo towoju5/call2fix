@@ -153,7 +153,7 @@ Route::middleware(['api'])->domain(env('API_URL'))->prefix('v1')->group(function
         Route::prefix('orders')->middleware('log_activity')->group(function () {
             Route::post('/new', [OrderController::class, 'place_order']);
             Route::post('calculate-shipping-rate', [OrderController::class, 'getShippingRate']);
-            Route::get('/', [OrderController::class, 'getUserOrders'])->middleware('feature:orders');
+            Route::get('/', [OrderController::class, 'getUserOrders']); //->middleware('feature:orders');
             Route::get('status/{status}', [OrderController::class, 'getOrdersByStatus']);
             Route::get('sorted', [OrderController::class, 'getSortedOrders']);
             Route::post('track', [OrderController::class, 'trackOrder']);
