@@ -76,4 +76,54 @@ class ServiceRequestRatingsController extends Controller
         }
         return get_success_response($rating, 'Rating retrieved successfully', 200);
     }
+
+    public function averageRatingByUser($userId)
+    {
+        // Get all ratings submitted by the user
+        $ratings = ServiceRequestRatings::where('user_id', $userId)->get();
+
+        if ($ratings->isEmpty()) {
+            return get_error_response("No ratings found for this user", ['error' => 'User has no ratings'], 404);
+        }
+
+        $total = 0;
+        $count = 0;
+
+        foreach ($ratings as $rating) {
+            // Extract all 10 criteria fields
+            $criteria = [
+                'work_quality',
+                'timeliness',
+                'communication',
+                'professionalism',
+                'cleanliness',
+                'pricing_transparency',
+                'tools_quality',
+                'issue_handling',
+                'safety_adherence',
+                'overall_satisfaction',
+            ];
+
+            foreach ($criteria as $field) {
+                if (isset($rating->$field['ratings']) && is_numeric($rating->$field['ratings'])) {
+                    $total += $rating->$field['ratings'];
+                    $count++;
+                }
+            }
+        }
+
+        if ($count === 0) {
+            return get_error_response("No valid ratings found", ['error' => 'User has no valid numeric ratings'], 404);
+        }
+
+        $average = round($total / $count, 2); // out of 5
+
+        return get_success_response([
+            'user_id' => $userId,
+            'average_rating' => $average,
+            'out_of' => 5,
+            'total_criteria' => $count,
+        ], 'Average rating calculated successfully', 200);
+    }
+
 }

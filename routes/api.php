@@ -109,6 +109,7 @@ Route::middleware(['api'])->domain(env('API_URL'))->prefix('v1')->group(function
         Route::prefix('ratings')->middleware('log_activity')->group(function () {
             Route::post('service-request-ratings', [ServiceRequestRatingsController::class, 'store']);
             Route::get('service-request-ratings/{id}', [ServiceRequestRatingsController::class, 'show']);
+            Route::get('provider-rating/{userId}', [ServiceRequestRatingsController::class, 'averageRatingByUser']);
         });
 
 

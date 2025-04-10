@@ -285,6 +285,9 @@ class PaystackServices
 
     public function handleSuccessfulTransfer($data)
     {
+        if(!isset($data['customer']['email'])) {
+            return false;
+        }
         // Handle successful transfers (payouts)
         $user = User::where('email', $data['customer']['email'])->first();
         if ($user) {
