@@ -42,6 +42,7 @@ class PropertyController extends Controller
                 'porperty_latitude' => 'required|string'
             ]);
             $validatedData['user_id'] = auth()->id();
+            $validatedData['_account_type'] = active_role();
             $property = Property::create($validatedData);
             auth()->user()->notify(new CreatedNotification($property));
             return get_success_response($property, 'Property created successfully');
