@@ -146,7 +146,7 @@ class OrderController extends Controller
     public function getOrder($orderId)
     {
         try {
-            $orders = OrderModel::with('product', 'seller', 'user')->where('_account_type', active_role())->findOrFail($orderId);
+            $orders = Order::with('product', 'seller', 'user')->where('_account_type', active_role())->findOrFail($orderId);
             return get_success_response($orders, "Order retrieved successfully");
         } catch (ModelNotFoundException $e) {
             return get_error_response("Order not found", ['error' => "Order not found"], 404);
