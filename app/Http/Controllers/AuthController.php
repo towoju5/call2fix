@@ -114,7 +114,7 @@ class AuthController extends Controller
                 $userData['phone'] = str_replace(" ", "", $request->phone);
             }
 
-            $user = DB::transaction(function () use ($userData, $request, $accountType, $businessAccountTypes) {
+            $user = DB::transaction(function () use ($userData, $request, $accountType, $businessAccountTypes, $normalAccountTypes) {
                 $user = User::create($userData);
 
                 if (!$user) {

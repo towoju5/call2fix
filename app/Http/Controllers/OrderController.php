@@ -254,7 +254,7 @@ class OrderController extends Controller
                 }
                 
                 $seller = User::find($order->seller_id);
-                $seller->notify(new CustomNotification('Order closed by customer', 'Order closed by customer'));
+                $seller->notify(new CustomNotification('Order canceled by customer', 'Order canceled by customer'));
                 return get_success_response($order, "Order canceled successfully", 200);
             }
 
