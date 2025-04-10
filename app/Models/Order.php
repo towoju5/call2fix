@@ -124,6 +124,7 @@ class Order extends BaseModel
         static::creating(function ($model) {
             if (!$model->order_id) {
                 $model->order_id = (string) (self::count() + 1);
+                $model->_account_type = active_role();
             }
         });
     }

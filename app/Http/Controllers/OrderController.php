@@ -132,9 +132,9 @@ class OrderController extends Controller
         try {
             $orders = Order::with('product', 'seller', 'user');
             if(request()->user()->current_role == 'suppliers'){
-                $orders = $orders->latest()->where('seller_id', auth()->id())->limit(100)->get();
+                $orders = $orders->where('_account_type', active_role())->latest()->where('seller_id', auth()->id())->limit(100)->get();
             } else {
-                $orders = $orders->latest()->where('user_id', auth()->id())->limit(100)->get();
+                $orders = $orders->where('_account_type', active_role())->latest()->where('user_id', auth()->id())->limit(100)->get();
             }
             return get_success_response($orders, "User orders retrieved successfully");
         } catch (\Exception $e) {
@@ -146,7 +146,7 @@ class OrderController extends Controller
     public function getOrder($orderId)
     {
         try {
-            $orders = OrderModel::with('product', 'seller', 'user')->findOrFail($orderId);
+            $orders = OrderModel::with('product', 'seller', 'user')->where('_account_type', active_role())->findOrFail($orderId);
             return get_success_response($orders, "Order retrieved successfully");
         } catch (ModelNotFoundException $e) {
             return get_error_response("Order not found", ['error' => "Order not found"], 404);
@@ -172,7 +172,7 @@ class OrderController extends Controller
     public function getOrdersByStatus($status)
     {
         try {
-            $orders = OrderModel::where('user_id', auth()->id())->where('status', $status)->get();
+            $orders = OrderModel::where('user_id', auth()->id())->where('_account_type', active_role())->where('status', $status)->get();
             return get_success_response($orders, "Orders retrieved successfully");
         } catch (\Exception $e) {
             \Log::error('Error retrieving orders by status: ' . $e->getMessage());
@@ -183,7 +183,7 @@ class OrderController extends Controller
     public function getSortedOrders()
     {
         try {
-            $orders = OrderModel::where('user_id', auth()->id())->orderBy('status')->latest()->get();
+            $orders = OrderModel::where('user_id', auth()->id())->where('_account_type', active_role())->orderBy('status')->latest()->get();
             return get_success_response($orders, "Sorted orders retrieved successfully");
         } catch (\Exception $e) {
             \Log::error('Error retrieving sorted orders: ' . $e->getMessage());
