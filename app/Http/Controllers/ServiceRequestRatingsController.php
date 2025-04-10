@@ -12,15 +12,15 @@ use Illuminate\Support\Facades\Schema;
 
 class ServiceRequestRatingsController extends Controller
 {
-    public function __construct()
-    {
-        // Check if 'read_by' column exists, if not, add it (This should be done in a migration)
-        if (!Schema::hasColumn('service_request_ratings', 'status')) {
-            Schema::table('service_request_ratings', function (Blueprint $table) {
-                $table->string('service_provider_id')->nullable();
-            });
-        }
-    }
+    // public function __construct()
+    // {
+    //     // Check if 'read_by' column exists, if not, add it (This should be done in a migration)
+    //     if (!Schema::hasColumn('service_request_ratings', 'status')) {
+    //         Schema::table('service_request_ratings', function (Blueprint $table) {
+    //             $table->string('service_provider_id')->nullable();
+    //         });
+    //     }
+    // }
 
     public function store(Request $request)
     {
