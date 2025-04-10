@@ -28,7 +28,7 @@ class UsersController extends Controller
                     $q->whereIn('name', is_array(request('roles')) ? request('roles') : [request('roles')]);
                 });
             })
-            ->paginate(15);
+            ->get(); //paginate(15);
         return view('admin.users.index', compact('users'));
     }
 

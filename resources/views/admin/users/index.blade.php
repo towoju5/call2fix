@@ -4,7 +4,7 @@
     <div class="container my-3">
         <div class="card">
             <div class="card-body">
-                <table class="table table-striped">
+                <table class="table table-striped" id="users-table">
                     <thead>
                         <tr>
                             <th>ID</th>
@@ -60,3 +60,28 @@
         </div>
     </div>
 @endsection
+
+@push('styles')
+    <!-- DataTables CSS -->
+    <link href="//cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" rel="stylesheet" />
+@endpush
+
+@push('scripts')
+    <!-- jQuery + DataTables -->
+    <script src="//code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="//cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="//cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+
+    <script>
+        $(document).ready(function() {
+            $('#users-table').DataTable({
+                responsive: true,
+                pageLength: 15,
+                ordering: true,
+                columnDefs: [
+                    { orderable: false, targets: -1 } // Disable ordering on the Actions column
+                ]
+            });
+        });
+    </script>
+@endpush
