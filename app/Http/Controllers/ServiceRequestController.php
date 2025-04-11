@@ -80,6 +80,8 @@ class ServiceRequestController extends Controller
                 "alternative_time" => "sometimes"
             ]);
 
+            Log::debug("Incoming request payload is: ", ['payload' => $request->all()]);
+
             if ($validate->fails()) {
                 return get_error_response("Validation Error", $validate->errors()->toArray());
             }
@@ -314,7 +316,7 @@ class ServiceRequestController extends Controller
                     );
 
                     if (!$providerDeposit) {
-                        return get_error_response('Failed to deposit into provider wallet');
+                        return get_error_response('Failed to deposit into provider wallet', ['error' => 'Failed to deposit into provider wallet']);
                     }
                     
                     $provider->notify(new CustomNotification('Wallet credited', "Your wallet has been credited with {$apportionment['service_provider_earnings']}."));
