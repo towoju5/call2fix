@@ -55,7 +55,7 @@ class OrderController extends Controller
                 return get_error_response("User wallet not found", ["error" => "User wallet not found"], 404);
             }
 
-            $orderData = $validator->validated();
+            $incoming = $orderData = $validator->validated();
             $orderData["user_id"] = $user->id;
             $orderData["seller_id"] = $product->seller_id;
             $orderData["status"] = "pending";
@@ -114,7 +114,8 @@ class OrderController extends Controller
                 "order" => $order,
                 "amountDue" => $orderData["total_price"],
                 "shipping" => $shippingFee,
-                "delivery_type" => $request->delivery_type
+                "delivery_type" => $request->delivery_type,
+                "incoming_data" => $incoming
             ]);
 
             // Notify the user
