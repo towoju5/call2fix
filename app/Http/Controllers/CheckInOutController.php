@@ -27,7 +27,10 @@ class CheckInOutController extends Controller
         if($approved_provider == null || empty($approved_provider)) {
             // find provider using the artisan ID
             $artisan = Artisans::where('artisan_id', $req->approved_artisan_id)->first();
-            $approved_provider = $artisan->service_provider_id;
+            if(!$artisan) {
+                return get_error_response("Unable to proceed please contact support", ['error' => "Unable to proceed please contact support"]);
+            }
+            $approved_provider = $artisan?->service_provider_id;
             Log::info("Service request object", ['approved_provider' => $approved_provider]);
         }
     
