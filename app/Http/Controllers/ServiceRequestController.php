@@ -198,7 +198,8 @@ class ServiceRequestController extends Controller
         try {
             return get_success_response($serviceRequest->with('reworkMessages'));
         } catch (\Throwable $th) {
-            return get_error_response($th->getMessage());
+            Log::info("Error on Negotiation: ", ['error' => $th->getMessage()]);
+            return get_error_response($th->getMessage(), ['error' => $th->getMessage()]);
         }
     }
 
