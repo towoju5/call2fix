@@ -90,7 +90,7 @@ class OrderController extends Controller
                 $rentingRate = $request->lease_rate;
                 $itemPrice = $request->quantity * $rentingRate;
                 $vatAmount = 0.075 * $itemPrice;
-                $totalPrice = $shippingFee + $itemPrice + $vatAmount;
+                $totalPrice = $rentingRate; //$shippingFee + $itemPrice + $vatAmount;
                 $orderData['rentable_price'] = $itemPrice;
             } else {
                 // Non-Rentable Product
@@ -101,7 +101,7 @@ class OrderController extends Controller
             }
 
             $orderData["total_price"] = round($totalPrice, 2);
-            \Log::info('Amount due now is ', ['amount_due' => $orderData]);
+
             // Withdraw from wallet
             if(!$wallet->withdrawal(round($orderData["total_price"] * 100, 2), ["description" => "Order placed", "Order placement"])){
                 return ['error' => 'Insufficient Balance'];
