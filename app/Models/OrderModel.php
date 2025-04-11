@@ -41,6 +41,8 @@ class OrderModel extends Model
         // 'kwik_order_id',
     ];
 
+    // Override the primary key type
+    protected $keyType = 'string';
 
     public const STATUSES = [
         0 => 'UPCOMING',
