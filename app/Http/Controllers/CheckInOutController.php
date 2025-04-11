@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Artisans;
 use App\Models\ServiceRequestModel as ServiceRequest;
 use App\Models\User;
 use App\Models\CheckIn;
@@ -21,26 +22,34 @@ class CheckInOutController extends Controller
         if (!$req) {
             return get_error_response("Service request with provided ID not found", ['error' => "Service request with provided ID not found"]);
         }
+
+        $approved_provider = $req->approved_providers_id;
+        if($approved_provider == null || empty($approved_provider)) {
+            // find provider using the artisan ID
+            $artisan = Artisans::where('artisan_id', $req->approved_artisan_id)->first();
+            $approved_provider = $artisan->service_provider_id;
+            Log::info("Service request object", ['approved_provider' => $approved_provider]);
+        }
     
-        \Log::info("Service request object", ['service_request' => $req]);
+        Log::info("Service request object", ['service_request' => $req]);
     
         $customer = User::find($req->user_id);
         $provider = User::find($req->approved_providers_id);
     
         if (!$customer) {
-            \Log::error("Customer not found for service request", ['request_id' => $requestId]);
+            Log::error("Customer not found for service request", ['request_id' => $requestId]);
         }
         if (!$provider) {
-            \Log::error("Provider not found for service request", ['request_id' => $requestId]);
+            Log::error("Provider not found for service request", ['request_id' => $requestId]);
         }
     
         $quote = SubmittedQuotes::where([
             'request_id' => $req->id,
-            'provider_id' => $req->approved_providers_id
+            'provider_id' => $approved_provider
         ])->first();
     
         if (!$quote) {
-            \Log::error("No quote found for service request", ['request_id' => $requestId]);
+            Log::error("No quote found for service request", ['request_id' => $requestId]);
             return get_error_response("Quote not found", ['error' => "No quote found for this service request"], 404);
         }
     
