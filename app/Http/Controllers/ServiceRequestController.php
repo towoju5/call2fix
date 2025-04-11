@@ -630,7 +630,7 @@ class ServiceRequestController extends Controller
                 $serviceRequest->request_status = "Payment Confirmed";
 
                 $serviceRequest->total_cost = $amountDue;
-                $customer->notify(new PaymentStatusUpdated('Payment Confirmed', $negotiation));
+                // $customer->notify(new PaymentStatusUpdated('Payment Confirmed', $negotiation));
 
                 if (!$serviceRequest->save()) {
                     DB::rollBack();
