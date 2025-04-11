@@ -85,7 +85,7 @@ class OrderController extends Controller
             $orderData["product_service_category_id"] = $product->category_id;
 
             // Calculate total price for Rentable and Non-Rentable Products
-            if ($request->has('lease_duration')) {
+            if ($product->is_leasable == true && $request->has('lease_duration') && !empty($request->has('lease_duration'))) {
                 // Rentable Product
                 $rentingRate = $request->lease_rate;
                 $itemPrice = $request->quantity * $rentingRate;
