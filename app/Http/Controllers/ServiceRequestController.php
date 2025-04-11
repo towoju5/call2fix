@@ -155,7 +155,8 @@ class ServiceRequestController extends Controller
                 $wallet = Wallet::where(['user_id' => $user->id, 'currency' => $currency, 'role' => $role])->first();
                 $wallet1 = $user->getWallet($currency ?? 'ngn');
 
-                $isPaySuccessfull = $wallet1->withdrawal(floatval(get_settings_value('assessment_fee', 500) * 100), [
+                $assesmentFee = get_settings_value('assessment_fee', 500);
+                $isPaySuccessfull = $wallet1->withdrawal($assesmentFee * 100, [
                     "description" => "Assessment fee for Service request order."
                 ]);
 
@@ -758,7 +759,7 @@ class ServiceRequestController extends Controller
 
             // get the customer's wallet
             $wallet = $customer->getWallet($walletType);
-            $transaction[] = $wallet->withdrawal($total_cost,  ['description' => "Service request payment - {$serviceRequest->id}", "narration" => $request->narration ?? null]);
+            $transaction[] = $wallet->withdrawal($total_cost * 100,  ['description' => "Service request payment - {$serviceRequest->id}", "narration" => $request->narration ?? null]);
 
             if ($transaction && $wallet) {
                 $serviceRequest->update([

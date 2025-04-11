@@ -109,6 +109,13 @@ class OrderController extends Controller
 
             // Create order
             $order = Order::create($orderData);
+            Log::info("Order details is as follow", [
+                "product" => $product,
+                "order" => $order,
+                "amountDue" => $orderData["total_price"],
+                "shipping" => $shippingFee,
+                "delivery_type" => $request->delivery_type
+            ]);
 
             // Notify the user
             if ($order) {
