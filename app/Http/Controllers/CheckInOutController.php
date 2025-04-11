@@ -34,7 +34,7 @@ class CheckInOutController extends Controller
         Log::info("Service request object", ['service_request' => $req]);
     
         $customer = User::find($req->user_id);
-        $provider = User::find($req->approved_providers_id);
+        $provider = User::find($approved_provider);
     
         if (!$customer) {
             Log::error("Customer not found for service request", ['request_id' => $requestId]);
