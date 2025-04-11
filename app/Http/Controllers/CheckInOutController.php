@@ -15,6 +15,7 @@ class CheckInOutController extends Controller
     {
         $user = auth()->user();
         $req = ServiceRequest::whereId($requestId)->first();
+        Log::debug("New request checkin && checkout", ['request' => $req]);
     
         if (!$req) {
             return get_error_response("Service request with provided ID not found", ['error' => "Service request with provided ID not found"]);
@@ -32,15 +33,15 @@ class CheckInOutController extends Controller
             \Log::error("Provider not found for service request", ['request_id' => $requestId]);
         }
     
-        // $quote = SubmittedQuotes::where([
-        //     'request_id' => $req->id,
-        //     'provider_id' => $req->approved_providers_id
-        // ])->first();
+        $quote = SubmittedQuotes::where([
+            'request_id' => $req->id,
+            'provider_id' => $req->approved_providers_id
+        ])->first();
     
-        // if (!$quote) {
-        //     \Log::error("No quote found for service request", ['request_id' => $requestId]);
-        //     return get_error_response("Quote not found", ['error' => "No quote found for this service request"], 404);
-        // }
+        if (!$quote) {
+            \Log::error("No quote found for service request", ['request_id' => $requestId]);
+            return get_error_response("Quote not found", ['error' => "No quote found for this service request"], 404);
+        }
     
         $todayCheckIn = $req->checkIns()->whereDate('check_in_time', today())->latest()->first();
     
