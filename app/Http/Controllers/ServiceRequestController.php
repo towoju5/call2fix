@@ -205,7 +205,7 @@ class ServiceRequestController extends Controller
     public function show($serviceRequest)
     {
         try {
-            $serviceRequest = ServiceRequestModel::with('reworkMessages', 'service_provider', 'invited_artisan')->whereId($serviceRequest)->first();
+            $serviceRequest = ServiceRequestModel::with('reworkMessages', 'submittedQuotes', 'service_provider', 'invited_artisan')->whereId($serviceRequest)->first();
             return get_success_response($serviceRequest);
         } catch (\Throwable $th) {
             return get_error_response($th->getMessage(), ['error' => $th->getMessage()]);
@@ -318,7 +318,8 @@ class ServiceRequestController extends Controller
             ]);
 
             // Credit Provider
-            $provider = User::find($serviceRequest->approved_providers_id);
+            $neg = Negotiation::where('request_id', $requestId)->where('status', "accepted")->first();
+            $provider = User::find($serviceRequest->approved_providers_id ?? $neg->provider_id);
             if (!$provider) {
                 DB::rollBack();
                 return get_error_response('Provider not found');
@@ -851,8 +852,8 @@ class ServiceRequestController extends Controller
             return ['error' => "Service request not found"];
         }
 
-        if(isset($submittedQuote->provider_id)) {
-            $serviceRequest->approved_providers_id = $submittedQuote->provider_id;
+        if(isset($submittedQuote->provider_id) || isset($neg->provider_id)) {
+            $serviceRequest->approved_providers_id = $submittedQuote->provider_id ?? $neg->provider_id;
             $serviceRequest->save();
         }
 
