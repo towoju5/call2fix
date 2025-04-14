@@ -879,7 +879,7 @@ class ServiceRequestController extends Controller
             } elseif ($paymentMethod === 'percentage') {
                 $artisanShare = $distributable * ($paymentValue / 100);
             }
-            Log::debug("Artisan payment details: ", ['artisan' => $paymentValue]);
+            Log::debug("Artisan payment details: ", ['artisan' => $artisan]);
         }
 
         
