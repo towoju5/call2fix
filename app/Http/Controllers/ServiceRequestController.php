@@ -282,9 +282,8 @@ class ServiceRequestController extends Controller
     public function updateStatus(Request $request, $requestId)
     {
         try {
-            // Fetch the service request with auth checks
             $authId = auth()->id();
-            $serviceRequest = ServiceRequestModel::whereId($requestId)->first();
+            $serviceRequest = ServiceRequestModel::find($requestId);
 
             if (!$serviceRequest) {
                 return get_error_response("Service request not found", ["error" => "Service request not found"]);
@@ -292,89 +291,89 @@ class ServiceRequestController extends Controller
 
             $finalStatus = $request->status;
 
-            // Update the status in the database
-            $update = $serviceRequest->update(['request_status' => $finalStatus]);
-
-            if ($update && $finalStatus === 'Closed') {
-                DB::beginTransaction();
-                try {
-                    $serviceRequest = ServiceRequestModel::findOrFail($requestId);
-                    $apportionment = $this->aportionment($serviceRequest); // Corrected method name
-
-                    // Create PaymentApportionment record
-                    PaymentApportionment::updateOrCreate([
-                        'service_request_id' => $serviceRequest->id,
-                        'subtotal' => $apportionment['subtotal'],
-                        'service_provider_earnings' => $apportionment['service_provider_earnings'],
-                        'call2fix_management_fee' => $apportionment['call2fix_management_fee'],
-                        'call2fix_earnings' => $apportionment['call2fix_earnings'],
-                        'warranty_retention' => $apportionment['warranty_retention'],
-                        'artisan_earnings' => $apportionment['artisan_earnings'],
-                    ]);
-
-                    // Credit Service Provider
-                    $provider = User::find($serviceRequest->approved_providers_id);
-                    if (!$provider) {
-                        return get_error_response('Provider not found');
-                    }
-
-                    $providerDeposit = $provider->getWallet('ngn')->deposit(
-                        $apportionment['service_provider_earnings'] * 100,
-                        ["description" => $serviceRequest->problem_title]
-                    );
-
-                    if (!$providerDeposit) {
-                        return get_error_response('Failed to deposit into provider wallet', ['error' => 'Failed to deposit into provider wallet']);
-                    }
-                    
-                    $provider->notify(new CustomNotification('Wallet credited', "Your wallet has been credited with {$apportionment['service_provider_earnings']}."));
-
-                    // Credit Artisan
-                    if ($serviceRequest->approved_artisan_id) {
-                        $artisan = User::find($serviceRequest->approved_artisan_id);
-                        if (!$artisan) {
-                            return get_error_response('Artisan not found');
-                        }
-                        $artisanDeposit = $artisan->getWallet('ngn')->deposit(
-                            $apportionment['artisan_earnings'] * 100,
-                            ["description" => $serviceRequest->problem_title]
-                        );
-                        if (!$artisanDeposit) {
-                            return get_error_response('Failed to deposit into artisan wallet');
-                        }
-                        $artisan->notify(new CustomNotification('Wallet credited', "Your wallet has been credited with {$apportionment['artisan_earnings']}."));
-                    }
-
-                    // Credit Call2Fix
-                    // $call2fixUserId = get_settings_value('call2fix_user_id');
-                    // $call2fixUser = User::find($call2fixUserId);
-                    // if (!$call2fixUser) {
-                    //     return get_error_response('Call2Fix user not found');
-                    // }
-                    // $call2fixDeposit = $call2fixUser->getWallet('ngn')->deposit(
-                    //     $apportionment['call2fix_earnings'] * 100,
-                    //     ["description" => $serviceRequest->problem_title]
-                    // );
-                    // if (!$call2fixDeposit) {
-                    //     return get_error_response('Failed to deposit into Call2Fix wallet');
-                    // }
-                    // $call2fixUser->notify(new CustomNotification('Wallet credited', "Your wallet has been credited with {$apportionment['call2fix_earnings']}."));
-
-                    DB::commit();
-                    return get_success_response($serviceRequest, "Service Request closed successfully");
-                } catch (\Exception $e) {
-                    DB::rollBack();
-                    return get_error_response("Payment processing failed: " . $e->getMessage(), ['error' => $e->getMessage()], 500);
-                }
+            if ($finalStatus !== 'Closed') {
+                $serviceRequest->update(['request_status' => $finalStatus]);
+                return get_success_response($serviceRequest, "Service Request status updated successfully");
             }
 
-            return get_success_response($serviceRequest, "Service Request status updated successfully");
+            // Begin full transaction for status = Closed
+            DB::beginTransaction();
+
+            $serviceRequest->update(['request_status' => $finalStatus]);
+
+            $apportionment = $this->aportionment($serviceRequest);
+
+            PaymentApportionment::updateOrCreate([
+                'service_request_id' => $serviceRequest->id,
+            ], [
+                'subtotal' => $apportionment['subtotal'],
+                'service_provider_earnings' => $apportionment['service_provider_earnings'],
+                'call2fix_management_fee' => $apportionment['call2fix_management_fee'],
+                'call2fix_earnings' => $apportionment['call2fix_earnings'],
+                'warranty_retention' => $apportionment['warranty_retention'],
+                'artisan_earnings' => $apportionment['artisan_earnings'],
+            ]);
+
+            // Credit Provider
+            $provider = User::find($serviceRequest->approved_providers_id);
+            if (!$provider) {
+                DB::rollBack();
+                return get_error_response('Provider not found');
+            }
+
+            $providerDeposit = $provider->getWallet('ngn')->deposit(
+                $apportionment['service_provider_earnings'] * 100,
+                ["description" => $serviceRequest->problem_title]
+            );
+
+            if (!$providerDeposit) {
+                DB::rollBack();
+                return get_error_response('Failed to deposit into provider wallet');
+            }
+
+            $provider->notify(new CustomNotification(
+                'Wallet Credited',
+                "Your wallet has been credited with ₦" . number_format($apportionment['service_provider_earnings'], 2)
+            ));
+
+            // Credit Artisan (optional)
+            if ($serviceRequest->approved_artisan_id) {
+                $artisan = User::find($serviceRequest->approved_artisan_id);
+                if (!$artisan) {
+                    DB::rollBack();
+                    return get_error_response('Artisan not found');
+                }
+
+                $artisanDeposit = $artisan->getWallet('ngn')->deposit(
+                    $apportionment['artisan_earnings'] * 100,
+                    ["description" => $serviceRequest->problem_title]
+                );
+
+                if (!$artisanDeposit) {
+                    DB::rollBack();
+                    return get_error_response('Failed to deposit into artisan wallet');
+                }
+
+                $artisan->notify(new CustomNotification(
+                    'Wallet Credited',
+                    "Your wallet has been credited with ₦" . number_format($apportionment['artisan_earnings'], 2)
+                ));
+            }
+
+            // Optionally Credit Call2Fix (commented out intentionally)
+
+            DB::commit();
+            return get_success_response($serviceRequest, "Service Request closed successfully");
+
         } catch (\Illuminate\Validation\ValidationException $e) {
             return get_error_response("Invalid status provided", $e->errors(), 422);
         } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error("Status update failed", ['error' => $e->getMessage()]);
             return get_error_response("An error occurred while updating the status: " . $e->getMessage(), ['error' => $e->getMessage()], 500);
         }
     }
+
 
     public function inspectionRequest(Request $request, $requestId)
     {
