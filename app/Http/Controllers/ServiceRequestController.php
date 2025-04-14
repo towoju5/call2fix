@@ -828,7 +828,7 @@ class ServiceRequestController extends Controller
             }
         } catch (\Throwable $th) {
             Log::debug("Transaction failed_1: ", ['error' => $th->getMessage()]);
-            return get_error_response(['error' => $th->getMessage()]);
+            return get_error_response($th->getMessage(), ['error' => $th->getMessage()]);
         }
     }
 
