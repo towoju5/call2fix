@@ -864,7 +864,7 @@ class ServiceRequestController extends Controller
         $distributable = $quoteTotal * 0.80;
         
         // Retrieve Artisan and Payment Logic
-        $artisan = Artisans::where('id', $submittedQuote->approved_artisan_id)->first();
+        $artisan = Artisans::where('artisan_id', $submittedQuote->approved_artisan_id ?? $serviceRequest->approved_artisan_id)->first();
         
         $artisanShare = 0;
         if ($artisan) {
