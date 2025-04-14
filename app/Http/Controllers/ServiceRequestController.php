@@ -302,7 +302,7 @@ class ServiceRequestController extends Controller
                     $apportionment = $this->aportionment($serviceRequest); // Corrected method name
 
                     // Create PaymentApportionment record
-                    PaymentApportionment::create([
+                    PaymentApportionment::updateOrCreate([
                         'service_request_id' => $serviceRequest->id,
                         'subtotal' => $apportionment['subtotal'],
                         'service_provider_earnings' => $apportionment['service_provider_earnings'],
@@ -317,6 +317,7 @@ class ServiceRequestController extends Controller
                     if (!$provider) {
                         return get_error_response('Provider not found');
                     }
+
                     $providerDeposit = $provider->getWallet('ngn')->deposit(
                         $apportionment['service_provider_earnings'] * 100,
                         ["description" => $serviceRequest->problem_title]
@@ -822,10 +823,14 @@ class ServiceRequestController extends Controller
 
     private function aportionment(ServiceRequestModel $serviceRequest)
     {
-        $submittedQuote = SubmittedQuotes::where('request_id', serviceRequest->id)->where('status', "accepted")->first();
-        $quoteTotal = (float) $submittedQuote->workmanship + collect($submittedQuote->items)->sum(function ($item) {
-            return (float) $item['itemTotalPrice'];
-        });
+        $submittedQuote = SubmittedQuotes::where('request_id', $serviceRequest->id)->where('status', "accepted")->first();
+
+        $neg = Negotiation::where('request_id', $serviceRequest->id)->where('status', "accepted")->first();
+        if($neg) {
+            return get_error_response("Qoute already accepted", ['error' => "Qoute already accepted"], 400);
+        }
+
+        $quoteTotal = $neg->new_item_total + $neg->new_workmanship;
         
         $call2FixFee = $quoteTotal * 0.10;
         $warrantyRetention = $quoteTotal * 0.10;
