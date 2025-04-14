@@ -516,14 +516,14 @@ class ServiceRequestController extends Controller
                 return get_error_response("Quote not found", ["error" => "Quote not found!"], 404);
             }
 
-            $submittedQuote = SubmittedQuotes::where('request_id', serviceRequest->id)->where('status', "accepted")->first();
-            if($submittedQuote) {
+            $neg = Negotiation::where('request_id', $requestId)->where('status', "accepted")->first();
+            if($neg) {
                 return get_error_response("Qoute already accepted", ['error' => "Qoute already accepted"], 400);
             }
 
             // $negotiation = [];
 
-            $quoteTotal = (float) $submittedQuote->workmanship + collect($submittedQuote->items)->sum(function ($item) {
+            $quoteTotal = (float) collect($quote->items)->sum(function ($item) {
                 return (float) $item['itemTotalPrice'];
             });
 
@@ -534,8 +534,8 @@ class ServiceRequestController extends Controller
                 'price' => number_format($request->price, 4, '.', ''),
                 'status' => 'pending',
                 'percentage_decrease' => $request->percentage_decrease ?? 0,
-                'new_item_total' => $request->new_item_total ?? $quoteTotal,
-                'new_workmanship' => $request->new_workmanship ?? $quote->workmanship,
+                'new_item_total' => $this->removePercentage($quoteTotal, $request->percentage_decrease) ?? $quoteTotal,
+                'new_workmanship' => $this->removePercentage($quote->workmanship, $request->percentage_decrease) ?? $quote->workmanship,
             ]);
 
             $serviceRequest = ServiceRequest::whereId($requestId)->first();
@@ -845,4 +845,11 @@ class ServiceRequestController extends Controller
         Log::debug("Hello world: ", ['apportionments' => $apportionments]);
         return $apportionments;
     }
+
+    private function removePercentage($amount, $percentage)
+    {
+        $deduction = ($percentage / 100) * $amount;
+        return $amount - $deduction;
+    }
+
 }
