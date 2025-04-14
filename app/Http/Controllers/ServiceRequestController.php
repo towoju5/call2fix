@@ -504,7 +504,7 @@ class ServiceRequestController extends Controller
     {
         try {
             $validate = Validator::make($request->all(), [
-                'price' => 'required|numeric|min:0'
+                'price' => 'required|numeric|min:0',
             ]);
 
             if ($validate->fails()) {
@@ -596,6 +596,12 @@ class ServiceRequestController extends Controller
             if (!$negotiation) {
                 return get_error_response("Negotiation not found", ["error" => "Negotiation not found"], 404);
             }
+
+            $neg = Negotiation::where('request_id', $negotiation->request_id)->where('status', "accepted")->first();
+            if($neg) {
+                return get_error_response("Qoute already accepted", ['error' => "Qoute already accepted"], 400);
+            }
+
 
             // Update the negotiation status
             $negotiation->status = $request->status;
