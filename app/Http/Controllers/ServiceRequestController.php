@@ -836,9 +836,6 @@ class ServiceRequestController extends Controller
         $submittedQuote = SubmittedQuotes::where('request_id', $serviceRequest->id)->where('status', "accepted")->first();
 
         $neg = Negotiation::where('request_id', $serviceRequest->id)->where('status', "accepted")->first();
-        if($neg) {
-            return get_error_response("Qoute already accepted", ['error' => "Qoute already accepted"], 400);
-        }
 
         $quoteTotal = $neg->new_item_total + $neg->new_workmanship;
         
