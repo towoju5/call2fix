@@ -301,7 +301,7 @@ class ServiceRequestController extends Controller
 
             $serviceRequest->update(['request_status' => $finalStatus]);
 
-            $apportionment = $this->aportionment($serviceRequest);
+            $apportionment = $this->aportionment($requestId);
             if($apportionment['error']) {
                 return get_error_response($apportionment['error'], ['error' => $apportionment['error']]);
             }
@@ -834,14 +834,14 @@ class ServiceRequestController extends Controller
         }
     }
 
-    private function aportionment(ServiceRequestModel $serviceRequest)
+    private function aportionment($requestId)
     {
-        $submittedQuote = SubmittedQuotes::where('request_id', $serviceRequest->id)->where('status', "accepted")->first();
+        $submittedQuote = SubmittedQuotes::where('request_id', $requestId)->where('status', "accepted")->first();
         if(!$submittedQuote) {
             return ['error' => 'Quote not found'];
         }
 
-        $neg = Negotiation::where('request_id', $serviceRequest->id)->where('status', "accepted")->first();
+        $neg = Negotiation::where('request_id', $requestId)->where('status', "accepted")->first();
         if(!$neg) {
             return ['error' => 'Negotiation not found'];
         }
