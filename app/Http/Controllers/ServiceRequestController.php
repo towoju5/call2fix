@@ -556,7 +556,7 @@ class ServiceRequestController extends Controller
 
             return get_success_response($negotiation, "Price negotiation submitted successfully");
         } catch (\Throwable $th) {
-            Log::info("Error on Negotiation: ", ['error' => $th->getMessage()]);
+            Log::info("Error on Negotiation: ", ['error' => $th->getMessage(), 'trace' => $th->getTrace()]);
             return get_error_response($th->getMessage(), ["error" => $th->getMessage()]);
         }
     }
