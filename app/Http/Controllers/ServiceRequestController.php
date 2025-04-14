@@ -857,6 +857,10 @@ class ServiceRequestController extends Controller
         
         $artisanShare = 0;
         if ($artisan) {
+            $serviceRequest = ServiceRequestModel::whereId($requestId)->first();
+            $serviceRequest->update([
+                'approved_providers_id' => $artisan->service_provider_id
+            ]);
             $paymentMethod = $artisan->payment_method; // "fixed" or "percentage"
             $paymentValue = (float) $artisan->payment_value;
         
