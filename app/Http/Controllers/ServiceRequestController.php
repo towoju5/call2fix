@@ -841,6 +841,9 @@ class ServiceRequestController extends Controller
             return ['error' => 'Negotiation not found or not yet approved'];
         }
         $serviceRequest = ServiceRequestModel::whereId($requestId)->first();
+        if(!$serviceRequest) {
+            return ['error' => "Service request not found"];
+        }
 
         $submittedQuote = SubmittedQuotes::where('request_id', $requestId)->whereId($neg->submitted_quote_id)->first();
         if(!$submittedQuote) {
