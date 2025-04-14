@@ -327,7 +327,7 @@ class ServiceRequestController extends Controller
 
             $providerDeposit = $provider->getWallet('ngn')->deposit(
                 $apportionment['service_provider_earnings'] * 100,
-                ["description" => $serviceRequest->problem_title]
+                ["description" => "Payment for: ".$serviceRequest->problem_title]
             );
 
             if (!$providerDeposit) {
@@ -350,7 +350,7 @@ class ServiceRequestController extends Controller
 
                 $artisanDeposit = $artisan->getWallet('ngn')->deposit(
                     $apportionment['artisan_earnings'] * 100,
-                    ["description" => $serviceRequest->problem_title]
+                    ["description" => "Payment for: ".$serviceRequest->problem_title]
                 );
 
                 if (!$artisanDeposit) {
