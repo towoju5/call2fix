@@ -871,8 +871,8 @@ class ServiceRequestController extends Controller
             $serviceRequest->update([
                 'approved_providers_id' => $artisan->service_provider_id
             ]);
-            $paymentMethod = $artisan->payment_method; // "fixed" or "percentage"
-            $paymentValue = (float) $artisan->payment_value;
+            $paymentMethod = $artisan->payment_plan; // "fixed" or "percentage"
+            $paymentValue = (float) $artisan->payment_amount;
         
             if ($paymentMethod === 'fixed') {
                 $artisanShare = $paymentValue;

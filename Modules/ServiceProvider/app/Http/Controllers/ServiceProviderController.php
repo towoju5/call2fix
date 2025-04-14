@@ -89,7 +89,7 @@ class ServiceProviderController extends Controller
                 "id_image" => "required",
                 "trade_certificate" => "required",
                 "payment_plan" => "required|string|in:percentage,fixed",
-                "payment_amount" => "required|numeric|min:0",
+                "payment_amount" => "required|numeric|min:1",
                 "bank_code" => "required|string|max:20",
                 "account_number" => "required|string|max:20",
                 "account_name" => "required|string|max:255",
