@@ -212,7 +212,7 @@
                                     <td>{{ $wallet->id }}</td>
                                     <td>{{ strtoupper($wallet->currency) }}</td>
                                     <td>{{ ucfirst($wallet->role) }}</td>
-                                    <td>{{ $wallet->meta['meta']['symbol'].number_format($wallet->balance, 2) }}</td>
+                                    <td>{{ $wallet->meta['meta']['symbol'].number_format($wallet->balance/100, 2) }}</td>
                                 </tr>
                                 @endforeach
                             </tbody>
