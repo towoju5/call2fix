@@ -302,6 +302,9 @@ class ServiceRequestController extends Controller
             $serviceRequest->update(['request_status' => $finalStatus]);
 
             $apportionment = $this->aportionment($serviceRequest);
+            if($apportionment['error']) {
+                return get_error_response($apportionment['error'], ['error' => $apportionment['error']]);
+            }
 
             PaymentApportionment::updateOrCreate([
                 'service_request_id' => $serviceRequest->id,
