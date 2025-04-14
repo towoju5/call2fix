@@ -834,8 +834,14 @@ class ServiceRequestController extends Controller
     private function aportionment(ServiceRequestModel $serviceRequest)
     {
         $submittedQuote = SubmittedQuotes::where('request_id', $serviceRequest->id)->where('status', "accepted")->first();
+        if(!$submittedQuote) {
+            return ['error' => 'Quote not found'];
+        }
 
         $neg = Negotiation::where('request_id', $serviceRequest->id)->where('status', "accepted")->first();
+        if(!$neg) {
+            return ['error' => 'Negotiation not found'];
+        }
 
         $quoteTotal = $neg->new_item_total + $neg->new_workmanship;
         
