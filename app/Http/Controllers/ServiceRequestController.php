@@ -515,18 +515,24 @@ class ServiceRequestController extends Controller
             if (!$quote) {
                 return get_error_response("Quote not found", ["error" => "Quote not found!"], 404);
             }
+            Log::info("Quote retrieved");
 
             $neg = Negotiation::where('request_id', $requestId)->where('status', "accepted")->first();
             if($neg) {
                 return get_error_response("Qoute already accepted", ['error' => "Qoute already accepted"], 400);
             }
+            Log::info("neg retrieved");
 
-            // $negotiation = [];
 
-            $quoteTotal = (float) collect($quote->items)->sum(function ($item) {
-                return (float) $item['itemTotalPrice'];
-            });
+            // $quoteTotal = (float) collect($quote->items)->sum(function ($item) {
+            //     return (float) $item['itemTotalPrice'];
+            // });
 
+            $items = json_decode($quote->items, true);
+            $quoteTotal = collect($items)->sum(fn($item) => (float) $item['itemTotalPrice']);
+
+
+            Log::info("Quote total");
             $negotiation = Negotiation::create([
                 'submitted_quote_id' => $quoteId,
                 'request_id' => $requestId,
@@ -540,6 +546,7 @@ class ServiceRequestController extends Controller
 
             $serviceRequest = ServiceRequest::whereId($requestId)->first();
             
+            Log::info("service request retrieved");
             $serviceRequest->update([
                 "total_cost" => $request->price,
                 "formatted_price" => number_format($request->price, 4, '.', ''),
@@ -553,6 +560,7 @@ class ServiceRequestController extends Controller
                     // $user->notify(new ServiceRequestNegotiated($serviceRequest));
                 }
             }
+            Log::info("Final log");
 
             return get_success_response($negotiation, "Price negotiation submitted successfully");
         } catch (\Throwable $th) {

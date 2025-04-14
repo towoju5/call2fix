@@ -14,7 +14,10 @@ class Negotiation extends Model
         'request_id', 
         'provider_id',
         'price',
-        'status'
+        'status',
+        'percentage_decrease',
+        'new_item_total',
+        'new_workmanship'
     ];
 
     protected $casts = [
