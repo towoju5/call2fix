@@ -54,7 +54,7 @@ class VerificationWebhookController extends Controller
 
 
             if (!empty($businessData)) {
-                $user->business_info_info()->updateOrCreate(
+                $user->business_info()->updateOrCreate(
                     ['user_id' => $user->id],
                     [
                         'businessName' => data_get($businessData, 'business_name') ?? optional($user->business_info)->businessName,
