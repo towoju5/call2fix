@@ -509,14 +509,34 @@ class ServiceRequestController extends Controller
                 return get_error_response("Quote not found", ["error" => "Quote not found!"], 404);
             }
 
+            $submittedQuote = SubmittedQuotes::where('request_id', serviceRequest->id)->where('status', "accepted")->first();
+            if($submittedQuote) {
+                return get_error_response("Qoute already accepted", ['error' => "Qoute already accepted"], 400);
+            }
+
             // $negotiation = [];
+
+            if (!Schema::hasColumn('negotiations', 'percentage_decrease')) {
+                Schema::table('negotiations', function (Blueprint $table) {
+                    $table->string('percentage_decrease')->nullable();
+                    $table->string('new_item_total')->nullable();
+                    $table->string('new_workmanship')->nullable();
+                });
+            }
+
+            $quoteTotal = (float) $submittedQuote->workmanship + collect($submittedQuote->items)->sum(function ($item) {
+                return (float) $item['itemTotalPrice'];
+            });
 
             $negotiation = Negotiation::create([
                 'submitted_quote_id' => $quoteId,
                 'request_id' => $requestId,
                 'provider_id' => $quote->provider_id,
                 'price' => number_format($request->price, 4, '.', ''),
-                'status' => 'pending'
+                'status' => 'pending',
+                'percentage_decrease' => $request->percentage_decrease ?? 0,
+                'new_item_total' => $request->new_item_total ?? $quoteTotal,
+                'new_workmanship' => $request->new_workmanship ?? $quote->workmanship,
             ]);
 
             $serviceRequest = ServiceRequest::whereId($requestId)->first();
@@ -789,40 +809,39 @@ class ServiceRequestController extends Controller
 
     private function aportionment(ServiceRequestModel $serviceRequest)
     {
-        $subtotal = $serviceRequest->total_cost; // Ensure this field exists in your ServiceRequestModel
-
-        // Calculate Call2Fix components
-        $managementFee = min(0.15 * $subtotal, 100000);
-        $call2fixEarnings = 0.10 * $subtotal + $managementFee;
-
-        // Calculate Warranty Retention
-        $warrantyRetention = 0.10 * $subtotal;
-
-        // Calculate Service Provider's base earnings
-        $serviceProviderEarningsBase = 0.80 * $subtotal;
-
-        // Calculate Artisan's earnings
-        $artisanEarnings = 0;
-        if ($serviceRequest->approved_artisan_id) {
-            $artisan = Artisans::where('artisan_id', $serviceRequest->approved_artisan_id)->first();
-            if ($artisan) {
-                if ($artisan->payment_plan === 'percentage') {
-                    $artisanEarnings = ($serviceProviderEarningsBase / 100) * $artisan->payment_amount;
-                } else {
-                    $artisanEarnings = $artisan->payment_amount;
-                }
+        $submittedQuote = SubmittedQuotes::where('request_id', serviceRequest->id)->where('status', "accepted")->first();
+        $quoteTotal = (float) $submittedQuote->workmanship + collect($submittedQuote->items)->sum(function ($item) {
+            return (float) $item['itemTotalPrice'];
+        });
+        
+        $call2FixFee = $quoteTotal * 0.10;
+        $warrantyRetention = $quoteTotal * 0.10;
+        $distributable = $quoteTotal * 0.80;
+        
+        // Retrieve Artisan and Payment Logic
+        $artisan = Artisan::where('id', $submittedQuote->approved_artisan_id)->first();
+        
+        $artisanShare = 0;
+        if ($artisan) {
+            $paymentMethod = $artisan->payment_method; // "fixed" or "percentage"
+            $paymentValue = (float) $artisan->payment_value;
+        
+            if ($paymentMethod === 'fixed') {
+                $artisanShare = $paymentValue;
+            } elseif ($paymentMethod === 'percentage') {
+                $artisanShare = $distributable * ($paymentValue / 100);
             }
         }
-
-        // Final Service Provider earnings after artisan split
-        $serviceProviderFinalEarnings = $serviceProviderEarningsBase - $artisanEarnings;
+        
+        // Final Distribution
+        $providerShare = $distributable - $artisanShare;
         $apportionments = [
-            'subtotal' => $subtotal,
-            'service_provider_earnings' => $serviceProviderFinalEarnings,
-            'call2fix_management_fee' => $managementFee,
-            'call2fix_earnings' => $call2fixEarnings,
+            'subtotal' => $quoteTotal,
+            'service_provider_earnings' => $providerShare,
+            'call2fix_management_fee' => $submittedQuote->administrative_fee,
+            'call2fix_earnings' => $call2FixFee,
             'warranty_retention' => $warrantyRetention,
-            'artisan_earnings' => $artisanEarnings ?? 0,
+            'artisan_earnings' => $artisanShare,
         ];
         Log::debug("Hello world: ", ['apportionments' => $apportionments]);
         return $apportionments;
