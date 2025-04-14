@@ -26,7 +26,7 @@
                                     @if (count($user['roles']) > 0)
                                         @foreach ($user['roles'] as $role)
                                             <span
-                                                class="badge bg-primary">{{ str_replace('_', ' ', ucfirst($role->name)) }}</span>
+                                                class="badge bg-primary">{{ str_replace('_', ' ', $role->name) }}</span>
                                         @endforeach
                                     @else
                                         <span class="badge bg-secondary">No roles</span>
