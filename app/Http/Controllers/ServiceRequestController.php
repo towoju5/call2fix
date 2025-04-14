@@ -870,9 +870,14 @@ class ServiceRequestController extends Controller
                 $artisanShare = $distributable * ($paymentValue / 100);
             }
         }
+
         
         // Final Distribution
         $providerShare = $distributable - $artisanShare;
+        if($artisanShare > $distributable) {
+            $artisanShare = 0;
+            $providerShare = $distributable;
+        }
         $apportionments = [
             'subtotal' => $quoteTotal,
             'service_provider_earnings' => $providerShare,
