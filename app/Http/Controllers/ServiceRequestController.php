@@ -840,10 +840,17 @@ class ServiceRequestController extends Controller
         if(!$neg) {
             return ['error' => 'Negotiation not found or not yet approved'];
         }
+        $serviceRequest = ServiceRequestModel::whereId($requestId)->first();
 
         $submittedQuote = SubmittedQuotes::where('request_id', $requestId)->whereId($neg->submitted_quote_id)->first();
         if(!$submittedQuote) {
             return ['error' => 'Quote not found'];
+        }
+
+        if(isset($submittedQuote->provider_id)) {
+            $serviceRequest->update([
+                'approved_providers_id' => $submittedQuote->provider_id
+            ]);
         }
 
         $quoteTotal = $neg->new_item_total + $neg->new_workmanship;
@@ -857,7 +864,6 @@ class ServiceRequestController extends Controller
         
         $artisanShare = 0;
         if ($artisan) {
-            $serviceRequest = ServiceRequestModel::whereId($requestId)->first();
             $serviceRequest->update([
                 'approved_providers_id' => $artisan->service_provider_id
             ]);
@@ -886,7 +892,7 @@ class ServiceRequestController extends Controller
             'warranty_retention' => $warrantyRetention,
             'artisan_earnings' => $artisanShare,
         ];
-        Log::debug("Hello world: ", ['apportionments' => $apportionments]);
+        Log::debug("Hello world new: ", ['apportionments' => $apportionments]);
         return $apportionments;
     }
 
