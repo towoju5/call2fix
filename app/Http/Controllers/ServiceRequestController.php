@@ -34,6 +34,13 @@ class ServiceRequestController extends Controller
     protected $radiusLimitKm;
     public function __construct()
     {
+        if (!Schema::hasColumn('negotiations', 'percentage_decrease')) {
+            Schema::table('negotiations', function (Blueprint $table) {
+                $table->string('percentage_decrease')->nullable();
+                $table->string('new_item_total')->nullable();
+                $table->string('new_workmanship')->nullable();
+            });
+        }
         $this->radiusLimitKm = get_settings_value('max_provider_radius') ?? 30;
     }
 
@@ -515,14 +522,6 @@ class ServiceRequestController extends Controller
             }
 
             // $negotiation = [];
-
-            if (!Schema::hasColumn('negotiations', 'percentage_decrease')) {
-                Schema::table('negotiations', function (Blueprint $table) {
-                    $table->string('percentage_decrease')->nullable();
-                    $table->string('new_item_total')->nullable();
-                    $table->string('new_workmanship')->nullable();
-                });
-            }
 
             $quoteTotal = (float) $submittedQuote->workmanship + collect($submittedQuote->items)->sum(function ($item) {
                 return (float) $item['itemTotalPrice'];
