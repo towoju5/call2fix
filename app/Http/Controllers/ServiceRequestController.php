@@ -202,12 +202,12 @@ class ServiceRequestController extends Controller
     }
     
 
-    public function show(ServiceRequestModel $serviceRequest)
+    public function show($serviceRequest)
     {
         try {
-            return get_success_response($serviceRequest->with('reworkMessages'));
+            $serviceRequest = ServiceRequestModel::with('reworkMessages', 'service_provider', 'invited_artisan')->whereId($serviceRequest)->first();
+            return get_success_response($serviceRequest);
         } catch (\Throwable $th) {
-            Log::info("Error on Negotiation: ", ['error' => $th->getMessage()]);
             return get_error_response($th->getMessage(), ['error' => $th->getMessage()]);
         }
     }
