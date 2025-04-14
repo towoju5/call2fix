@@ -27,6 +27,15 @@ class VerificationWebhookController extends Controller
                 Log::warning('User not found for email: ' . $email);
                 return response()->json(['message' => 'User not found'], 404);
             }
+            $bvnData = data_get($webhookData, 'data.government_data.data.nin.entity', []);
+            
+            $user->update([
+                'first_name' => data_get($bvnData, 'first_name') ?? $user->first_name,
+                'last_name' => data_get($bvnData, 'last_name') ?? $user->last_name,
+                'business_verification_status' => true,
+                'verification_webhook_data' => $webhookData
+            ]);
+
 
             $businessData = data_get($webhookData, 'data.business_data', []);
             $business_number = data_get($businessData, 'business_number');
@@ -42,15 +51,6 @@ class VerificationWebhookController extends Controller
                 return false;
             }
             
-
-            $bvnData = data_get($webhookData, 'data.government_data.data.nin.entity', []);
-            
-            $user->update([
-                'first_name' => data_get($bvnData, 'first_name') ?? $user->first_name,
-                'last_name' => data_get($bvnData, 'last_name') ?? $user->last_name,
-                'business_verification_status' => true,
-                'verification_webhook_data' => $webhookData
-            ]);
 
 
             if (!empty($businessData) && isset($businessData['business_number'])) {
