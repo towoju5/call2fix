@@ -53,7 +53,7 @@ class VerificationWebhookController extends Controller
             ]);
 
 
-            if (!empty($businessData)) {
+            if (!empty($businessData) && isset($businessData['business_number'])) {
                 $user->business_info()->updateOrCreate(
                     ['user_id' => $user->id],
                     [
