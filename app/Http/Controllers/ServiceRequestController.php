@@ -302,7 +302,7 @@ class ServiceRequestController extends Controller
             $serviceRequest->update(['request_status' => $finalStatus]);
 
             $apportionment = $this->aportionment($requestId);
-            if($apportionment['error']) {
+            if(isset($apportionment['error'])) {
                 return get_error_response($apportionment['error'], ['error' => $apportionment['error']]);
             }
 
