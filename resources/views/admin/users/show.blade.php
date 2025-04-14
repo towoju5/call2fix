@@ -11,7 +11,7 @@
             <div class="card mb-3">
                 <div class="card-body">
                     <h5 class="card-title">Wallet ID: {{ $wallet->currency }}</h5>
-                    <p class="card-text">Balance: {{ number_format($wallet->balance, 2) }}</p>
+                    <p class="card-text">Balance: {{ number_format($wallet->balance/100, 2) }}</p>
                 </div>
             </div>
             @endforeach
