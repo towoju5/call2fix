@@ -913,7 +913,7 @@ class ServiceRequestController extends Controller
         // Ensure providerShare doesn't go negative
         if ($providerShare < 0) {
             $providerShare = 0;
-            $artisanShare = $distributable; // Distribute remaining to artisan if providerShare is negative
+            $artisanShare = $distributable; 
         }
 
         // Final Distribution

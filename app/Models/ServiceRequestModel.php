@@ -40,7 +40,7 @@ class ServiceRequestModel extends Model
     
     protected $with = [
         'negotiations',
-        // 'submittedQuotes',
+        'ratings',
         'user',
         'service_provider',
         'checkIns'
@@ -126,5 +126,10 @@ class ServiceRequestModel extends Model
     public function getFeaturedProvidersAttribute()
     {
         return User::whereIn('id', $this->featured_providers_id ?? [])->get();
+    }
+
+    public function ratings()
+    {
+        return $this->hasMany(ServiceRequestRatings::class, 'service_request_id', 'id');
     }
 }
