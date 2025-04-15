@@ -919,7 +919,7 @@ class ServiceRequestController extends Controller
         // Final Distribution
         $apportionments = [
             'subtotal' => $quoteTotal,
-            'service_provider_earnings' => $providerShare,
+            'service_provider_earnings' => $quoteTotal - floatval($call2FixFee + $warrantyRetention + $artisanShare),
             'call2fix_management_fee' => $submittedQuote->administrative_fee,
             'call2fix_earnings' => $call2FixFee,
             'warranty_retention' => $warrantyRetention,
