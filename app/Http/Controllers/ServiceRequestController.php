@@ -565,7 +565,7 @@ class ServiceRequestController extends Controller
                 $provider = User::whereId($request->provider_id)->first();
                 if($provider) {
                     $provider->notify(new CustomNotification("Quote Negotiated by customer", "Quote Negotiated by customer."));
-                    // $user->notify(new ServiceRequestNegotiated($serviceRequest));
+                    $user->notify(new ServiceRequestNegotiated($serviceRequest));
                 }
             }
             Log::info("Final log");
