@@ -291,7 +291,7 @@ class ServiceRequestController extends Controller
 
             $finalStatus = $request->status;
 
-            if($serviceRequest->request_status) {
+            if(strtolower($serviceRequest->request_status) === 'closed') {
                 return get_error_response("Service request is already completed", ['error' => "Service request is already completed"]);
             }
 
