@@ -4,6 +4,7 @@ namespace Modules\Artisan\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Models\ServiceRequestModel;
+use App\Models\ArtisanCanSubmitQuote;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
