@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Artisans;
 use Illuminate\Http\Request;
 use App\Models\User;
 use App\Notifications\CustomNotification;
@@ -35,6 +36,16 @@ class VerificationWebhookController extends Controller
                 'business_verification_status' => true,
                 'verification_webhook_data' => $webhookData
             ]);
+
+            if($user->current_role == 'artisan') {
+                $artisan = Artisans::where('artisan_id', $user->id)->first();
+                if($artisan) {
+                    $artisan->update([
+                        "first_name" => data_get($bvnData, 'first_name') ?? $user->first_name,,
+                        "last_name" => data_get($bvnData, 'last_name') ?? $user->last_name,
+                    ]);
+                }
+            }
 
 
             $businessData = data_get($webhookData, 'data.business_data', []);
