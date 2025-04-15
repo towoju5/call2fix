@@ -825,10 +825,16 @@ class ServiceRequestController extends Controller
                         $pro = $artisan->service_provider_id;
                     }
                 }
-                $provider = User::find($pro);
                 $pro = $serviceRequest->approved_providers_id;
-                $provider->notify(new CustomNotification("Payment confirmed", "Payment confirmed."));
-                $artisan->notify(new CustomNotification("Payment confirmed", "Payment has been confirmed for service request ID: {$serviceRequest->id}"));
+                $provider = User::find($pro);
+                if($provider) {
+                    $provider->notify(new CustomNotification("Payment confirmed", "Payment confirmed."));
+                }
+                
+                if($artisan) {
+                    $artisan->notify(new CustomNotification("Payment confirmed", "Payment has been confirmed for service request ID: {$serviceRequest->id}"));
+                }
+
                 // return success data with the transaction and service request data  
                 return get_success_response([
                     'transaction' => $transaction,
