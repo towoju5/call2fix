@@ -917,13 +917,15 @@ class ServiceRequestController extends Controller
         }
 
         // Final Distribution
+        $reminder = floatval($call2FixFee + $warrantyRetention + $artisanShare);
         $apportionments = [
             'subtotal' => $quoteTotal,
-            'service_provider_earnings' => $quoteTotal - floatval($call2FixFee + $warrantyRetention + $artisanShare),
+            'service_provider_earnings' => $quoteTotal - $reminder,
             'call2fix_management_fee' => $submittedQuote->administrative_fee,
             'call2fix_earnings' => $call2FixFee,
             'warranty_retention' => $warrantyRetention,
             'artisan_earnings' => $artisanShare,
+            'reminder' => $reminder
         ];
 
         // Ensure the sum of provider and artisan earnings equals the quoteTotal
@@ -932,7 +934,7 @@ class ServiceRequestController extends Controller
             $apportionments['service_provider_earnings'] = $quoteTotal - $apportionments['artisan_earnings'];
         }
 
-        Log::debug("Hello world new: ", ['apportionments' => $apportionments]);
+        Log::debug("Apportionment Result: ", ['apportionments' => $apportionments]);
         return $apportionments;
     }
 
