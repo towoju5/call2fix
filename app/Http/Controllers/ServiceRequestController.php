@@ -806,18 +806,18 @@ class ServiceRequestController extends Controller
             // get the customer's wallet
             $wallet = $customer->getWallet($walletType);
             $transaction[] = $wallet->withdrawal($total_cost * 100,  ['description' => "Service request payment - {$serviceRequest->id}", "narration" => $request->narration ?? null]);
-
+            $artisan = Artisans::where('artisan_id', $request->artisan_id)->first();
             if ($transaction && $wallet) {
                 $serviceRequest->update([
                     "total_cost" => $total_cost,
                     "approved_artisan_id" => $request->artisan_id,
+                    'approved_providers_id' => $artisan->service_provider_id,
                     "request_status" => "Payment Confirmed"
                 ]);
 
                 $pro = $serviceRequest->approved_providers_id;
                 if(empty($pro)) {
                     // check if artisan is set
-                    $artisan = Artisans::where('artisan_id', $request->artisan_id)->first();
                     if($artisan) {
                         $serviceRequest->update([
                             'approved_providers_id' => $artisan->service_provider_id
@@ -826,7 +826,9 @@ class ServiceRequestController extends Controller
                     }
                 }
                 $provider = User::find($pro);
-                // $provider->notify(new CustomNotification("Payment confirmed", "Payment confirmed."));
+                $pro = $serviceRequest->approved_providers_id;
+                $provider->notify(new CustomNotification("Payment confirmed", "Payment confirmed."));
+                $artisan->notify(new CustomNotification("Payment confirmed", "Payment has been confirmed for service request ID: {$serviceRequest->id}"));
                 // return success data with the transaction and service request data  
                 return get_success_response([
                     'transaction' => $transaction,
