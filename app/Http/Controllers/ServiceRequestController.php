@@ -842,57 +842,67 @@ class ServiceRequestController extends Controller
     private function aportionment($requestId)
     {
         $neg = Negotiation::where('request_id', $requestId)->where('status', "accepted")->first();
-        if(!$neg) {
+        if (!$neg) {
             return ['error' => 'Negotiation not found or not yet approved'];
         }
 
         $submittedQuote = SubmittedQuotes::where('request_id', $requestId)->whereId($neg->submitted_quote_id)->first();
-        if(!$submittedQuote) {
+        if (!$submittedQuote) {
             return ['error' => 'Quote not found'];
         }
 
         $serviceRequest = ServiceRequestModel::whereId($requestId)->first();
-        if(!$serviceRequest) {
+        if (!$serviceRequest) {
             return ['error' => "Service request not found"];
         }
 
-        if(isset($submittedQuote->provider_id) || isset($neg->provider_id)) {
+        if (isset($submittedQuote->provider_id) || isset($neg->provider_id)) {
             $serviceRequest->approved_providers_id = $submittedQuote->provider_id ?? $neg->provider_id;
             $serviceRequest->save();
         }
 
-        $quoteTotal = $neg->new_item_total + $neg->new_workmanship;
-        
-        $call2FixFee = $quoteTotal * 0.10;
-        $warrantyRetention = $quoteTotal * 0.10;
-        $distributable = $quoteTotal * 0.80;
-        
+        // Calculate total quote (items_total + workmanship)
+        $itemsTotal = $neg->new_item_total;
+        $workmanship = $neg->new_workmanship;
+        $quoteTotal = $itemsTotal + $workmanship;
+
+        // Calculate fees and retention
+        $call2FixFee = $quoteTotal * 0.10; // 10% of total quote
+        $warrantyRetention = $quoteTotal * 0.10; // 10% of total quote
+
+        // Distributable amount (after deducting call2FixFee and warrantyRetention)
+        $distributable = $quoteTotal - ($call2FixFee + $warrantyRetention);
+
         // Retrieve Artisan and Payment Logic
         $artisan = Artisans::where('artisan_id', $submittedQuote->approved_artisan_id ?? $serviceRequest->approved_artisan_id)->first();
-        
+
         $artisanShare = 0;
         if ($artisan) {
             $serviceRequest->update([
                 'approved_providers_id' => $artisan->service_provider_id
             ]);
             $paymentMethod = $artisan->payment_plan; // "fixed" or "percentage"
-            $paymentValue = (float) $artisan->payment_amount;
-        
+            $paymentValue = (float)$artisan->payment_amount;
+
+            // Artisan's share is calculated only from workmanship
             if ($paymentMethod === 'fixed') {
-                $artisanShare = $paymentValue;
+                $artisanShare = min($paymentValue, $workmanship); // Ensure it doesn't exceed workmanship
             } elseif ($paymentMethod === 'percentage') {
-                $artisanShare = $distributable * ($paymentValue / 100);
+                $artisanShare = min($workmanship * ($paymentValue / 100), $workmanship); // Ensure it doesn't exceed workmanship
             }
+
+            // If artisan's share exceeds workmanship, set artisanShare to 0
+            if ($artisanShare > $workmanship) {
+                $artisanShare = 0;
+            }
+
             Log::debug("Artisan payment details: ", ['artisan' => $artisan]);
         }
 
-        
+        // Provider's share is items_total + (distributable - artisanShare)
+        $providerShare = $itemsTotal + ($distributable - $artisanShare);
+
         // Final Distribution
-        $providerShare = $distributable - $artisanShare;
-        if($artisanShare > $distributable) {
-            $artisanShare = 0;
-            $providerShare = $distributable;
-        }
         $apportionments = [
             'subtotal' => $quoteTotal,
             'service_provider_earnings' => $providerShare,
@@ -901,6 +911,7 @@ class ServiceRequestController extends Controller
             'warranty_retention' => $warrantyRetention,
             'artisan_earnings' => $artisanShare,
         ];
+
         Log::debug("Hello world new: ", ['apportionments' => $apportionments]);
         return $apportionments;
     }
