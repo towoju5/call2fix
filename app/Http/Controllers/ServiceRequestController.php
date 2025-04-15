@@ -904,6 +904,12 @@ class ServiceRequestController extends Controller
         // Provider's share is items_total + (distributable - artisanShare)
         $providerShare = $itemsTotal + ($distributable - $artisanShare);
 
+        // Ensure providerShare doesn't go negative
+        if ($providerShare < 0) {
+            $providerShare = 0;
+            $artisanShare = $distributable; // Distribute remaining to artisan if providerShare is negative
+        }
+
         // Final Distribution
         $apportionments = [
             'subtotal' => $quoteTotal,
@@ -913,6 +919,12 @@ class ServiceRequestController extends Controller
             'warranty_retention' => $warrantyRetention,
             'artisan_earnings' => $artisanShare,
         ];
+
+        // Ensure the sum of provider and artisan earnings equals the quoteTotal
+        if (($apportionments['service_provider_earnings'] + $apportionments['artisan_earnings']) != $quoteTotal) {
+            // Adjust if there's a discrepancy (e.g., due to rounding)
+            $apportionments['service_provider_earnings'] = $quoteTotal - $apportionments['artisan_earnings'];
+        }
 
         Log::debug("Hello world new: ", ['apportionments' => $apportionments]);
         return $apportionments;
