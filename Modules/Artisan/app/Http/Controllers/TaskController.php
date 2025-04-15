@@ -14,9 +14,23 @@ class TaskController extends Controller
     public function index()
     {
         try {
-            $tasks = ServiceRequestModel::latest()->where('request_status', 'Work In Progress')->orWhere('request_status', 'Awaiting Approval')
-                        ->where('approved_artisan_id', auth()->id())
-                        ->with('service_provider', 'serviceCategory', 'submittedQuotes')->get();
+            // $tasks = ServiceRequestModel::latest()
+            //             ->where('approved_artisan_id', auth()->id())
+            //             ->with('service_provider', 'serviceCategory', 'submittedQuotes')->get();
+
+            $requestIds = ArtisanCanSubmitQuote::whereArtisanId(auth()->id())->latest()->pluck("request_id");
+            $tasks = ServiceRequestModel::whereIn('id', $requestIds)->with([
+                'user',
+                'service_provider',
+                'artisan',
+                'property',
+                'serviceCategory',
+                'service',
+                'reworkMessages',
+                'checkIns',
+            ])->where('request_status', 'Work In Progress')->orWhere('request_status', 'Awaiting Approval')
+                ->with('service_provider', 'serviceCategory', 'submittedQuotes')
+                ->latest()->get();
             return get_success_response($tasks, "All tasks retrieved successfully");
         } catch (\Throwable $th) {
             return get_error_response($th->getMessage(), ["error" => $th->getMessage()]);
