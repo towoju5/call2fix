@@ -321,9 +321,10 @@ class ServiceProviderController extends Controller
             }
 
             // Check if quote already submitted    
-            // if (SubmittedQuotes::where(["provider_id" => auth()->id(), "request_id" => $request->request_id])->exists()) {
-            //     return get_error_response("You have already submitted a quote for this request", ["error" => "You have already submitted a quote for this request"]);
-            // }
+            if (SubmittedQuotes::where(["provider_id" => auth()->id(), "request_id" => $request->request_id])->exists()) {
+                return get_error_response("You have already submitted a quote for this request", ["error" => "You have already submitted a quote for this request"]);
+            }
+            
             $service_vat = ($request->workmanship + get_settings_value('administrative_fee')) * 0.075;
 
             $items_total = 0;
@@ -334,14 +335,7 @@ class ServiceProviderController extends Controller
                 }
                 $service_vat += $items_total * 0.075;
             }
-                
-            
-            if (!Schema::hasColumn('submitted_quotes', 'old_price')) {
-                Schema::table('submitted_quotes', function (Blueprint $table) {
-                    $table->string('old_price')->nullable();
-                });
-            }
-
+              
             // Process quote submission 
             // $items_total = $request->total_charges ?? $items_total;
             $createQuote = SubmittedQuotes::updateOrCreate(
