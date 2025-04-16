@@ -116,7 +116,7 @@ class CheckInOutController extends Controller
     public function clockins($requestId)
     {
         $checkIns = CheckIn::where('service_request_id', $requestId)->latest()->get();
-        if($checkIns) {
+        if(!$checkIns) {
             return get_error_response("No checkins-checkout found for this service", ['error' => "No checkins-checkout found for this service"]);
         }
         return get_success_response($checkIns);
