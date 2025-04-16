@@ -313,7 +313,8 @@ class ServiceProviderController extends Controller
                 'sla_start_date' => 'required',
                 'attachments' => 'nullable',
                 'summary_note' => 'required',
-                'total_charges' => 'required'
+                'total_charges' => 'required',
+                'service_vat' => 'required',
             ]);
 
             if ($validate->fails()) {
@@ -324,7 +325,7 @@ class ServiceProviderController extends Controller
             if (SubmittedQuotes::where(["provider_id" => auth()->id(), "request_id" => $request->request_id])->exists()) {
                 return get_error_response("You have already submitted a quote for this request", ["error" => "You have already submitted a quote for this request"]);
             }
-            
+
             $service_vat = ($request->workmanship + get_settings_value('administrative_fee')) * 0.075;
 
             $items_total = 0;
@@ -352,7 +353,7 @@ class ServiceProviderController extends Controller
                     "attachments" => $request->attachments,
                     "summary_note" => $request->summary_note,
                     "administrative_fee" => $request->administrative_fee, //get_settings_value('administrative_fee', 500),
-                    "service_vat" => $service_vat,
+                    "service_vat" => $request->service_vat,
                     "items" => $request->items,
                     "old_price" => $request->total_charges, // ?? $request->workmanship + $items_total + get_settings_value('administrative_fee') + $service_vat,
                     "total_charges" => $request->total_charges, // ?? $request->workmanship + $items_total + get_settings_value('administrative_fee') + $service_vat,
