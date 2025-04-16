@@ -921,7 +921,7 @@ class ServiceRequestController extends Controller
         $balance = $quoteTotal - $spent;
         $apportionments = [
             'subtotal' => $quoteTotal,
-            'service_provider_earnings' => $quoteTotal - $spent,
+            'service_provider_earnings' => $balance,
             'call2fix_management_fee' => $submittedQuote->administrative_fee,
             'call2fix_earnings' => $call2FixFee,
             'warranty_retention' => $warrantyRetention,
