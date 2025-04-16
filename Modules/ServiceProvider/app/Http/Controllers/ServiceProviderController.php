@@ -313,6 +313,7 @@ class ServiceProviderController extends Controller
                 'sla_start_date' => 'required',
                 'attachments' => 'nullable',
                 'summary_note' => 'required',
+                'total_charges' => 'required'
             ]);
 
             if ($validate->fails()) {
@@ -342,7 +343,7 @@ class ServiceProviderController extends Controller
             }
 
             // Process quote submission 
-            $items_total = $request->total_charges ?? $items_total;
+            // $items_total = $request->total_charges ?? $items_total;
             $createQuote = SubmittedQuotes::updateOrCreate(
                 [
                     "provider_id" => auth()->id(),
@@ -359,8 +360,8 @@ class ServiceProviderController extends Controller
                     "administrative_fee" => $request->administrative_fee, //get_settings_value('administrative_fee', 500),
                     "service_vat" => $service_vat,
                     "items" => $request->items,
-                    "old_price" => $request->total_charges ?? $request->workmanship + $items_total + get_settings_value('administrative_fee') + $service_vat,
-                    "total_charges" => $request->total_charges ?? $request->workmanship + $items_total + get_settings_value('administrative_fee') + $service_vat,
+                    "old_price" => $request->total_charges, // ?? $request->workmanship + $items_total + get_settings_value('administrative_fee') + $service_vat,
+                    "total_charges" => $request->total_charges, // ?? $request->workmanship + $items_total + get_settings_value('administrative_fee') + $service_vat,
                 ]
             );
 
