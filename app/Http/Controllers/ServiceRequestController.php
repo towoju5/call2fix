@@ -931,10 +931,10 @@ class ServiceRequestController extends Controller
         ];
 
         // Ensure the sum of provider and artisan earnings equals the quoteTotal
-        if (($apportionments['service_provider_earnings'] + $apportionments['artisan_earnings']) != $quoteTotal) {
-            // Adjust if there's a discrepancy (e.g., due to rounding)
-            $apportionments['service_provider_earnings'] = $quoteTotal - $apportionments['artisan_earnings'];
-        }
+        // if (($apportionments['service_provider_earnings'] + $apportionments['artisan_earnings']) != $quoteTotal) {
+        //     // Adjust if there's a discrepancy (e.g., due to rounding)
+        //     $apportionments['service_provider_earnings'] = $quoteTotal - $apportionments['artisan_earnings'];
+        // }
 
         Log::debug("Apportionment Result: ", ['apportionments' => $apportionments]);
         return $apportionments;
