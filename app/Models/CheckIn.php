@@ -11,10 +11,10 @@ class CheckIn extends Model
     use HasFactory;
     
     protected $table = 'check_ins';
-    
-    protected $fillable = [
-        'user_id',
-        'check_in_time',
-        'check_out_time',
-    ];
+    protected $guarded = [];
+    // protected $fillable = [
+    //     'user_id',
+    //     'check_in_time',
+    //     'check_out_time',
+    // ];
 }
