@@ -356,7 +356,7 @@ class ServiceProviderController extends Controller
                     "sla_start_date" => $request->sla_start_date,
                     "attachments" => $request->attachments,
                     "summary_note" => $request->summary_note,
-                    "administrative_fee" => get_settings_value('administrative_fee', 500),
+                    "administrative_fee" => $request->administrative_fee, //get_settings_value('administrative_fee', 500),
                     "service_vat" => $service_vat,
                     "items" => $request->items,
                     "old_price" => $request->total_charges ?? $request->workmanship + $items_total + get_settings_value('administrative_fee') + $service_vat,
